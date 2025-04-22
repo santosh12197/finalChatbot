@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+    <style>
+        /* Add styling for chat */
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="left-side">
+            <p id="bot-message">Hi! How can I help you today?</p>
+            <button onclick="sendMessage('Payment Failure')">Payment Failure</button>
+            <button onclick="sendMessage('Refund Issues')">Refund Issues</button>
+            <button onclick="sendMessage('Invoice Requests')">Invoice Requests</button>
+            <button onclick="sendMessage('Other Payment Queries')">Other Payment Queries</button>
+        </div>
+        <div id="right-side"></div>
+    </div>
+
+
+
+
+
+
+
+    
+    <script>
+        function sendMessage(option) {
+            // Send selected message and handle response
+            fetch('/chatbot/', {    
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: 'Hi! How can I help you today?', selected_option: option })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('right-side').innerHTML = `<p>${data.message}</p>`;
+                // Show sub-options after selection
+                data.sub_options.forEach(opt => {
+                    let button = document.createElement('button');
+                    button.innerHTML = opt;
+                    button.onclick = function() { sendMessage(opt); };
+                    document.getElementById('right-side').appendChild(button);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

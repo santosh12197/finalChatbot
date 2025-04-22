@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Support Team</title>
+</head>
+<body>
+    <h2>Support Team</h2>
+    <div id="support-requests">
+        {% for request in support_requests %}
+        <div class="support-request">
+            <p>{{ request.user.username }} - Request at {{ request.created_at }}</p>
+            <button onclick="connectSupport({{ request.id }})">Connect</button>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    
+    <script>
+        function connectSupport(requestId) {
+            fetch('/support_team/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ support_request_id: requestId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            });
+        }
+    </script>
+</body>
+</html>
