@@ -1,0 +1,55 @@
+i want to make chatbot using django and postgresql db, where user can resister, and then can login. once login, then user can chat with chatbot. chatting of user with the bot will happen like the following:
+when chatbot loads, then it will have following message:
+Hi! How can I help you today?
+and the following four buttons :
+Payment Failure
+Refund Issues
+Invoice Requests
+Other Payment Queries
+
+Above messages and buttons will be on the left side of the screen. User will have option to select any one of them. Based on option selected, first selected option will be visible on the right side of the screen like a chat in whatsapp, and then will give other sub options as following on the left side of the screen:
+ Payment Failure:
+         - Card Payment Failure
+         - Bank Transfer Failure
+        
+        Refund Issues:
+         - Refund Status
+         - Refund Delay
+         - Refund Request
+
+        Invoice Requests:
+         - Invoice Not Received
+         - Incorrect Invoice
+
+        Other Payment Queries:
+         - General Payment Inquiry
+         - Payer Change/Modification
+         - Payment Method Inquiry
+         - Membership/Account Inquiry
+         - Hold Payment Request
+         - License / Billing Info
+         - Installments/Discount
+         - Waiver/Other Issues
+         - Signed Document Request
+         - Payment Receipt Request
+
+And, then after selecting any one of the above sub options, the selected sub options should be visible on the right side of the screen and then following messages on the right side :
+Thank you for connecting. You can retry again.
+Are you satisfied with the answer?
+and the following two buttons:
+Yes, I am satisfied
+No, Connect with Support Team 
+
+When user clicks on "Yes, I am satisfied", then show the selected message on the right side of the screen and Show message "Thank you for connecting with SciPris Aptara." on the left side. And then restart the chat with the user i.e. give message "Hi! How can I help you today?" and four buttons to select any one of them on the left side of the screen.
+When user select "No, Connect with Support team", then selected item should be displayed on the right side of the screen and then a message like "Connecting with the support team" and then Connect with the support team and give message like "Connected with support team" on the left side of the screen. Once connection is established with the support team, then instead of bot, user can chat live with the person from support team. make a separate page for support team, where multiple users can send request to chat live in real time with the support team. users sent request to chat with the support team should be appear on the left side of the screen. once any member from support team select a particular user, then that member can chat with the user in real time. all the chats done by the user with bot should also be restored in the chat with support team chat thread.
+
+Above chat should be implemented in real chat system like whatsapp and and all the chats should be stored in the postgres db. so, Prepare models accordingly in django to store chat data (with the bot and support team).
+give complete code from end to end using python 3.11 and django 5.0 . mention requirements.txt also. use class based view (inheriting View class) and not generic class like CreateaView etc. in django. Give url, view and models and template completed code. implement models such that data will be stored user wise e.g., for a user chat data will be stored and those chats may belong to different dates.
+
+
+
+superuser credential on local------------------
+Username: ashok
+Email: ashok@gmail.com
+password: 1234
+-----------------------------------------------
