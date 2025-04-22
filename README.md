@@ -79,10 +79,6 @@ python manage.py runserver
 chatbot_project/
 ├── chatbot_app/
 │   ├── migrations/
-│   ├── templates/
-│   │   └── chatbot_app/
-│   │       ├── chat.html
-│   │       └── support_dashboard.html
 │   ├── __init__.py
 │   ├── admin.py
 │   ├── consumers.py
@@ -95,4 +91,7 @@ chatbot_project/
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
+├── templates/
+│   ├── chatbot.html
+│   └── support_team.html
 └── manage.py
