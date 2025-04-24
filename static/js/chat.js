@@ -4,11 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const botTree = {
         "Payment Failure": {
             "Card Payment Failure": {
-                "MasterCard": "Thank you for connecting. You can retry again.",
-                "Visa": "Thank you for connecting. You can retry again.",
+                "Master Card": "Thank you for connecting. You can try again.",
+                "Visa Card": "Thank you for connecting. You can try again.",
                 "Other Card": "We only use Visa or Master card for payment. Please use these cards only."
             },
-            "Bank Transfer Failure": "Thank you for connecting. You can retry again."
+            "Bank Transfer Failure": "Thank you for connecting. You can try again."
         },
         "Refund Issues": {
             "Refund Status": "Your refund is being processed.",
@@ -20,16 +20,16 @@ document.addEventListener("DOMContentLoaded", () => {
             "Incorrect Invoice": "Please share the correct invoice details."
         },
         "Other Payment Queries": {
-            "General Payment Enquiry": "Please describe your issue.",
-            "payer change/modification": "We can help with that. Connecting...",
-            "payment method Enquiry": "Available methods: Card, Bank, Wallet.",
-            "membership/account inquiry": "Please specify your account issue.",
-            "hold payment Request": "Your request has been noted.",
-            "license / billing info": "Please provide your license ID.",
-            "installments/discount": "Installments can be discussed further.",
-            "Waiver/other Issues": "Our team will review your waiver.",
-            "signed document Request": "Please upload your document.",
-            "Payment receipt Request": "We will resend your receipt shortly."
+            "General Payment Inquiry": "Please describe your issue.",
+            "Payer Change/Modification": "We can help with that. Connecting...",
+            "Payment Method Inquiry": "Available methods: Card, Bank, Wallet.",
+            "Membership/Account Inquiry": "Please specify your account issue.",
+            "Hold Payment Request": "Your request has been noted.",
+            "License / Billing Info": "Please provide your license ID.",
+            "Installments/Discount": "Installments can be discussed further.",
+            "Waiver/Other Issues": "Our team will review your waiver.",
+            "Signed Document Request": "Please upload your document.",
+            "Payment Receipt Request": "We will resend your receipt shortly."
         }
     };
 
@@ -52,17 +52,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleOptionClick(label, next) {
+        // show the selected option by the user
         appendMessage(label, 'user');
-        console.log("USer")
+
+        // save the key of the botTree in the table
         saveMessageToDB(label, 'user');
-        console.log("typeof next ", typeof next, next)
+
+        // display and save other options by the bot
         if (typeof next === 'string') {
+            // meaning that we are at the leaf of the botTree
+            // display message, save to db, and then ask for satisfaction check
             appendMessage(next, 'bot');
-            console.log("Bot")
             saveMessageToDB(next, 'bot');
             showSatisfactionOptions();
         } else {
-            const keyList = Object.keys(next).join(', ');
+            // meaning that we are not at the leaf of the botTree
+            // first save key to db, and then call renderOptions() method so that we will reach till leaf of the botTree
+            const keyList = Object.keys(next).join('; ');
             saveMessageToDB(keyList, 'bot');
             renderOptions(next);
         }
@@ -74,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         wrapper.className = "message-wrapper";
 
         appendMessage("Are you satisfied with the answer?", 'bot');
-        saveMessageToDB("Are you satisfied with the answer?", "bot"); 
+        saveMessageToDB("Are you satisfied with the answer?\n Yes, I am satisfied \n No, Connect with the Support Team", "bot"); 
 
         const yesBtn = document.createElement("button");
         yesBtn.className = "btn btn-success option-button";
@@ -83,8 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage("Yes, I'm satisfied", "user"); // Show user reply
             saveMessageToDB("Yes, I'm satisfied", "user"); // saving user
             
-            appendMessage("Thank you for connecting with SciPrisAptara.", "bot"); // Bot reply
-            saveMessageToDB("Thank you for connecting with SciPrisAptara.", "bot"); // saving bot reply to db
+            appendMessage("Thank you for connecting with SciPris Aptara.", "bot"); // Bot reply
+            saveMessageToDB("Thank you for connecting with SciPris Aptara.; \n Hi! How can I help you today?; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries", "bot"); // saving to db
             
             appendMessage("Hi! How can I help you today?", "bot");
             renderOptions(botTree); // Restart options
@@ -96,7 +102,11 @@ document.addEventListener("DOMContentLoaded", () => {
         supportBtn.textContent = "No, Connect with the Support Team";
         supportBtn.onclick = () => {
             appendMessage("No, Connect with Support Team", "user"); // Show user reply
-            appendMessage("Connecting you to our support team...", "bot");
+            saveMessageToDB("No, Connect with Support Team", "user"); // saving user
+
+            appendMessage("Connecting you to our support team...", "bot"); 
+            saveMessageToDB("Connecting you to our support team...", "bot"); // saving bot
+
             window.location.href = "/support/"; // to change 
         };
     
