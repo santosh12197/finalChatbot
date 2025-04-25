@@ -1,0 +1,60 @@
+
+
+
+Daphne:-------------------------------
+Daphne is an ASGI server (Asynchronous Server Gateway Interface) developed as part of Django Channels. Think of it as the async replacement for WSGI servers like Gunicorn or uWSGI, but built for handling both HTTP and WebSockets.
+Why do you need Daphne?
+When you use Django with Channels (for WebSockets, long polling, real-time updates), the regular WSGI servers won’t work because they don’t support WebSocket or async protocols.
+
+That’s where Daphne comes in — it can:
+
+Serve regular HTTP requests (like normal Django)
+
+Handle WebSocket connections (for real-time chat, notifications, etc.)
+
+Handle long-lived connections (like for IoT or multiplayer apps)
+
+--------------------------------------------
+Channels introduces three key pieces:
+
+(1) ASGI application – replaces WSGI; lets Django handle HTTP and WebSockets.
+
+(2) Consumer – the “view” for WebSockets; runs async, keeps the connection open.
+
+(3) Channel Layer – a Redis‑ or IPC‑backed pub/sub system used to broadcast between consumers (e.g., all clients in a chat room).
+
+
+- In computer science, handshaking is a process that ensures the server is in sync with its clients (e.g., desktop, smartphone, tablet). Handshaking is the basic concept of Web Socket protocol.
+- Web Sockets Definition
+	- Web sockets are defined as a two-way communication between the servers and the clients, which mean both the parties communicate and exchange data at the same time.
+- HTTP has its own set of schemas such as http and https. Web socket protocol also has similar schema defined in its URL pattern.
+	- ws://example.com:8000/chat.php ------> schema://host:port/server 
+
+- The steps for establishing the connection of Web Socket are as follows −
+
+	- The client establishes a connection through a process known as Web Socket handshake.
+
+	- The process begins with the client sending a regular HTTP request to the server.
+
+	- An Upgrade header is requested. In this request, it informs the server that request is for Web Socket connection.
+
+	- Web Socket URLs use the ws scheme. They are also used for secure Web Socket connections, which are the equivalent to HTTPs.
+
+- It is necessary to initialize the connection to the server from client for communication between them. For initializing the connection, creation of Javascript object with the URL with the remote or local server is required.
+
+	- var socket = new WebSocket( ws://echo.websocket.org );
+
+- There are four main Web Socket API events −
+(1) Open: Once the connection has been established between the client and the server, the open event is fired from Web Socket instance. It is called as the initial handshake between client and server. The event, which is raised once the connection is established, is called onopen.
+(2) Message: Message event happens usually when the server sends some data. Messages sent by the server to the client can include plain text messages, binary data or images. Whenever the data is sent, the onmessage function is fired.
+(3) Close: Close event marks the end of the communication between server and the client. Closing the connection is possible with the help of onclose event. After marking the end of communication with the help of onclose event, no messages can be further transferred between the server and the client. Closing the event can happen due to poor connectivity as well.
+(4) Error: Error marks for some mistake, which happens during the communication. It is marked with the help of onerror event. Onerror is always followed by termination of connection. 
+
+- Web Sockets Actions
+Events are usually triggered when something happens. On the other hand, actions are taken when a user wants something to happen. Actions are made by explicit calls using functions by users.
+
+The Web Socket protocol supports two main actions, namely −
+
+(1) send( ): This action is usually preferred for some communication with the server, which includes sending messages, which includes text files, binary data or images.
+	- Note − Sending the messages is only possible if the connection is open.
+(2) close( ): This method stands for goodbye handshake. It terminates the connection completely and no data can be transferred until the connection is re-established.
