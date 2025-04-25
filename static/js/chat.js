@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // show the selected option by the user
         appendMessage(label, 'user');
 
-        // save the key of the botTree in the table
+        // save the key of the botTree selected by user in the table
         saveMessageToDB(label, 'user');
 
         // display and save other options by the bot
@@ -64,6 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // display message, save to db, and then ask for satisfaction check
             appendMessage(next, 'bot');
             saveMessageToDB(next, 'bot');
+
+            // check user is satisfied by the response or not only at the leaf of the tree
             showSatisfactionOptions();
         } else {
             // meaning that we are not at the leaf of the botTree
@@ -87,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         yesBtn.textContent = "Yes, I'm satisfied";
         yesBtn.onclick = () => {
             appendMessage("Yes, I'm satisfied", "user"); // Show user reply
-            saveMessageToDB("Yes, I'm satisfied", "user"); // saving user
+            saveMessageToDB("Yes, I'm satisfied", "user"); // saving chat data for the user
             
             appendMessage("Thank you for connecting with SciPris Aptara.", "bot"); // Bot reply
             saveMessageToDB("Thank you for connecting with SciPris Aptara.; \n Hi! How can I help you today?; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries", "bot"); // saving to db
@@ -96,7 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
             renderOptions(botTree); // Restart options
         };
 
-        // to change logic
+        // when user is not satisfied with the bot response
+        // connect with the support team
         const supportBtn = document.createElement("button");
         supportBtn.className = "btn btn-warning option-button";
         supportBtn.textContent = "No, Connect with the Support Team";
