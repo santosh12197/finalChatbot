@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const chatContainer = document.getElementById("chat-container");
-    
+    const chatContainer = document.getElementById("chat-container")
+
     const botTree = {
         "Payment Failure": {
             "Card Payment Failure": {
@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     let conversationPath = []; // Tracks current path in the botTree
+    let chatSocket; // Declare it globally to be accessible in send/receive.
 
     function renderOptions(options) {
         const wrapper = document.createElement("div");
@@ -108,9 +109,11 @@ document.addEventListener("DOMContentLoaded", () => {
             saveMessageToDB("No, Connect with Support Team", "user"); // saving user
 
             appendMessage("Connecting you to our support team...", "bot"); 
-            saveMessageToDB("Connecting you to our support team...", "bot"); // saving bot
+            appendMessage("Successfully connected with the support team", "bot"); 
+            saveMessageToDB("Connecting you to our support team...;\n Successfully connected with the support team", "bot"); // saving bot
 
-            window.location.href = "/support/"; // to change 
+            // connecting with the support team
+            enableRealTimeChat();
         };
     
         wrapper.appendChild(yesBtn);
@@ -118,6 +121,62 @@ document.addEventListener("DOMContentLoaded", () => {
         chatContainer.appendChild(wrapper);
         scrollToBottom();
     }
+
+    function enableRealTimeChat() {
+        // Create input field + send button
+        const inputWrapper = document.createElement('div');
+        inputWrapper.className = 'input-wrapper';
+
+        // input field
+        const inputField = document.createElement('input');
+        inputField.type = 'text';
+        inputField.placeholder = 'Type your message...';
+        inputField.className = 'chat-input form-control';
+
+        // send button
+        const sendButton = document.createElement('button');
+        sendButton.className = 'btn btn-primary';
+        sendButton.textContent = 'Send';
+
+        inputWrapper.appendChild(inputField);
+        inputWrapper.appendChild(sendButton);
+        chatContainer.appendChild(inputWrapper);
+
+        scrollToBottom();
+
+        // WebSocket Connection
+        const roomName = "support_" + Date.now(); // You can make this user-specific if needed
+        chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/support/' + roomName + '/'
+        );
+        console.log("window.location.host", window.location.host)
+        console.log("chatSocket: ", chatSocket)
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log("data: ", data)
+            if (data.message) {
+                appendMessage(data.message, 'support'); // Assume messages from support team
+                saveMessageToDB(data.message, 'support');
+            }
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        sendButton.onclick = () => {
+            if (inputField.value.trim() !== '') {
+                chatSocket.send(JSON.stringify({
+                    'message': inputField.value
+                }));
+                appendMessage(inputField.value, 'user'); // Show user message
+                saveMessageToDB(inputField.value, 'user'); // Save user message
+                inputField.value = ''; // clear input field
+                scrollToBottom();
+            }
+        };
+    }
+
 
     function appendMessage(text, sender) {
         const message = document.createElement("div");

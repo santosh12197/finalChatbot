@@ -7,14 +7,20 @@ Why do you need Daphne?
 When you use Django with Channels (for WebSockets, long polling, real-time updates), the regular WSGI servers won’t work because they don’t support WebSocket or async protocols.
 
 That’s where Daphne comes in — it can:
-
-Serve regular HTTP requests (like normal Django)
-
-Handle WebSocket connections (for real-time chat, notifications, etc.)
-
-Handle long-lived connections (like for IoT or multiplayer apps)
+- Serve regular HTTP requests (like normal Django)
+- Handle WebSocket connections (for real-time chat, notifications, etc.)
+- Handle long-lived connections (like for IoT or multiplayer apps)
 
 --------------------------------------------
+
+Django Channels Overview-------------------------------------
+Django Channels enables Django to handle asynchronous protocols alongside regular HTTP.
+
+It introduces a concept of Consumers, which are like Django views but for WebSockets or other asynchronous protocols.
+
+Channels use an ASGI (Asynchronous Server Gateway Interface) application instead of WSGI (used for regular HTTP requests), making it suitable for handling asynchronous communication.
+
+-----------------------------------------------------------------------
 Channels introduces three key pieces:
 
 (1) ASGI application – replaces WSGI; lets Django handle HTTP and WebSockets.

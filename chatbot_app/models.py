@@ -16,5 +16,15 @@ class ChatMessage(models.Model):
     # when the message was sent
     timestamp = models.DateTimeField(auto_now_add=True)
 
+     # nullable field: if sender or receiver is support agent
+    support_agent = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name='support_chats',
+        null=True,
+        blank=True,
+        help_text="Support agent involved in this chat (only if sender is support)"
+    )
+
     def __str__(self):
         return f"{self.sender} - {self.user.username} at {self.timestamp}"
