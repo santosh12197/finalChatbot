@@ -52,6 +52,9 @@
 </head>
 <body>
     <div id="chat-container" class="d-flex flex-column" data-chat></div>
+    <script>
+        const currentUserId = "{{ request.user.id }}";
+      </script>
     <script src="{% static 'js/chat.js' %}"></script>
 </body>
 </html>

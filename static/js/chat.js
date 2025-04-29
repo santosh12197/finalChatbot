@@ -145,15 +145,13 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollToBottom();
 
         // WebSocket Connection
-        const roomName = "support_" + Date.now(); // You can make this user-specific if needed
+        const roomName = "support_" + currentUserId; // You can make this user-specific if needed
         chatSocket = new WebSocket(
             'ws://' + window.location.host + '/ws/support/' + roomName + '/'
         );
-        console.log("window.location.host", window.location.host)
-        console.log("chatSocket: ", chatSocket)
+
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            console.log("data: ", data)
             if (data.message) {
                 appendMessage(data.message, 'support'); // Assume messages from support team
                 saveMessageToDB(data.message, 'support');
