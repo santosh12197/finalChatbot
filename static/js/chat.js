@@ -123,16 +123,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function enableRealTimeChat() {
-        // Check if inputWrapper already exists
-        if (document.getElementById('input-wrapper')) return;
-
-        const chatWrapper = document.getElementById('chat-wrapper');
-
-        // Create input field + send button
-        const inputWrapper = document.createElement('div');
-        inputWrapper.id = 'input-wrapper';
-        inputWrapper.className = 'input-wrapper';
-
+        const inputWrapper = document.getElementById('input-wrapper');
+        if (inputWrapper.hasChildNodes()) return; // prevent duplicate input
+    
         const inputField = document.createElement('input');
         inputField.type = 'text';
         inputField.placeholder = 'Type your message...';
@@ -144,12 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         inputWrapper.appendChild(inputField);
         inputWrapper.appendChild(sendButton);
-        chatWrapper.appendChild(inputWrapper); // Append to wrapper, NOT inside chatContainer
 
         scrollToBottom();
 
-        // WebSocket Connection
-        const roomName = "support_" + currentUserId; // You can make this user-specific if needed
+        const roomName = "support_" + currentUserId;
         chatSocket = new WebSocket(
             'ws://' + window.location.host + '/ws/support/' + roomName + '/'
         );
@@ -157,11 +148,11 @@ document.addEventListener("DOMContentLoaded", () => {
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             if (data.message) {
-                appendMessage(data.message, 'support'); // Assume messages from support team
+                appendMessage(data.message, 'support');
                 saveMessageToDB(data.message, 'support');
             }
         };
-
+    
         chatSocket.onclose = function(e) {
             console.error('Chat socket closed unexpectedly');
         };
@@ -171,20 +162,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 chatSocket.send(JSON.stringify({
                     'message': inputField.value
                 }));
-                appendMessage(inputField.value, 'user'); // Show user message
-                saveMessageToDB(inputField.value, 'user'); // Save user message
-                inputField.value = ''; // clear input field
+                appendMessage(inputField.value, 'user');
+                saveMessageToDB(inputField.value, 'user');
+                inputField.value = '';
                 scrollToBottom();
             }
         };
-        // Press Enter to send message by the user
+    
         inputField.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendButton.click();
-            }
+            if (e.key === 'Enter') sendButton.click();
         });
     }
-
+    
 
     function appendMessage(text, sender) {
         const message = document.createElement("div");

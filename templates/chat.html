@@ -5,58 +5,82 @@
     <title>Chatbot - Payment Support</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
+       body {
             background-color: #f8f9fa;
+            margin: 0;
         }
+
         #chat-container {
-            max-width: 700px;
-            margin: 2rem auto;
             background: white;
-            border-radius: 8px;
-            padding: 1rem;
-            height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .bot-message, .user-message, .support-message {
+
+        .bot-message,
+        .user-message,
+        .support-message {
             margin-bottom: 1rem;
-            max-width: 80%;
+            margin-top: 1rem;
+            /* max-width: 80%; */  /* commenting for full screen */
             padding: 10px 15px;
             border-radius: 15px;
         }
-        .bot-message, .support-message {
+
+        .bot-message,
+        .support-message {
             background-color: #f0f4f8a4;
             align-self: flex-start;
             text-align: left;
         }
+
         .user-message {
             background-color: #007bff;
             color: white;
             align-self: flex-end;
             text-align: right;
+            /* width: 50%; */          /*Occupy 50% width */
+            max-width: 50%;       /* Prevent growing beyond 50% */
+            width: fit-content;
+            word-wrap: break-word;
+            margin-left: auto;
         }
+
         .message-wrapper {
             display: flex;
             flex-direction: column;
         }
+
         .option-button {
             margin-top: 5px;
             margin-right: auto;
         }
+
         .btn-custom-grey {
             background-color: #d3d3d3;
             color: #000;
             border: none;
         }
-        #input-wrapper{
-            max-width: 80%;
+
+        #input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
+        .chat-input {
+            flex: 1;
+        }
+
     </style>
 </head>
 <body>
-    <div id="chat-wrapper">
-        <div id="chat-container" class="d-flex flex-column" data-chat></div>
-    </div>
+    <div class="d-flex flex-column vh-100">
+        <!-- Chat messages -->
+        <div id="chat-container" class="flex-grow-1 overflow-auto p-3" data-chat></div>
+    
+        <!-- Input field and Send button will be added dynamically by JS inside this -->
+        <div id="input-wrapper" class="p-2 border-top bg-white"></div>
+      </div>
     <script>
         const currentUserId = "{{ request.user.id }}";
       </script>
