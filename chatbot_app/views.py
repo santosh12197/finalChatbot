@@ -94,3 +94,26 @@ class SaveChatMessageView(LoginRequiredMixin, View):
             return JsonResponse({'status': 'success'})
         return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
 
+
+class SupportDashboardView(View):
+
+    def get(self, request):
+        # Get unique users who requested support
+        users = ChatMessage.objects.filter(sender='user').values('user').distinct()
+        user_objs = User.objects.filter(id__in=[u['user'] for u in users])
+        return render(request, 'support_dashboard.html', {'users': user_objs})
+    
+
+class GetChatHistoryView(View):
+
+    def get(self, request, user_id):
+        chats = ChatMessage.objects.filter(user_id=user_id).order_by('timestamp')
+        data = [
+            {
+                'sender': msg.sender,
+                'message': msg.message,
+                'timestamp': msg.timestamp.strftime("%H:%M")
+            }
+            for msg in chats
+        ]
+        return JsonResponse(data, safe=False)

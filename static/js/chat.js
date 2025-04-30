@@ -123,24 +123,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function enableRealTimeChat() {
+        // Check if inputWrapper already exists
+        if (document.getElementById('input-wrapper')) return;
+
+        const chatWrapper = document.getElementById('chat-wrapper');
+
         // Create input field + send button
         const inputWrapper = document.createElement('div');
+        inputWrapper.id = 'input-wrapper';
         inputWrapper.className = 'input-wrapper';
 
-        // input field
         const inputField = document.createElement('input');
         inputField.type = 'text';
         inputField.placeholder = 'Type your message...';
         inputField.className = 'chat-input form-control';
 
-        // send button
         const sendButton = document.createElement('button');
         sendButton.className = 'btn btn-primary';
         sendButton.textContent = 'Send';
 
         inputWrapper.appendChild(inputField);
         inputWrapper.appendChild(sendButton);
-        chatContainer.appendChild(inputWrapper);
+        chatWrapper.appendChild(inputWrapper); // Append to wrapper, NOT inside chatContainer
 
         scrollToBottom();
 
@@ -173,6 +177,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 scrollToBottom();
             }
         };
+        // Press Enter to send message by the user
+        inputField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
     }
 
 

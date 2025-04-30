@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Support Dashboard</title>
+    <style>
+        body { font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
+        #user-list { width: 25%; border-right: 1px solid #ccc; overflow-y: auto; }
+        #chat-area { flex: 1; padding: 10px; display: flex; flex-direction: column; }
+        .user { padding: 10px; cursor: pointer; border-bottom: 1px solid #ddd; }
+        .message { padding: 8px 12px; margin: 5px; border-radius: 10px; max-width: 70%; }
+        .user-msg { background-color: #007bff; color: white; align-self: flex-end; }
+        .support-msg { background-color: #f1f1f1; align-self: flex-start; }
+        #message-input {margin-top: auto; margin: 5px; border-radius: 10px; max-width: 70%;}
+        input { flex: 1; padding: 10px; }
+        #input-message{ border-radius: 10px; margin: 5px;}
+        #send-button{ border-radius: 10px; margin: 5px;}  
+        button { padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="user-list">
+    {% for user in users %}
+        <div class="user" data-user-id="{{ user.id }}">{{ user.username }}</div>
+    {% endfor %}
+</div>
+
+<div id="chat-area">
+    <div id="chat-messages" style="flex: 1; overflow-y: auto;"></div>
+    <div id="message-input" style="display: none;">
+        <input type="text" id="input-message" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+    </div>
+</div>
+
+<script>
+    let selectedUserId = null;
+    let chatSocket = null;
+
+    document.querySelectorAll('.user').forEach(userDiv => {
+        userDiv.addEventListener('click', () => {
+            selectedUserId = userDiv.dataset.userId;
+            loadChatHistory(selectedUserId);
+        });
+    });
+
+    function loadChatHistory(userId) {
+        fetch(`/get_chat_history/${userId}/`)
+        .then(res => res.json())
+        .then(data => {
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.innerHTML = '';
+            data.forEach(msg => {
+                const msgDiv = document.createElement('div');
+                msgDiv.classList.add('message', msg.sender === 'support' ? 'support-msg' : 'user-msg');
+                msgDiv.textContent = msg.message;
+                chatBox.appendChild(msgDiv);
+            });
+            document.getElementById('message-input').style.display = 'flex';
+            connectWebSocket(userId);
+        });
+    }
+
+    function connectWebSocket(userId) {
+        if (chatSocket) {
+            chatSocket.close();
+        }
+
+        chatSocket = new WebSocket(`ws://${window.location.host}/ws/support/support_${userId}/`);
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const chatBox = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'user-msg');
+            msgDiv.textContent = data.message;
+            chatBox.appendChild(msgDiv);
+        };
+    }
+
+    document.getElementById('send-button').addEventListener('click', () => {
+        const input = document.getElementById('input-message');
+        const message = input.value.trim();
+        if (message && chatSocket) {
+            chatSocket.send(JSON.stringify({ message }));
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'support-msg');
+            msgDiv.textContent = message;
+            document.getElementById('chat-messages').appendChild(msgDiv);
+            input.value = '';
+        }
+    });
+
+    // Press Enter to send message
+    const inputField = document.getElementById('input-message');
+
+    inputField.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            const message = inputField.value.trim();
+            if (message.length > 0) {
+                chatSocket.send(JSON.stringify({ 'message': message }));
+                // TODO: save to db
+                // appendMessage(message, 'user');
+                // saveMessageToDB(message, 'user');
+                inputField.value = '';
+                scrollToBottom();
+            }
+        }
+    });
+
+    function scrollToBottom() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+
+</script>
+</body>
+</html>

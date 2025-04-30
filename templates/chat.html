@@ -18,13 +18,13 @@
             overflow-y: auto;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .bot-message, .user-message {
+        .bot-message, .user-message, .support-message {
             margin-bottom: 1rem;
             max-width: 80%;
             padding: 10px 15px;
             border-radius: 15px;
         }
-        .bot-message {
+        .bot-message, .support-message {
             background-color: #f0f4f8a4;
             align-self: flex-start;
             text-align: left;
@@ -48,10 +48,15 @@
             color: #000;
             border: none;
         }
+        #input-wrapper{
+            max-width: 80%;
+        }
     </style>
 </head>
 <body>
-    <div id="chat-container" class="d-flex flex-column" data-chat></div>
+    <div id="chat-wrapper">
+        <div id="chat-container" class="d-flex flex-column" data-chat></div>
+    </div>
     <script>
         const currentUserId = "{{ request.user.id }}";
       </script>
