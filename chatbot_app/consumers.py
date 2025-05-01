@@ -30,18 +30,18 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'chat_message',
+                'type': 'chat_message', # triggers a method called chat_message()
                 'message': message,
                 'sender': self.scope['user'].username  # Assuming user is authenticated
             }
         )
 
-    # Receive message from room group
+    # Receive message from room group: Django sends the message back to clients
     async def chat_message(self, event):
         message = event['message']
         sender = event['sender']
 
-        # Send message to WebSocket
+        # Send message to WebSocket: Sends message back to all connected clients in that room using .send()
         await self.send(text_data=json.dumps({
             'message': message,
             'sender': sender
