@@ -64,3 +64,54 @@ The Web Socket protocol supports two main actions, namely −
 (1) send( ): This action is usually preferred for some communication with the server, which includes sending messages, which includes text files, binary data or images.
 	- Note − Sending the messages is only possible if the connection is open.
 (2) close( ): This method stands for goodbye handshake. It terminates the connection completely and no data can be transferred until the connection is re-established.
+
+
+---------------------------------------how websocket initiates?------------------------
+- In WebSocket communication, the client always initiates the connection — not the server.
+- Here's why:
+	-The WebSocket protocol is designed this way. The client (usually a browser or mobile app) sends a WebSocket handshake request to the server using HTTP (called the Upgrade request).
+	- The server responds to this request and upgrades the connection to a persistent WebSocket connection.
+	- After the connection is established, both client and server can send messages at any time.
+
+- Why can't the server initiate a WebSocket connection?
+	- Servers typically don’t have direct access to the client’s network or browser due to:
+	- Firewalls/NAT
+	- Browser sandboxing/security
+	- No persistent way to know when a client is available to accept a connection
+
+---------------------------------------JSON.parse() and JSON.stringify() in JS:-------------------------------------------------
+
+JSON.parse(): in javascript
+- This function takes a JSON-formatted string and converts it into a JavaScript object.
+- example:
+	- const jsonString = '{"user": "Alice", "text": "Hi"}';
+	  const obj = JSON.parse(jsonString);
+	  console.log(obj.user); // Alice
+	  console.log(obj.text); // Hi
+
+JSON.stringify(): in javascript
+- it is the opposite of JSON.parse().
+- It converts a JavaScript object into a JSON string.
+- example:
+	- const obj = { user: "Alice", text: "Hi" };
+	  const jsonString = JSON.stringify(obj);
+	  console.log(jsonString); // {"user":"Alice","text":"Hi"} in the form of string.
+
+------------------------------------------------------------------------------------------------------------------------------
+- Each WebSocket connection is a separate and persistent connection between a specific user (or browser tab) and the server.
+- Each connection is handled by a separate consumer instance (your AsyncWebsocketConsumer class), and Django Channels can manage all of these connections in parallel, using Redis to help with group communication.
+------------------------------------------------------------------------------------------------------------------------------
+- channel layer:
+	- enables communication between consumers
+	- working of django channel layer:
+	Client A  --> WebSocketConsumer (User A)     -->   join group 'chat_room_1'
+	Client B  --> WebSocketConsumer (User B)     -->   join group 'chat_room_1'
+
+	Now, if User A sends a message:
+	WebSocketConsumer (User A)  --> channel_layer.group_send('chat_room_1', {...})
+								|
+								v
+		Django Channels dispatches to all consumers in 'chat_room_1'
+								|
+								v
+			WebSocketConsumer (User B) receives the message
