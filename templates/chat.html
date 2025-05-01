@@ -38,8 +38,8 @@
             color: white;
             align-self: flex-end;
             text-align: right;
-            /* width: 50%; */          /*Occupy 50% width */
-            max-width: 50%;       /* Prevent growing beyond 50% */
+            /* width: 90%; */          /*Occupy 90% width */
+            max-width: 90%;       /* Prevent growing beyond 50% */
             width: fit-content;
             word-wrap: break-word;
             margin-left: auto;
@@ -82,6 +82,7 @@
         <div id="input-wrapper" class="p-2 border-top bg-white"></div>
       </div>
     <script>
+        const currentUsername = "{{ request.user.username|escapejs }}";
         const currentUserId = "{{ request.user.id }}";
       </script>
     <script src="{% static 'js/chat.js' %}"></script>

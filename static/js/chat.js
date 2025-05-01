@@ -123,24 +123,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function enableRealTimeChat() {
+        // Input field and Send button will be added dynamically by JS inside in this
         const inputWrapper = document.getElementById('input-wrapper');
         if (inputWrapper.hasChildNodes()) return; // prevent duplicate input
-    
+
+        // creating "input field" where user can type msg to chat with the support team
         const inputField = document.createElement('input');
         inputField.type = 'text';
         inputField.placeholder = 'Type your message...';
         inputField.className = 'chat-input form-control';
 
+        // creating "Send" button to send the msg
         const sendButton = document.createElement('button');
         sendButton.className = 'btn btn-primary';
         sendButton.textContent = 'Send';
 
+        // inserting input field and Send button inside inputWrapper div
         inputWrapper.appendChild(inputField);
         inputWrapper.appendChild(sendButton);
 
         scrollToBottom();
 
-        const roomName = "support_" + currentUserId;
+        const roomName = "support_" + currentUserId; // currentUserId is from html file chat.html
+        // websocket connection for a particular user
         chatSocket = new WebSocket(
             'ws://' + window.location.host + '/ws/support/' + roomName + '/'
         );
@@ -148,8 +153,10 @@ document.addEventListener("DOMContentLoaded", () => {
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             if (data.message) {
-                appendMessage(data.message, 'support');
-                saveMessageToDB(data.message, 'support');
+                const sender = data.sender === currentUsername ? 'user' : 'support';
+                appendMessage(data.message, sender);
+                saveMessageToDB(data.message, sender);
+                scrollToBottom();
             }
         };
     
@@ -162,10 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 chatSocket.send(JSON.stringify({
                     'message': inputField.value
                 }));
-                appendMessage(inputField.value, 'user');
-                saveMessageToDB(inputField.value, 'user');
                 inputField.value = '';
-                scrollToBottom();
             }
         };
     
