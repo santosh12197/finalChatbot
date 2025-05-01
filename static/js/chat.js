@@ -164,9 +164,10 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error('Chat socket closed unexpectedly');
         };
 
+        // user sends msg
         sendButton.onclick = () => {
             if (inputField.value.trim() !== '') {
-                chatSocket.send(JSON.stringify({
+                chatSocket.send(JSON.stringify({ // send msg over websocket
                     'message': inputField.value
                 }));
                 inputField.value = '';

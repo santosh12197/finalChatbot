@@ -115,3 +115,42 @@ JSON.stringify(): in javascript
 								|
 								v
 			WebSocketConsumer (User B) receives the message
+
+------------------------------------------------------
+steps for chatting:
+- websocket connection requested by the client (chatSocket = new WebSocket('ws://' + window.location.host + '/ws/support/' + roomName + '/');)
+- The request goes to /ws/support/support_42/
+- Django Channels Connects Consumer using connect() method
+	- Django Channels extracts room_name from URL.
+	- room_group_name = support_support_42
+	- The WebSocket is added to a Channels group: All clients (user and support agent) in this room receive messages from this group.
+	- Connection is accepted.
+- User Sends a Message:
+	- JS sends the message over the WebSocket.
+	chatSocket.send(JSON.stringify({
+			'message': inputField.value
+		}));
+- Consumer Receives Message:
+	- receive() method is called automatically by Django Channels.
+	- Message is sent to the room group using group_send.
+	- This triggers the chat_message method on all consumers in the room group.
+- Message Broadcast to All Clients: 
+	- chat_message() runs in all consumers listening on that group.
+	- The message is sent to each connected WebSocket client using self.send().
+- Client JS Receives the Message: 
+	- Browser JS receives the WebSocket message.
+	- Message is shown in the chat window and saved to DB via /save_message/ endpoint.
+- Support Agent Responds:
+	- On the support team’s UI, the same WebSocket room (support_42) is opened.
+	- When the support agent types and sends a message, the flow is exactly the same:
+		- WebSocket send() → receive() in consumer → group_send() → chat_message() → message broadcast to all clients → both user and support see it.
+
+------Summary: Key Function Flow
+Event							Code Path
+WebSocket connection			chat.js → new WebSocket() → asgi.py → project/routing.py → app/routing.py → SupportChatConsumer.connect()
+User sends message				chat.js → chatSocket.send()
+Consumer receives				SupportChatConsumer.receive()
+Broadcast message				channel_layer.group_send()
+Consumers in room receive		SupportChatConsumer.chat_message()
+Message sent to frontend		chatSocket.onmessage() (in JS)
+Support responds				Same flow in reverse (from support UI JS → backend → user UI)
