@@ -35,6 +35,7 @@
 </div>
 
 <script>
+    // script to handle situation when member from support team clicks on any user (who has requested to chat with support team)
     let selectedUserId = null;
     let chatSocket = null;
 
@@ -66,7 +67,7 @@
         if (chatSocket) {
             chatSocket.close();
         }
-
+        // websocket connection for chat with the support team
         chatSocket = new WebSocket(`ws://${window.location.host}/ws/support/support_${userId}/`);
 
         chatSocket.onmessage = function(e) {

@@ -15,7 +15,8 @@ class ChatMessage(models.Model):
     sender = models.CharField(max_length=10, choices=SENDER_CHOICES)
     # when the message was sent
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    # whether user requested for support chat or not, default to False
+    requested_for_support = models.BooleanField(default=False)
      # nullable field: if sender or receiver is support agent
     support_agent = models.ForeignKey(
         User,

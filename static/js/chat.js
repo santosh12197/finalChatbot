@@ -127,6 +127,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const inputWrapper = document.getElementById('input-wrapper');
         if (inputWrapper.hasChildNodes()) return; // prevent duplicate input
 
+        // Mark this user as having requested support in the backend
+        fetch("/mark_support_request/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken(),
+            },
+            body: JSON.stringify({ requested: true })
+        });
+
         // creating "input field" where user can type msg to chat with the support team
         const inputField = document.createElement('input');
         inputField.type = 'text';
@@ -150,6 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
             'ws://' + window.location.host + '/ws/support/' + roomName + '/'
         );
 
+        // msg received from the backend by the frontend
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             if (data.message) {
@@ -167,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // user sends msg
         sendButton.onclick = () => {
             if (inputField.value.trim() !== '') {
-                chatSocket.send(JSON.stringify({ // send msg over websocket
+                chatSocket.send(JSON.stringify({ // send msg over websocket to the backend
                     'message': inputField.value
                 }));
                 inputField.value = '';

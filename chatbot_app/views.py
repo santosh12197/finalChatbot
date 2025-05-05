@@ -7,6 +7,8 @@ from .models import ChatMessage
 from django.utils import timezone
 from datetime import date
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 import json
 
 INITIAL_OPTIONS = [
@@ -79,6 +81,22 @@ class ChatView(LoginRequiredMixin, View):
         pass
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class MarkSupportRequestView(View):
+    def post(self, request):
+        data = json.loads(request.body)
+        user = request.user
+
+        # Update the latest ChatMessage with requested_for_support=True
+        ChatMessage.objects.create(
+            user=user,
+            message="User requested support",
+            sender="user",
+            requested_for_support=True
+        )
+        return JsonResponse({"status": "marked"})
+
+
 class SaveChatMessageView(LoginRequiredMixin, View):
     def post(self, request):
         data = json.loads(request.body.decode('utf-8'))
@@ -99,7 +117,10 @@ class SupportDashboardView(View):
 
     def get(self, request):
         # Get unique users who requested support
-        users = ChatMessage.objects.filter(sender='user').values('user').distinct()
+        users = ChatMessage.objects.filter(
+            sender='user',  
+            requested_for_support=True
+        ).values('user').distinct()
         user_objs = User.objects.filter(id__in=[u['user'] for u in users])
         return render(request, 'support_dashboard.html', {'users': user_objs})
     
