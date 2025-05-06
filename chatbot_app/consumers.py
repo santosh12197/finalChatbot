@@ -25,6 +25,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data['message']
+        sender = data["sender"]
 
         # Send message to room group
         await self.channel_layer.group_send(
@@ -32,7 +33,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'chat_message', # triggers a method called chat_message()
                 'message': message,
-                'sender': self.scope['user'].username  # Assuming user is authenticated
+                'sender': sender  # Assuming user is authenticated
             }
         )
 

@@ -179,7 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
         sendButton.onclick = () => {
             if (inputField.value.trim() !== '') {
                 chatSocket.send(JSON.stringify({ // send msg over websocket to the backend
-                    'message': inputField.value
+                    'message': inputField.value, 
+                    'sender': currentUsername
                 }));
                 inputField.value = '';
             }
@@ -193,7 +194,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function appendMessage(text, sender) {
         const message = document.createElement("div");
-        message.className = sender === 'bot' ? 'bot-message align-self-start' : 'user-message align-self-end';
+        if (sender === 'bot') {
+            message.className = 'bot-message align-self-start';
+        } else if (sender === 'support') {
+            message.className = 'support-message align-self-start';
+        } else {
+            message.className = 'user-message align-self-end';
+        }
         message.textContent = text;
         chatContainer.appendChild(message);
     }
