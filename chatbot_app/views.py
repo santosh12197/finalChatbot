@@ -3,13 +3,16 @@ from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from .models import ChatMessage
+import requests
+from .models import ChatMessage, UserLocation
 from django.utils import timezone
 from datetime import date
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
+
+from .utils import get_client_ip, get_location_from_ip, save_user_location
 
 INITIAL_OPTIONS = [
     "Payment Failure",
@@ -104,6 +107,9 @@ class SaveChatMessageView(LoginRequiredMixin, View):
         sender = data.get('sender')
 
         if message and sender:
+            # first save IP address of the user
+            save_user_location(request, request.user)
+            # then save chat data of the user
             ChatMessage.objects.create(
                 user=request.user,
                 message=message,
@@ -122,7 +128,31 @@ class SupportDashboardView(View):
             requested_for_support=True
         ).values('user').distinct()
         user_objs = User.objects.filter(id__in=[u['user'] for u in users])
-        return render(request, 'support_dashboard.html', {'users': user_objs})
+        user_data = []
+        for user in user_objs:
+            try:
+                loc = UserLocation.objects.get(user=user)
+                user_data.append({
+                    "id": user.id,
+                    "username": user.username,
+                    "lat": loc.latitude,
+                    "lng": loc.longitude
+                })
+            except UserLocation.DoesNotExist:
+                user_data.append({
+                    "id": user.id,
+                    "username": user.username,
+                    "lat": None,
+                    "lng": None
+                })
+
+        context = {
+            'users': user_objs,
+            "user_data": user_data
+        }
+        template_name = 'support_dashboard.html'
+
+        return render(request, template_name, context=context)
     
 
 class GetChatHistoryView(View):
@@ -138,3 +168,31 @@ class GetChatHistoryView(View):
             for msg in chats
         ]
         return JsonResponse(data, safe=False)
+    
+
+class UserLocationView(View):
+    """
+        User location based on IP address
+    """
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+
+            # Get the most recent IP address from ChatMessage, or default
+            last_message = UserLocation.objects.filter(user=user).order_by('-updated_at').first()
+            ip = request.META.get('REMOTE_ADDR') if last_message is None else last_message.ip_address # TODO : update IP dynamically using get_client_ip() inside utils.py
+
+            # Use IP Geolocation API
+            response = requests.get(f"http://ip-api.com/json/8.8.8.8") # TODO :to replace 8.8.8.8 by {ip}
+            data = response.json()
+            if data['status'] == 'success':
+                return JsonResponse({
+                    'lat': data['lat'],
+                    'lon': data['lon'],
+                    'city': data['city'],
+                    'country': data['country'],
+                })
+            else:
+                return JsonResponse({'error': 'Could not fetch location'}, status=400)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)

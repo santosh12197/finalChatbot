@@ -29,3 +29,18 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender} - {self.user.username} at {self.timestamp}"
+
+
+class UserLocation(models.Model):
+    # NOTE: model to Store User Location
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    ip_address = models.GenericIPAddressField()
+    city = models.CharField(max_length=100, blank=True, null=True)
+    region = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Location of {self.user.username}"

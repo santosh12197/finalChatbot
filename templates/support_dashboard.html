@@ -5,11 +5,41 @@
     <title>Support Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
-        #user-list { width: 25%; border-right: 1px solid #ccc; overflow-y: auto; }
-        #chat-area { flex: 1; padding: 10px; display: flex; flex-direction: column; }
-        .user { padding: 10px; cursor: pointer; border-bottom: 1px solid #ddd; }
-        .message { padding: 8px 12px; margin: 5px; border-radius: 10px; max-width: 70%; }
+        body { 
+            font-family: sans-serif; 
+            display: flex; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        #user-list { 
+            width: 25%; 
+            border-right: 1px solid #ccc; 
+            overflow-y: auto; 
+        }
+        #chat-area { 
+            flex: 1; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            max-width: 50%;
+            border-right: 1px solid #ccc;
+        }
+        #user-info{
+            width: 25%;
+            padding: 8px 12px; 
+            margin: 5px;
+        }
+        .user { 
+            padding: 10px; 
+            cursor: pointer; 
+            border-bottom: 1px solid #ddd; 
+        }
+        .message { 
+            padding: 8px 12px; 
+            margin: 5px; 
+            border-radius: 10px; 
+            max-width: 70%; 
+        }
         .user-msg { 
             background-color: #f1f1f1; 
             align-self: flex-start; 
@@ -30,136 +60,227 @@
             border-radius: 10px; 
             max-width: 100%;
         }
-        input { flex: 1; padding: 10px; }
-        #input-message{ border-radius: 10px; margin: 5px;}
+        input { 
+            flex: 1; 
+            padding: 10px; 
+        }
+        #input-message{ 
+            border-radius: 10px; 
+            margin: 5px;
+        }
         #send-button{ 
             border-radius: 8px; 
             margin: 5px;
         }  
-        button { padding: 10px; }
+        button { 
+            padding: 10px; 
+        }
     </style>
+    <script 
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSj9JpJ1vEAR0HhTCXjupjzsJk3Z0E6TM&libraries=marker"
+        async
+        defer>
+    </script>
 </head>
 <body>
 
-<div id="user-list">
-    {% if users %}
-        {% for user in users %}
-            <div class="user" data-user-id="{{ user.id }}">{{ user.username }}</div>
-        {% endfor %}
-    {% else %}
-        <div>
-            No user to chat!
-        </div>
-    {% endif %}
-</div>
-
-<div id="chat-area">
-    <div id="chat-messages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;"></div>
-    <div id="message-input" style="display: none;">
-        <input type="text" id="input-message" placeholder="Type your message...">
-        <button id="send-button" class="btn btn-primary">Send</button>
+    <div id="user-list">
+        {% if users %}
+            {% for user in users %}
+                <div class="user" 
+                data-user-id="{{ user.id }}"
+                data-user-fname="{{ user.first_name }}"
+                data-user-lname="{{ user.last_name }}"
+                data-user-mobile="{{ user.mobile }}"
+                data-user-email="{{ user.email }}"
+                data-user-lat="{{ user.lat }}"
+                data-user-lng="{{ user.lng }}">
+                {{ user.username }}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div>
+                <span>No user to chat!</span>
+            </div>
+        {% endif %}
     </div>
-</div>
 
-<script>
-    // script to handle situation when member from support team clicks on any user (who has requested to chat with support team)
-    const chatContainer = document.getElementById('chat-messages')
-    let selectedUserId = null;
-    let chatSocket = null;
+    <div id="chat-area">
+        <div id="chat-messages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;"></div>
+        <div id="message-input" style="display: none;">
+            <input type="text" id="input-message" placeholder="Type your message...">
+            <button id="send-button" class="btn btn-primary">Send</button>
+        </div>
+    </div>
 
-    document.querySelectorAll('.user').forEach(userDiv => {
-        userDiv.addEventListener('click', () => {
-            selectedUserId = userDiv.dataset.userId;
-            loadChatHistory(selectedUserId);
-        });
-    });
+    <div id="user-info">
+        <div>
+            <p><span id="user-name"></span></p>
+            <p><span id="user-mobile"></span></p>
+            <p><span id="user-email"></span></p>
+            <p><span id="user-location"></span></p>
+            <!-- User's location based on IP address -->
+            <div id="map" style="width: 100%; height: 300px; margin-top: 10px;"></div>
+        </div>
+    </div>
 
-    function loadChatHistory(userId) {
-        fetch(`/get_chat_history/${userId}/`)
-        .then(res => res.json())
-        .then(data => {
-            const chatBox = document.getElementById('chat-messages');
-            chatBox.innerHTML = '';
-            data.forEach(msg => {
-                const msgDiv = document.createElement('div');
-                msgDiv.classList.add('message', msg.sender === 'support' ? 'support-msg' : 'user-msg');
-                msgDiv.textContent = msg.message;
-                chatBox.appendChild(msgDiv);
+    <script>
+        // script to handle chat data when member from support team clicks on any user (who has requested to chat with support team)
+        const chatContainer = document.getElementById('chat-messages')
+        let selectedUserId = null;
+        let chatSocket = null;
+
+        document.querySelectorAll('.user').forEach(userDiv => {
+            userDiv.addEventListener('click', () => {
+                
+                // when support team clicks on any user
+                selectedUserId = userDiv.dataset.userId;
+
+                // load chat history data of that user
+                loadChatHistory(selectedUserId);
+
+                // load user location based on IP address
+                loadUserLocation(selectedUserId);  // Load map too
+
+                // fetching user details
+                const fname = userDiv.dataset.userFirstName;
+                const lname = userDiv.dataset.userLastName;
+                const mobile = userDiv.dataset.userMobile;
+                const email = userDiv.dataset.userEmail;
+                // Displaying user details
+                document.getElementById("user-name").textContent = `Name: ${fname} ${lname}`;
+                document.getElementById("user-mobile").textContent = `Mobile: ${mobile}`;
+                document.getElementById("user-email").textContent = `Email: ${email}`;
+
             });
-            document.getElementById('message-input').style.display = 'flex';
-            connectWebSocket(userId);
-            scrollToBottom();
         });
-    }
 
-    function connectWebSocket(userId) {
-        if (chatSocket) {
-            chatSocket.close();
+        function loadChatHistory(userId) {
+            fetch(`/get_chat_history/${userId}/`)
+            .then(res => res.json())
+            .then(data => {
+                const chatBox = document.getElementById('chat-messages');
+                chatBox.innerHTML = '';
+                data.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.classList.add('message', msg.sender === 'support' ? 'support-msg' : 'user-msg');
+                    msgDiv.textContent = msg.message;
+                    chatBox.appendChild(msgDiv);
+                });
+                document.getElementById('message-input').style.display = 'flex';
+                connectWebSocket(userId);
+                scrollToBottom();
+            });
         }
-        // websocket connection for chat with the support team
-        chatSocket = new WebSocket(`ws://${window.location.host}/ws/support/support_${userId}/`);
 
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const chatBox = document.getElementById('chat-messages');
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message');
-            msgDiv.classList.add(data.sender === 'support' ? 'support-msg' : 'user-msg');
-            msgDiv.textContent = data.message;
-            chatBox.appendChild(msgDiv);
-            scrollToBottom();
-        };
+        function connectWebSocket(userId) {
+            if (chatSocket) {
+                chatSocket.close();
+            }
+            // websocket connection for chat with the support team
+            chatSocket = new WebSocket(`ws://${window.location.host}/ws/support/support_${userId}/`);
 
-    }
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                const chatBox = document.getElementById('chat-messages');
+                const msgDiv = document.createElement('div');
+                msgDiv.classList.add('message');
+                msgDiv.classList.add(data.sender === 'support' ? 'support-msg' : 'user-msg');
+                msgDiv.textContent = data.message;
+                chatBox.appendChild(msgDiv);
+                scrollToBottom();
+            };
 
-    // clicking Send btn to send msg
-    document.getElementById('send-button').addEventListener('click', sendMessage);
-
-    const inputField = document.getElementById('input-message');
-
-    // Press Enter to send message
-    inputField.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter') {
-            sendMessage();
         }
-    });
 
-    // function to send msg
-    function sendMessage() {
-        const input = document.getElementById('input-message');
-        const message = input.value.trim();
-        if (message && chatSocket) {
-            chatSocket.send(JSON.stringify({ 'message': message, 'sender': 'support' }));
-            input.value = '';
-            scrollToBottom();
-        }
-    }
+        // clicking Send btn to send msg
+        document.getElementById('send-button').addEventListener('click', sendMessage);
 
-    function scrollToBottom() {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
+        const inputField = document.getElementById('input-message');
 
-    function saveMessageToDB(message, sender) {
-        fetch("/save_message/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCSRFToken(), // CSRF is needed for POST in Django
-            },
-            body: JSON.stringify({
-                message: message,
-                sender: sender
-            })
+        // Press Enter to send message
+        inputField.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
         });
-    }
-    
-    function getCSRFToken() {
-        return document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrftoken='))
-            ?.split('=')[1];
-    }
 
-</script>
+        // function to send msg
+        function sendMessage() {
+            const input = document.getElementById('input-message');
+            const message = input.value.trim();
+            if (message && chatSocket) {
+                chatSocket.send(JSON.stringify({ 'message': message, 'sender': 'support' }));
+                input.value = '';
+                scrollToBottom();
+            }
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function saveMessageToDB(message, sender) {
+            fetch("/save_message/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(), // CSRF is needed for POST in Django
+                },
+                body: JSON.stringify({
+                    message: message,
+                    sender: sender
+                })
+            });
+        }
+        
+        function getCSRFToken() {
+            return document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+        }
+
+    </script>
+
+    <script>
+        // to handle user info when support team member clicks on any user
+        let map;
+
+        function renderMap(lat = 20.5937, lon = 78.9629) {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: lat, lng: lon },
+                zoom: 6,
+                mapId: "DEMO_MAP_ID"  // Replace with your real Map ID (optional)
+            });
+
+            const marker = new google.maps.marker.AdvancedMarkerElement({
+                map: map,
+                position: { lat: lat, lng: lon },
+                title: "User Location"
+            });
+        }
+
+        function initMap(lat, lon) {
+            // Default map initialization (optional)
+            renderMap(lat, lon); // need to pass dynamic & actual longitude and lattitude of the user as params
+        }
+        
+        function loadUserLocation(userId) {
+            fetch(`/user_location/${userId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.lat && data.lon) {
+                        document.getElementById('user-location').innerText = `Location: ${data.city}, ${data.country}`;
+                        document.getElementById('map').style.display = 'block'; // Show map container
+                        initMap(data.lat, data.lon);
+                    } else {
+                        document.getElementById('user-location').innerText = 'Location not available';
+                        document.getElementById('map').style.display = 'none'; // Hide map if location not available
+                    }
+                });
+        }
+        </script>
+
 </body>
 </html>
