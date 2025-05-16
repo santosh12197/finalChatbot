@@ -1,7 +1,8 @@
 import requests
 
-from chatbot_app.models import UserLocation
-
+from chatbot_app.models import ChatMessage, UserLocation
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 def get_client_ip(request):
     """
@@ -55,3 +56,17 @@ def save_user_location(request, user):
                 'longitude': location_data['longitude']
             }
         )
+
+    # wherever the user escalates to support (e.g. view)
+def notify_support_of_unread(user_id):
+    unread_count = ChatMessage.objects.filter(user_id=user_id, sender='user', has_read=False).count()
+    channel_layer = get_channel_layer()
+    print("unread_count", unread_count)
+    async_to_sync(channel_layer.group_send)(
+        "support_notifications",
+        {
+            'type': 'send_unread_update',
+            'user_id': user_id,
+            'unread_count': unread_count
+        }
+    )

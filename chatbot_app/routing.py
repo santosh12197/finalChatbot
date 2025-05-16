@@ -3,5 +3,5 @@ from . import consumers
 
 websocket_urlpatterns = [
     path('ws/support/<str:room_name>/', consumers.SupportChatConsumer.as_asgi()), # for chat of user with the support team
-    # path('ws/support/dashboard/', consumers.SupportDashboardConsumer.as_asgi()), # to notify the support team dashboard of new user requests in real time 
+    path(r'ws/support_notifications/', consumers.SupportNotificationConsumer.as_asgi()), # list of users requested to chat with support team in real time 
 ]

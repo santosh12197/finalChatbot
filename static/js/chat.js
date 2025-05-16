@@ -57,14 +57,14 @@ document.addEventListener("DOMContentLoaded", () => {
         appendMessage(label, 'user');
 
         // save the key of the botTree selected by user in the table
-        saveMessageToDB(label, 'user');
+        saveMessageToDB(label, 'user', is_read=true);
 
         // display and save other options by the bot
         if (typeof next === 'string') {
             // meaning that we are at the leaf of the botTree
             // display message, save to db, and then ask for satisfaction check
             appendMessage(next, 'bot');
-            saveMessageToDB(next, 'bot');
+            saveMessageToDB(next, 'bot', is_read=true);
 
             // check user is satisfied by the response or not only at the leaf of the tree
             showSatisfactionOptions();
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // meaning that we are not at the leaf of the botTree
             // first save key to db, and then call renderOptions() method so that we will reach till leaf of the botTree
             const keyList = Object.keys(next).join('; ');
-            saveMessageToDB(keyList, 'bot');
+            saveMessageToDB(keyList, 'bot', is_read=true);
             renderOptions(next);
         }
         scrollToBottom();
@@ -83,17 +83,17 @@ document.addEventListener("DOMContentLoaded", () => {
         wrapper.className = "message-wrapper";
 
         appendMessage("Are you satisfied with the answer?", 'bot');
-        saveMessageToDB("Are you satisfied with the answer?\n Yes, I am satisfied \n No, Connect with the Support Team", "bot"); 
+        saveMessageToDB("Are you satisfied with the answer?\n Yes, I am satisfied \n No, Connect with the Support Team", "bot", is_read=true); 
 
         const yesBtn = document.createElement("button");
         yesBtn.className = "btn btn-success option-button";
         yesBtn.textContent = "Yes, I'm satisfied";
         yesBtn.onclick = () => {
             appendMessage("Yes, I'm satisfied", "user"); // Show user reply
-            saveMessageToDB("Yes, I'm satisfied", "user"); // saving chat data for the user
+            saveMessageToDB("Yes, I'm satisfied", "user", is_read=true); // saving chat data for the user
             
             appendMessage("Thank you for connecting with SciPris Aptara.", "bot"); // Bot reply
-            saveMessageToDB("Thank you for connecting with SciPris Aptara.; \n Hi! How can I help you today?; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries", "bot"); // saving to db
+            saveMessageToDB("Thank you for connecting with SciPris Aptara.; \n Hi! How can I help you today?; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries", "bot", is_read=true); // saving to db
             
             appendMessage("Hi! How can I help you today?", "bot");
             renderOptions(botTree); // Restart options
@@ -106,11 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
         supportBtn.textContent = "No, Connect with the Support Team";
         supportBtn.onclick = () => {
             appendMessage("No, Connect with Support Team", "user"); // Show user reply
-            saveMessageToDB("No, Connect with Support Team", "user"); // saving user
+            saveMessageToDB("No, Connect with Support Team", "user", is_read=true); // saving user
 
             appendMessage("Connecting you to our support team...", "bot"); 
             appendMessage("Successfully connected with the support team", "bot"); 
-            saveMessageToDB("Connecting you to our support team...;\n Successfully connected with the support team", "bot"); // saving bot
+            saveMessageToDB("Connecting you to our support team...;\n Successfully connected with the support team", "bot", is_read=true); // saving bot
 
             // connecting with the support team
             enableRealTimeChat();
@@ -155,18 +155,19 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollToBottom();
 
         const roomName = "support_" + currentUserId; // currentUserId is from html file chat.html
-        // websocket connection for a particular user
+        // websocket connection of current user
         chatSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/support/' + roomName + '/'
+            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
+            window.location.host +
+            '/ws/support/' + roomName + '/'
         );
 
         // msg received from the backend by the frontend
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             if (data.message) {
-                const sender = data.sender === currentUsername ? 'user' : 'support';
-                appendMessage(data.message, sender);
-                saveMessageToDB(data.message, sender);
+                appendMessage(data.message, data.sender);
+                // saveMessageToDB(data.message, sender);
                 scrollToBottom();
             }
         };
@@ -180,7 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (inputField.value.trim() !== '') {
                 chatSocket.send(JSON.stringify({ // send msg over websocket to the backend
                     'message': inputField.value, 
-                    'sender': currentUsername
+                    'sender': "user",
+                    'user_id': currentUserId
                 }));
                 inputField.value = '';
             }
@@ -209,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    function saveMessageToDB(message, sender) {
+    function saveMessageToDB(message, sender, is_read=false) {
         fetch("/save_message/", {
             method: "POST",
             headers: {
@@ -217,8 +219,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 "X-CSRFToken": getCSRFToken(), // CSRF is needed for POST in Django
             },
             body: JSON.stringify({
+                user_id: currentUserId,
                 message: message,
-                sender: sender
+                sender: sender,
+                is_read: is_read
             })
         });
     }

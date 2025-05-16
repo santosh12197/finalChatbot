@@ -48,10 +48,10 @@
             width: fit-content;
         }
         .support-msg { 
-            background-color: #007bff; 
-            color:white; 
+            background-color: #c6f8f1fd;
+            color:black; 
             align-self: flex-end; 
-            text-align: left;
+            text-align: right;
             max-width: 90%;
             width: fit-content;
         }
@@ -75,6 +75,18 @@
         button { 
             padding: 10px; 
         }
+        .unread-indicator {
+            background-color: #87d325;
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            padding: 4px 8px;
+            margin-left: 10px;
+            font-size: 12px;
+            min-width: 20px;
+            text-align: center;
+            display: inline-block;
+        }
     </style>
     <script 
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSj9JpJ1vEAR0HhTCXjupjzsJk3Z0E6TM&libraries=marker"
@@ -88,18 +100,24 @@
         {% if users %}
             {% for user in users %}
                 <div class="user" 
-                data-user-id="{{ user.id }}"
-                data-user-fname="{{ user.first_name }}"
-                data-user-lname="{{ user.last_name }}"
-                data-user-mobile="{{ user.mobile }}"
-                data-user-email="{{ user.email }}"
-                data-user-lat="{{ user.lat }}"
-                data-user-lng="{{ user.lng }}">
-                {{ user.username }}
+                    id="user-{{ user.id }}"
+                    data-user-id="{{ user.id }}"
+                    data-user-fname="{{ user.first_name }}"
+                    data-user-lname="{{ user.last_name }}"
+                    data-user-mobile="{{ user.mobile }}"
+                    data-user-email="{{ user.email }}"
+                    data-user-lat="{{ user.lat }}"
+                    data-user-lng="{{ user.lng }}">
+                    <span class="username">{{ user.username }}</span> <!--{{ user.timestamp|date:"d/m/y h:i A" }}-->
+                    <span id="user-indicator-{{user.id}}" class="{% if user.unread_count > 0 %}unread-indicator{% endif %}">
+                        {% if user.unread_count > 0 %}
+                            {{ user.unread_count }}
+                        {% endif %}
+                    </span>
                 </div>
             {% endfor %}
         {% else %}
-            <div>
+            <div id="no-users">
                 <span>No user to chat!</span>
             </div>
         {% endif %}
@@ -152,6 +170,16 @@
                 document.getElementById("user-mobile").textContent = `Mobile: ${mobile}`;
                 document.getElementById("user-email").textContent = `Email: ${email}`;
 
+                // mark as read for msg of selected user
+                markMessagesAsRead(selectedUserId);
+
+                // reseting unread to read
+                const indicator = document.getElementById(`user-indicator-${selectedUserId}`);
+                if (indicator) {
+                    indicator.textContent = '';
+                    indicator.style.display = 'none';
+                }
+
             });
         });
 
@@ -178,7 +206,8 @@
                 chatSocket.close();
             }
             // websocket connection for chat with the support team
-            chatSocket = new WebSocket(`ws://${window.location.host}/ws/support/support_${userId}/`);
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            chatSocket = new WebSocket(`${wsProtocol}://${window.location.host}/ws/support/support_${userId}/`);
 
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
@@ -187,6 +216,8 @@
                 msgDiv.classList.add('message');
                 msgDiv.classList.add(data.sender === 'support' ? 'support-msg' : 'user-msg');
                 msgDiv.textContent = data.message;
+                // msg has already been saved in receive() method inside consumers.py, so no neeed to save here again! only display the msg here
+
                 chatBox.appendChild(msgDiv);
                 scrollToBottom();
             };
@@ -194,23 +225,26 @@
         }
 
         // clicking Send btn to send msg
-        document.getElementById('send-button').addEventListener('click', sendMessage);
+        // document.getElementById('send-button').addEventListener('click', sendMessage);
+        document.getElementById('send-button').addEventListener('click', () => {
+            sendMessage(selectedUserId);
+        });
 
         const inputField = document.getElementById('input-message');
 
         // Press Enter to send message
         inputField.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
-                sendMessage();
+                sendMessage(selectedUserId);
             }
         });
 
         // function to send msg
-        function sendMessage() {
+        function sendMessage(selectedUserId) {
             const input = document.getElementById('input-message');
             const message = input.value.trim();
             if (message && chatSocket) {
-                chatSocket.send(JSON.stringify({ 'message': message, 'sender': 'support' }));
+                chatSocket.send(JSON.stringify({ 'message': message, 'sender': 'support', "user_id": selectedUserId }));
                 input.value = '';
                 scrollToBottom();
             }
@@ -280,7 +314,144 @@
                     }
                 });
         }
-        </script>
+    </script>
 
+    <script>
+        let notificationSocket = null;
+
+        function connectNotificationWebSocket() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const wsUrl = `${wsProtocol}://${window.location.host}/ws/support_notifications/`;
+            notificationSocket = new WebSocket(wsUrl);
+
+            notificationSocket.onopen = function () {
+                console.log('WebSocket connection opened');
+            };
+
+            notificationSocket.onmessage = function (e) {
+                const data = JSON.parse(e.data); 
+
+                if (data.type === 'new_support_thread') {
+                    const isCurrentUserOpen = selectedUserId === data.user.id;
+
+                    if (!isCurrentUserOpen) {
+                        // Only update unread count if this user is NOT currently being viewed
+                        addOrUpdateUser(data.user);
+                    }else{
+                        // if current user sends a msg, and that user is already opened on support dashboard to chat, then mark that msg as read
+                        markMessagesAsRead(data.user.id);
+                    }
+                    
+                }
+            };
+
+
+            notificationSocket.onclose = function (e) {
+                console.warn('WebSocket closed. Reconnecting in 2 seconds...', e);
+                setTimeout(connectNotificationWebSocket, 2000);  // Reconnect on close
+            };
+
+            notificationSocket.onerror = function (err) {
+                console.error('WebSocket error:', err);
+                notificationSocket.close();  // Trigger reconnect logic
+            };
+        }
+        function markMessagesAsRead(userId) {
+            fetch(`/mark_as_read/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),  // implement this if needed
+                }
+            }).then(res => res.json()).then(data => {
+                console.log('Marked messages as read:', data);
+            });
+        }
+
+        function addOrUpdateUser(user) {
+            const userList = document.getElementById('user-list');
+            const existingUser = document.getElementById(`user-${user.id}`);
+
+            // Remove "No user to chat!" if exists
+            const noUsersDiv = document.getElementById('no-users');
+            if (noUsersDiv) {
+                noUsersDiv.remove();
+            }
+
+            if (existingUser) {
+                // Move existing user to top
+                userList.prepend(existingUser);
+
+                // unread notification span
+                const indicator = document.getElementById(`user-indicator-${user.id}`);
+                if (indicator) {
+                    // let currentCount = parseInt(indicator.textContent || '0', 10);
+                    indicator.textContent = user.unread_count || 1;
+                    indicator.style.display = 'inline-block';
+                }
+            } else {    
+                // Create new user div
+                const userDiv = document.createElement('div');
+                userDiv.className = 'user';
+                
+                userDiv.id = `user-${user.id}`;
+
+                // Set data attributes
+                userDiv.setAttribute('data-user-id', user.id);
+                userDiv.setAttribute('data-user-fname', user.first_name || "");
+                userDiv.setAttribute('data-user-lname', user.last_name || "");
+                userDiv.setAttribute('data-user-mobile', user.mobile || "");
+                userDiv.setAttribute('data-user-email', user.email || "");
+                userDiv.setAttribute('data-user-lat', user.lat || "");
+                userDiv.setAttribute('data-user-lng', user.lng || "");
+
+                // Set inner HTML
+                userDiv.innerHTML = `
+                    <span class="username">${user.username}</span>
+                    <span id="user-indicator-${user.id}" class="unread-indicator">${user.unread_count}</span>
+                `;
+                // Add click event for a particular user's chat
+                userDiv.addEventListener('click', () => {
+
+                    selectedUserId = user.id;
+                    // loading chat history
+                    loadChatHistory(selectedUserId);
+
+                    // loading user location
+                    loadUserLocation(selectedUserId);
+
+                    // setting user details
+                    document.getElementById("user-name").textContent = `Name: ${user.first_name} ${user.last_name}`;
+                    document.getElementById("user-mobile").textContent = `Mobile: ${user.mobile}`;
+                    document.getElementById("user-email").textContent = `Email: ${user.email}`;
+
+                    // mark as read when the current user is selected to chat
+                    markMessagesAsRead(selectedUserId);
+
+                    // reseting unread to read
+                    const indicator = document.getElementById(`user-indicator-${user.id}`);
+                    if (indicator) {
+                        indicator.textContent = '';
+                        indicator.style.display = 'none';
+                    }
+
+                });
+
+                // Add to top of list
+                userList.prepend(userDiv);
+            }
+        }
+
+
+
+        // Reconnect-safe startup
+        document.addEventListener('DOMContentLoaded', function () {
+            connectNotificationWebSocket();
+        });
+
+
+    </script>
+
+
+    
 </body>
 </html>

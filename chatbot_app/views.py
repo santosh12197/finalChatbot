@@ -1,3 +1,4 @@
+from django.db.models import Count, Q
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import authenticate, login, logout
@@ -12,7 +13,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
 
-from .utils import get_client_ip, get_location_from_ip, save_user_location
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+from .utils import notify_support_of_unread, get_client_ip, get_location_from_ip, save_user_location
 
 INITIAL_OPTIONS = [
     "Payment Failure",
@@ -95,7 +99,8 @@ class MarkSupportRequestView(View):
             user=user,
             message="User requested support",
             sender="user",
-            requested_for_support=True
+            requested_for_support=True,
+            has_read=True
         )
         return JsonResponse({"status": "marked"})
 
@@ -105,19 +110,38 @@ class SaveChatMessageView(LoginRequiredMixin, View):
         data = json.loads(request.body.decode('utf-8'))
         message = data.get('message')
         sender = data.get('sender')
+        has_read = data.get('is_read')
+        user_id = data.get('user_id')
 
         if message and sender:
             # first save IP address of the user
-            save_user_location(request, request.user)
+            # save_user_location(request, request.user)
             # then save chat data of the user
-            ChatMessage.objects.create(
+            chat = ChatMessage.objects.create(
                 user=request.user,
                 message=message,
-                sender=sender
+                sender=sender,
+                has_read=has_read
             )
+
+            # for updating user list on support dashboard
+            # notify_support_of_unread(request.user.id)
+            
             return JsonResponse({'status': 'success'})
         return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
 
+
+class MarkAsRead(LoginRequiredMixin, View):
+
+    def post(self, request, user_id):
+
+        ChatMessage.objects.filter(
+            user_id=user_id,
+            sender='user',
+            has_read=False
+        ).update(has_read=True, read_at=timezone.now())
+
+        return JsonResponse({'status': 'ok'})
 
 class SupportDashboardView(View):
 
@@ -127,7 +151,9 @@ class SupportDashboardView(View):
             sender='user',  
             requested_for_support=True
         ).values('user').distinct()
-        user_objs = User.objects.filter(id__in=[u['user'] for u in users])
+        user_objs = User.objects.filter(id__in=[u['user'] for u in users]).annotate(
+            unread_count=Count('user_messages', filter=Q(user_messages__sender='user', user_messages__has_read=False))
+        )
         user_data = []
         for user in user_objs:
             try:

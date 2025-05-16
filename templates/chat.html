@@ -36,8 +36,8 @@
         }
 
         .user-message {
-            background-color: #007bff;
-            color: white;
+            background-color: #c6f8f1c2;
+            color: black;
             align-self: flex-end;
             text-align: right;
             /* width: 90%; */          /*Occupy 90% width */
@@ -82,11 +82,14 @@
     
         <!-- Input field and Send button will be added dynamically by JS inside this -->
         <div id="input-wrapper" class="p-2 border-top bg-white"></div>
-      </div>
+    </div>
+
+
     <script>
         const currentUsername = "{{ request.user.username|escapejs }}";
         const currentUserId = "{{ request.user.id }}";
-      </script>
+    </script>
     <script src="{% static 'js/chat.js' %}"></script>
+
 </body>
 </html>
