@@ -76,7 +76,7 @@
             padding: 10px; 
         }
         .unread-indicator {
-            background-color: #87d325;
+            background-color: #5b8f17b0;
             color: white;
             font-weight: bold;
             border-radius: 50%;
@@ -332,14 +332,19 @@
                 const data = JSON.parse(e.data); 
 
                 if (data.type === 'new_support_thread') {
-                    const isCurrentUserOpen = selectedUserId === data.user.id;
-
+                    const isCurrentUserOpen = Number(selectedUserId) === Number(data.user.id);
                     if (!isCurrentUserOpen) {
                         // Only update unread count if this user is NOT currently being viewed
                         addOrUpdateUser(data.user);
                     }else{
-                        // if current user sends a msg, and that user is already opened on support dashboard to chat, then mark that msg as read
+                        // if current user sends a msg, and that user is already opened on support dashboard to chat, then 
+                        // 1. mark that msg as read
                         markMessagesAsRead(data.user.id);
+                        // 2. Remove unread indicator bubble
+                        const indicator = document.getElementById(`user-indicator-${data.user.id}`);
+                        if (indicator) {
+                            indicator.classList.remove('unread-indicator');
+                        }
                     }
                     
                 }
@@ -385,6 +390,7 @@
                 const indicator = document.getElementById(`user-indicator-${user.id}`);
                 if (indicator) {
                     // let currentCount = parseInt(indicator.textContent || '0', 10);
+                    indicator.className = "unread-indicator";
                     indicator.textContent = user.unread_count || 1;
                     indicator.style.display = 'inline-block';
                 }
