@@ -48,7 +48,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         
         # Save message to DB
         chat = await self.save_message(thread, user, message, sender)#, support_agent)
-        
+        timestamp = chat.timestamp.strftime('%d/%m/%Y %I:%M %p')
+
         # Broadcast message to all clients in the room
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -56,7 +57,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message', # triggers a method called chat_message()
                 'message': message,
                 'sender': sender,  # Assuming user is authenticated
-                'username': user.username
+                'username': user.username,
+                'timestamp': timestamp
             }
         )
 
@@ -88,7 +90,9 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                         'mobile': getattr(chat.user, 'mobile', ''),
                         'lat': getattr(chat.user, 'lat', ''),
                         'lng': getattr(chat.user, 'lng', ''),
-                        "unread_count": unread_count
+                        "unread_count": unread_count,
+                        "timestamp": timestamp,
+                        "message": message,
                     }
                 }
             )
@@ -109,12 +113,14 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         message = event['message']
         sender = event['sender']
         username = event['username']
+        timestamp = event['timestamp']
 
         # Send message to WebSocket: Sends message back to all connected clients in that room using .send()
         await self.send(text_data=json.dumps({
             'message': message,
             'sender': sender,
-            'username': username
+            'username': username,
+            'timestamp': timestamp
         }))
 
     @database_sync_to_async

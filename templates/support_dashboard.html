@@ -16,6 +16,9 @@
             border-right: 1px solid #ccc; 
             overflow-y: auto; 
         }
+        .user:hover {
+            background-color: #f9f9f9;
+        }
         #chat-area { 
             flex: 1; 
             padding: 10px; 
@@ -29,10 +32,57 @@
             padding: 8px 12px; 
             margin: 5px;
         }
-        .user { 
-            padding: 10px; 
-            cursor: pointer; 
-            border-bottom: 1px solid #ddd; 
+        .user {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .user-header,
+        .user-body {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e1e1e;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .last-message {
+            font-size: 14px;
+            color: #555;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80%;
+        }
+
+        .unread-count {
+            font-size: 12px;
+            text-align: center;
+            margin-left: 8px;
+        }
+
+        .unread-indicator {
+            background-color: #179746c9;
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            padding: 4px 8px;
+            font-size: 12px;
+            min-width: 20px;
+            text-align: center;
         }
         .message { 
             padding: 8px 12px; 
@@ -75,18 +125,7 @@
         button { 
             padding: 10px; 
         }
-        .unread-indicator {
-            background-color: #5b8f17b0;
-            color: white;
-            font-weight: bold;
-            border-radius: 50%;
-            padding: 4px 8px;
-            margin-left: 10px;
-            font-size: 12px;
-            min-width: 20px;
-            text-align: center;
-            display: inline-block;
-        }
+        
     </style>
     <script 
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSj9JpJ1vEAR0HhTCXjupjzsJk3Z0E6TM&libraries=marker"
@@ -108,12 +147,24 @@
                     data-user-email="{{ user.email }}"
                     data-user-lat="{{ user.lat }}"
                     data-user-lng="{{ user.lng }}">
-                    <span class="username">{{ user.username }}</span> <!--{{ user.timestamp|date:"d/m/y h:i A" }}-->
-                    <span id="user-indicator-{{user.id}}" class="{% if user.unread_count > 0 %}unread-indicator{% endif %}">
-                        {% if user.unread_count > 0 %}
-                            {{ user.unread_count }}
-                        {% endif %}
-                    </span>
+                    <!-- Top Row: Username and Timestamp -->
+                    <div class="user-row user-header">
+                        <span class="username">{{ user.username }}</span>
+                        <span class="timestamp">{{ user.latest_timestamp|date:"d/m/y h:i A" }}</span>
+                    </div>
+
+                    <!-- Bottom Row: Last Message and Unread Bubble -->
+                    <div class="user-row user-body">
+                        <span class="last-message">
+                            {{ user.latest_message|default:"No messages yet" |truncatechars:30 }}
+                        </span>
+                        <span id="user-indicator-{{user.id}}" class="unread-count {% if user.unread_count > 0 %}unread-indicator{% endif %}">
+                            {% if user.unread_count > 0 %}
+                                {{ user.unread_count }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    
                 </div>
             {% endfor %}
         {% else %}
@@ -412,8 +463,20 @@
 
                 // Set inner HTML
                 userDiv.innerHTML = `
-                    <span class="username">${user.username}</span>
-                    <span id="user-indicator-${user.id}" class="unread-indicator">${user.unread_count}</span>
+                    <!-- Top Row: Username and Timestamp -->
+                    <div class="user-row user-header">
+                        <span class="username">${user.username}</span>
+                        <span class="timestamp">${user.timestamp || ''}</span>
+                    </div>
+                    <!-- Bottom Row: Last Message and Unread Bubble -->
+                    <div class="user-row user-body">
+                        <span class="last-message">
+                            ${user.message ? user.message.slice(0, 30) : 'No messages yet'}
+                        </span>
+                        <span id="user-indicator-${user.id}" class="unread-count ${user.unread_count > 0 ? 'unread-indicator' : ''}">
+                            ${user.unread_count > 0 ? user.unread_count : ''}
+                        </span>
+                    </div>
                 `;
                 // Add click event for a particular user's chat
                 userDiv.addEventListener('click', () => {

@@ -3,7 +3,9 @@ from django.contrib.auth.models import User
 
 # TODO : UserProfile
 # class UserProfile(User):
-#     pass
+    # doi = models.CharField()
+    # mobile = models.PositiveIntegerField()
+
 
 class ChatThread(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_threads')

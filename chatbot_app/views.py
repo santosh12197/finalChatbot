@@ -1,4 +1,4 @@
-from django.db.models import Count, Q
+from django.db.models import Count, Q, OuterRef, Subquery
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import authenticate, login, logout
@@ -146,14 +146,30 @@ class MarkAsRead(LoginRequiredMixin, View):
 class SupportDashboardView(View):
 
     def get(self, request):
-        # Get unique users who requested support
+        # Get users who requested support
         users = ChatMessage.objects.filter(
             sender='user',  
             requested_for_support=True
         ).values('user').distinct()
-        user_objs = User.objects.filter(id__in=[u['user'] for u in users]).annotate(
-            unread_count=Count('user_messages', filter=Q(user_messages__sender='user', user_messages__has_read=False))
+
+        user_ids = [u['user'] for u in users]
+
+        # Subqueries to fetch latest message timestamp and message
+        latest_msg_subquery = ChatMessage.objects.filter(
+            user=OuterRef('pk'),
+            sender='user',
+            requested_for_support=True
+        ).order_by('-timestamp')
+
+        user_objs = User.objects.filter(id__in=user_ids).annotate(
+            unread_count=Count(
+                'user_messages',
+                filter=Q(user_messages__sender='user', user_messages__has_read=False)
+            ),
+            latest_message=Subquery(latest_msg_subquery.values('message')[:1]),
+            latest_timestamp=Subquery(latest_msg_subquery.values('timestamp')[:1])
         )
+
         user_data = []
         for user in user_objs:
             try:
@@ -162,19 +178,25 @@ class SupportDashboardView(View):
                     "id": user.id,
                     "username": user.username,
                     "lat": loc.latitude,
-                    "lng": loc.longitude
+                    "lng": loc.longitude,
+                    "latest_message": user.latest_message,
+                    "latest_timestamp": user.latest_timestamp,
+                    "unread_count": user.unread_count,
                 })
             except UserLocation.DoesNotExist:
                 user_data.append({
                     "id": user.id,
                     "username": user.username,
                     "lat": None,
-                    "lng": None
+                    "lng": None,
+                    "latest_message": user.latest_message,
+                    "latest_timestamp": user.latest_timestamp,
+                    "unread_count": user.unread_count,
                 })
 
         context = {
-            'users': user_objs,
-            "user_data": user_data
+            'users': user_data,
+            # "user_data": user_data
         }
         template_name = 'support_dashboard.html'
 
