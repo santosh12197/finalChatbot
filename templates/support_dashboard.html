@@ -149,8 +149,8 @@
                     data-user-lng="{{ user.lng }}">
                     <!-- Top Row: Username and Timestamp -->
                     <div class="user-row user-header">
-                        <span class="username">{{ user.username }}</span>
-                        <span class="timestamp">{{ user.latest_timestamp|date:"d/m/y h:i A" }}</span>
+                        <span class="username" id="username-{{user.id}}">{{ user.username }}</span>
+                        <span class="timestamp" id="timestamp-{{user.id}}">{{ user.latest_timestamp|date:"d/m/y h:i A" }}</span>
                     </div>
 
                     <!-- Bottom Row: Last Message and Unread Bubble -->
@@ -384,6 +384,10 @@
 
                 if (data.type === 'new_support_thread') {
                     const isCurrentUserOpen = Number(selectedUserId) === Number(data.user.id);
+
+                    // Update latest message and timestamp
+                    updateLastMessageAndTimestamp(data.user);
+
                     if (!isCurrentUserOpen) {
                         // Only update unread count if this user is NOT currently being viewed
                         addOrUpdateUser(data.user);
@@ -465,12 +469,12 @@
                 userDiv.innerHTML = `
                     <!-- Top Row: Username and Timestamp -->
                     <div class="user-row user-header">
-                        <span class="username">${user.username}</span>
-                        <span class="timestamp">${user.timestamp || ''}</span>
+                        <span class="username" id="username-${user.id}">${user.username}</span>
+                        <span class="timestamp" id="timestamp-${user.id}">${user.timestamp || ''}</span>
                     </div>
                     <!-- Bottom Row: Last Message and Unread Bubble -->
                     <div class="user-row user-body">
-                        <span class="last-message">
+                        <span class="last-message" id="message-${user.id}">
                             ${user.message ? user.message.slice(0, 30) : 'No messages yet'}
                         </span>
                         <span id="user-indicator-${user.id}" class="unread-count ${user.unread_count > 0 ? 'unread-indicator' : ''}">
@@ -510,6 +514,29 @@
             }
         }
 
+        function updateLastMessageAndTimestamp(user) {
+            let userElement = document.getElementById(`user-${user.id}`);
+
+            if (!userElement) {
+                // User block doesn't exist, create it
+                addOrUpdateUser(user);
+                userElement = document.getElementById(`user-${user.id}`);
+            }
+
+            if (!userElement) return; // Still not found, abort
+
+            // Update last message
+            const messageSpan = userElement.querySelector('.last-message');
+            if (messageSpan) {
+                messageSpan.textContent = user.message ? user.message.slice(0, 30) : 'No messages yet';
+            }
+
+            // Update timestamp
+            const timestampSpan = document.getElementById(`timestamp-${user.id}`);
+            if (timestampSpan) {
+                timestampSpan.textContent = user.timestamp || '';
+            }
+        }
 
 
         // Reconnect-safe startup

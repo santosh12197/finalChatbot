@@ -156,7 +156,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             user=user,
             message=message,
             sender=sender,
-            has_read=False,  
+            has_read=False,
+            requested_for_support=True,  
             # support_agent=support_agent if sender == 'support' else None
         )
         return chat

@@ -94,15 +94,22 @@ class MarkSupportRequestView(View):
         data = json.loads(request.body)
         user = request.user
 
-        # Update the latest ChatMessage with requested_for_support=True
-        ChatMessage.objects.create(
-            user=user,
-            message="User requested support",
-            sender="user",
+        # get all the chat data for the user, and update requested_for_support as True
+        ChatMessage.objects.filter(
+            user=user, 
+            # sender="user"
+        ).update(
             requested_for_support=True,
             has_read=True
         )
-        return JsonResponse({"status": "marked"})
+        # ChatMessage.objects.create(
+        #     user=user,
+        #     message="User requested support",
+        #     sender="user",
+        #     requested_for_support=True,
+        #     has_read=True
+        # )
+        return JsonResponse({"status": f"User {user} successfully marked as requested for support!"})
 
 
 class SaveChatMessageView(LoginRequiredMixin, View):
@@ -112,6 +119,7 @@ class SaveChatMessageView(LoginRequiredMixin, View):
         sender = data.get('sender')
         has_read = data.get('is_read')
         user_id = data.get('user_id')
+        requested_for_support = data.get('requested_for_support', False)
 
         if message and sender:
             # first save IP address of the user
@@ -121,6 +129,7 @@ class SaveChatMessageView(LoginRequiredMixin, View):
                 user=request.user,
                 message=message,
                 sender=sender,
+                requested_for_support=requested_for_support,
                 has_read=has_read
             )
 
