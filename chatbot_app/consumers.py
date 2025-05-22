@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from channels.db import database_sync_to_async
 from django.db.models import Count
 import json
+from zoneinfo import ZoneInfo
 
 from .models import ChatMessage, ChatThread
 User = get_user_model()
@@ -48,7 +49,11 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         
         # Save message to DB
         chat = await self.save_message(thread, user, message, sender)#, support_agent)
-        timestamp = chat.timestamp.strftime('%d/%m/%Y %I:%M %p')
+        
+        # Convert from utc to IST, since timestamp is stored in utc format in db
+        chat_time_ist = chat.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))
+        # Format as desired
+        timestamp = chat_time_ist.strftime('%d/%m/%Y %I:%M %p')
 
         # Broadcast message to all clients in the room
         await self.channel_layer.group_send(

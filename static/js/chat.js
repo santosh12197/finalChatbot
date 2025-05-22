@@ -42,9 +42,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         Object.keys(options).forEach(option => {
             const btn = document.createElement("button");
-            btn.className = "btn btn-outline-primary  option-button btn-custom-grey";
+            btn.className = "btn btn-outline-primary option-button btn-custom-grey";
             btn.textContent = option;
+
+            // Create a timestamp span
+            const timestampSpan = document.createElement("span");
+            timestampSpan.className = "option-timestamp";
+            timestampSpan.textContent = getCurrentFormattedTimestamp();
+
+            // Add click event
             btn.addEventListener("click", () => handleOptionClick(option, options[option]));
+
+            // Append the timestamp inside the button
+            btn.appendChild(timestampSpan);
+
             wrapper.appendChild(btn);
         });
 
@@ -52,9 +63,10 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollToBottom();
     }
 
+
     function handleOptionClick(label, next) {
         // show the selected option by the user
-        appendMessage(label, 'user');
+        appendMessage(label, 'user', getCurrentFormattedTimestamp());
 
         // save the key of the botTree selected by user in the table
         saveMessageToDB(label, 'user', is_read=true, requested_for_support=false);
@@ -63,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof next === 'string') {
             // meaning that we are at the leaf of the botTree
             // display message, save to db, and then ask for satisfaction check
-            appendMessage(next, 'bot');
+            appendMessage(next, 'bot', getCurrentFormattedTimestamp());
             saveMessageToDB(next, 'bot', is_read=true, requested_for_support=false);
 
             // check user is satisfied by the response or not only at the leaf of the tree
@@ -82,20 +94,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const wrapper = document.createElement("div");
         wrapper.className = "message-wrapper";
 
-        appendMessage("Are you satisfied with the answer?", 'bot');
+        appendMessage("Are you satisfied with the answer?", 'bot', getCurrentFormattedTimestamp());
         saveMessageToDB("Are you satisfied with the answer?\n Yes, I am satisfied \n No, Connect with the Support Team", "bot", is_read=true, requested_for_support=false); 
 
         const yesBtn = document.createElement("button");
         yesBtn.className = "btn btn-success option-button";
         yesBtn.textContent = "Yes, I'm satisfied";
         yesBtn.onclick = () => {
-            appendMessage("Yes, I'm satisfied", "user"); // Show user reply
+            appendMessage("Yes, I'm satisfied", "user", getCurrentFormattedTimestamp()); // Show user reply
             saveMessageToDB("Yes, I'm satisfied", "user", is_read=true, requested_for_support=false); // saving chat data for the user
             
-            appendMessage("Thank you for connecting with SciPris Aptara.", "bot"); // Bot reply
+            appendMessage("Thank you for connecting with SciPris Aptara.", "bot", getCurrentFormattedTimestamp()); // Bot reply
             saveMessageToDB("Thank you for connecting with SciPris Aptara.; \n Hi! How can I help you today?; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries", "bot", is_read=true, requested_for_support=false); // saving to db
             
-            appendMessage("Hi! How can I help you today?", "bot");
+            appendMessage("Hi! How can I help you today?", "bot", getCurrentFormattedTimestamp());
             renderOptions(botTree); // Restart options
         };
 
@@ -105,11 +117,11 @@ document.addEventListener("DOMContentLoaded", () => {
         supportBtn.className = "btn btn-warning option-button";
         supportBtn.textContent = "No, Connect with the Support Team";
         supportBtn.onclick = () => {
-            appendMessage("No, Connect with Support Team", "user"); // Show user reply
+            appendMessage("No, Connect with Support Team", "user", getCurrentFormattedTimestamp()); // Show user reply
             saveMessageToDB("No, Connect with Support Team", "user", is_read=true, requested_for_support=true); // saving user
 
-            appendMessage("Connecting you to our support team...", "bot"); 
-            appendMessage("Successfully connected with the support team", "bot"); 
+            appendMessage("Connecting you to our support team...", "bot", getCurrentFormattedTimestamp()); 
+            appendMessage("Successfully connected with the support team", "bot", getCurrentFormattedTimestamp()); 
             saveMessageToDB("Connecting you to our support team...;\n Successfully connected with the support team", "bot", is_read=true, requested_for_support=true); // saving bot
 
             // connecting with the support team
@@ -165,8 +177,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // msg received from the backend by the frontend
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            if (data.message) {
-                appendMessage(data.message, data.sender);
+            if (data.message && data.timestamp) {
+                appendMessage(data.message,  data.sender, data.timestamp);
                 // saveMessageToDB(data.message, sender);
                 scrollToBottom();
             }
@@ -194,17 +206,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
 
-    function appendMessage(text, sender) {
+    function appendMessage(text, sender, timestampStr) {
+        const messageWrapper = document.createElement("div");
+        messageWrapper.classList.add("message-wrapper");
+
         const message = document.createElement("div");
+        const messageText = document.createElement("div");
+        const timestamp = document.createElement("div");
+
+        // Apply classes
+        messageText.className = "message-text";
+        timestamp.className = "timestamp";
+
+        // Set text and timestamp
+        messageText.textContent = text;
+        timestamp.textContent = timestampStr;
+
+        // Style based on sender
         if (sender === 'bot') {
-            message.className = 'bot-message align-self-start';
+            message.className = 'bot-message align-self-start message-bubble';
         } else if (sender === 'support') {
-            message.className = 'support-message align-self-start';
+            message.className = 'support-message align-self-start message-bubble';
         } else {
-            message.className = 'user-message align-self-end';
+            message.className = 'user-message align-self-end message-bubble';
         }
-        message.textContent = text;
-        chatContainer.appendChild(message);
+
+        // Append text and timestamp inside the message bubble
+        message.appendChild(messageText);
+        message.appendChild(timestamp);
+        messageWrapper.appendChild(message);
+        chatContainer.appendChild(messageWrapper);
     }
 
     function scrollToBottom() {
@@ -235,8 +266,25 @@ document.addEventListener("DOMContentLoaded", () => {
             ?.split('=')[1];
     }
     
+    function getCurrentFormattedTimestamp() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+
+        let hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+
+        const hourStr = String(hours).padStart(2, '0');
+
+        return `${day}/${month}/${year} ${hourStr}:${minutes} ${ampm}`;
+    }
 
     // Initial message
-    appendMessage("Hi! How can I help you today?", "bot");
+    appendMessage("Hi! How can I help you today?", "bot", getCurrentFormattedTimestamp());
     renderOptions(botTree);
 });

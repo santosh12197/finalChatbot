@@ -54,8 +54,9 @@
 
         .timestamp {
             font-size: 12px;
-            color: #999;
+            color: #555;
             margin-left: 10px;
+            align-self: flex-end;
             white-space: nowrap;
         }
 
@@ -84,11 +85,21 @@
             min-width: 20px;
             text-align: center;
         }
-        .message { 
-            padding: 8px 12px; 
-            margin: 5px; 
-            border-radius: 10px; 
-            max-width: 70%; 
+        .message {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 10px;
+            max-width: 70%;
+            position: relative;
+            word-wrap: break-word;
+        }
+        .message-timestamp{
+            font-size: 12px;
+            color: #110606ad;
+            text-align: right;
+            margin-top: 4px;
         }
         .user-msg { 
             background-color: #f1f1f1; 
@@ -150,13 +161,13 @@
                     <!-- Top Row: Username and Timestamp -->
                     <div class="user-row user-header">
                         <span class="username" id="username-{{user.id}}">{{ user.username }}</span>
-                        <span class="timestamp" id="timestamp-{{user.id}}">{{ user.latest_timestamp|date:"d/m/y h:i A" }}</span>
+                        <span class="timestamp" id="timestamp-{{user.id}}">{{ user.latest_timestamp }}</span>
                     </div>
 
                     <!-- Bottom Row: Last Message and Unread Bubble -->
                     <div class="user-row user-body">
                         <span class="last-message">
-                            {{ user.latest_message|default:"No messages yet" |truncatechars:30 }}
+                            {{ user.latest_message|slice:":30" }}{% if user.latest_message|length > 30 %}...{% endif %}
                         </span>
                         <span id="user-indicator-{{user.id}}" class="unread-count {% if user.unread_count > 0 %}unread-indicator{% endif %}">
                             {% if user.unread_count > 0 %}
@@ -240,12 +251,26 @@
             .then(data => {
                 const chatBox = document.getElementById('chat-messages');
                 chatBox.innerHTML = '';
+
                 data.forEach(msg => {
-                    const msgDiv = document.createElement('div');
-                    msgDiv.classList.add('message', msg.sender === 'support' ? 'support-msg' : 'user-msg');
-                    msgDiv.textContent = msg.message;
-                    chatBox.appendChild(msgDiv);
+                    const msgWrapper = document.createElement('div');
+                    msgWrapper.classList.add('message', msg.sender === 'support' ? 'support-msg' : 'user-msg');
+
+                    // Create message text element
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = msg.message;
+
+                    // Create timestamp element
+                    const timestampSpan = document.createElement('span');
+                    timestampSpan.classList.add('timestamp');
+                    timestampSpan.textContent = msg.timestamp;
+
+                    // Append message and timestamp to wrapper
+                    msgWrapper.appendChild(textSpan);
+                    msgWrapper.appendChild(timestampSpan);
+                    chatBox.appendChild(msgWrapper);
                 });
+
                 document.getElementById('message-input').style.display = 'flex';
                 connectWebSocket(userId);
                 scrollToBottom();
@@ -263,13 +288,27 @@
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
                 const chatBox = document.getElementById('chat-messages');
-                const msgDiv = document.createElement('div');
-                msgDiv.classList.add('message');
-                msgDiv.classList.add(data.sender === 'support' ? 'support-msg' : 'user-msg');
-                msgDiv.textContent = data.message;
-                // msg has already been saved in receive() method inside consumers.py, so no neeed to save here again! only display the msg here
 
-                chatBox.appendChild(msgDiv);
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(data.sender === 'support' ? 'support-msg' : 'user-msg');
+
+                // Create a span for the actual message text
+                const messageText = document.createElement('div');
+                messageText.classList.add('message-text');
+                messageText.textContent = data.message;
+
+                // Create a span for the timestamp
+                const timestamp = document.createElement('span');
+                timestamp.classList.add('message-timestamp');
+                timestamp.textContent = data.timestamp || '';
+
+                // Append text and timestamp to the message
+                messageDiv.appendChild(messageText);
+                messageDiv.appendChild(timestamp);
+
+                chatBox.appendChild(messageDiv);
+
                 scrollToBottom();
             };
 
@@ -528,7 +567,14 @@
             // Update last message
             const messageSpan = userElement.querySelector('.last-message');
             if (messageSpan) {
-                messageSpan.textContent = user.message ? user.message.slice(0, 30) : 'No messages yet';
+                if (user.message) {
+                    const trimmedMsg = user.message.length > 30 
+                        ? user.message.slice(0, 30) + '...' 
+                        : user.message;
+                    messageSpan.textContent = trimmedMsg;
+                } else {
+                    messageSpan.textContent = 'No messages yet';
+                }
             }
 
             // Update timestamp

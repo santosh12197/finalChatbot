@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 import requests
+
 from .models import ChatMessage, UserLocation
 from django.utils import timezone
 from datetime import date
@@ -12,6 +13,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
+from zoneinfo import ZoneInfo
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -179,29 +181,31 @@ class SupportDashboardView(View):
             latest_timestamp=Subquery(latest_msg_subquery.values('timestamp')[:1])
         )
 
+        ist = ZoneInfo("Asia/Kolkata")
         user_data = []
+
         for user in user_objs:
             try:
                 loc = UserLocation.objects.get(user=user)
-                user_data.append({
-                    "id": user.id,
-                    "username": user.username,
-                    "lat": loc.latitude,
-                    "lng": loc.longitude,
-                    "latest_message": user.latest_message,
-                    "latest_timestamp": user.latest_timestamp,
-                    "unread_count": user.unread_count,
-                })
             except UserLocation.DoesNotExist:
-                user_data.append({
-                    "id": user.id,
-                    "username": user.username,
-                    "lat": None,
-                    "lng": None,
-                    "latest_message": user.latest_message,
-                    "latest_timestamp": user.latest_timestamp,
-                    "unread_count": user.unread_count,
-                })
+                loc = None
+            
+            # Convert UTC to IST safely (only if timestamp exists)
+            if user.latest_timestamp:
+                ist_timestamp = user.latest_timestamp.astimezone(ist)
+                formatted_timestamp = ist_timestamp.strftime('%d/%m/%Y %I:%M %p')
+            else:
+                formatted_timestamp = None
+
+            user_data.append({
+                "id": user.id,
+                "username": user.username,
+                "lat": loc.latitude if loc else None,
+                "lng": loc.longitude if loc else None,
+                "latest_message": user.latest_message,
+                "latest_timestamp": formatted_timestamp,
+                "unread_count": user.unread_count,
+            })
 
         context = {
             'users': user_data,
@@ -220,7 +224,7 @@ class GetChatHistoryView(View):
             {
                 'sender': msg.sender,
                 'message': msg.message,
-                'timestamp': msg.timestamp.strftime("%H:%M")
+                'timestamp': msg.timestamp.astimezone(ZoneInfo('Asia/Kolkata')).strftime("%d/%m/%Y %I:%M %p") # first convert timezone for UTC to IST timezone 
             }
             for msg in chats
         ]
