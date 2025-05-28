@@ -95,6 +95,7 @@
             position: relative;
             word-wrap: break-word;
         }
+
         .message-timestamp{
             font-size: 12px;
             color: #110606ad;
@@ -112,7 +113,7 @@
             background-color: #c6f8f1fd;
             color:black; 
             align-self: flex-end; 
-            text-align: right;
+            text-align: left;
             max-width: 90%;
             width: fit-content;
         }
@@ -247,34 +248,52 @@
 
         function loadChatHistory(userId) {
             fetch(`/get_chat_history/${userId}/`)
-            .then(res => res.json())
-            .then(data => {
-                const chatBox = document.getElementById('chat-messages');
-                chatBox.innerHTML = '';
+                .then(res => res.json())
+                .then(data => {
+                    const chatBox = document.getElementById('chat-messages');
+                    chatBox.innerHTML = '';
 
-                data.forEach(msg => {
-                    const msgWrapper = document.createElement('div');
-                    msgWrapper.classList.add('message', msg.sender === 'support' ? 'support-msg' : 'user-msg');
+                    data.forEach(msg => {
+                        const msgWrapper = document.createElement('div');
+                        msgWrapper.classList.add('message');
 
-                    // Create message text element
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = msg.message;
+                        // Determine alignment based on sender
+                        if (msg.sender === 'user') {
+                            msgWrapper.classList.add('user-msg');
+                        } else {
+                            msgWrapper.classList.add('support-msg');
+                        }
 
-                    // Create timestamp element
-                    const timestampSpan = document.createElement('span');
-                    timestampSpan.classList.add('timestamp');
-                    timestampSpan.textContent = msg.timestamp;
+                        // Create message text element
+                        const textSpan = document.createElement('span');
 
-                    // Append message and timestamp to wrapper
-                    msgWrapper.appendChild(textSpan);
-                    msgWrapper.appendChild(timestampSpan);
-                    chatBox.appendChild(msgWrapper);
+                        if (msg.sender === 'bot') {
+                            // Create bold prefix
+                            const botPrefix = document.createElement('strong');
+                            botPrefix.textContent = 'Bot: ';
+                            textSpan.appendChild(botPrefix);
+
+                            // Add message text after prefix
+                            textSpan.append(msg.message);
+                        } else {
+                            textSpan.textContent = msg.message;
+                        }
+
+                        // Create timestamp element
+                        const timestampSpan = document.createElement('span');
+                        timestampSpan.classList.add('timestamp');
+                        timestampSpan.textContent = msg.timestamp;
+
+                        // Append message and timestamp to wrapper
+                        msgWrapper.appendChild(textSpan);
+                        msgWrapper.appendChild(timestampSpan);
+                        chatBox.appendChild(msgWrapper);
+                    });
+
+                    document.getElementById('message-input').style.display = 'flex';
+                    connectWebSocket(userId);
+                    scrollToBottom();
                 });
-
-                document.getElementById('message-input').style.display = 'flex';
-                connectWebSocket(userId);
-                scrollToBottom();
-            });
         }
 
         function connectWebSocket(userId) {
