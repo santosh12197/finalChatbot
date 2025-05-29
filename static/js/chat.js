@@ -4,11 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const botTree = {
         "Payment Failure": {
             "Card Payment Failure": {
-                "Master Card": "Thank you for connecting. You can try again.",
-                "Visa Card": "Thank you for connecting. You can try again.",
+                "Master Card": "Thank you for connecting. You can try again with Master Card.",
+                "Visa Card": "Thank you for connecting. You can try again. You can try again with Visa Card.",
                 "Other Card": "We only use Visa or Master card for payment. Please use these cards only."
             },
-            "Bank Transfer Failure": "Thank you for connecting. You can try again."
+            "Bank Transfer Failure": "Thank you for connecting. Pls try again."
         },
         "Refund Issues": {
             "Refund Status": "Your refund is being processed.",
@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     let conversationPath = []; // Tracks current path in the botTree
-    let chatSocket; // Declare it globally to be accessible in send/receive.
+    let chatSocket; // Declare it globally to be accessible in send/receive. 
 
     function renderOptions(options) {
         const wrapper = document.createElement("div");
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
             timestampSpan.textContent = getCurrentFormattedTimestamp();
 
             // Add click event
-            btn.addEventListener("click", () => handleOptionClick(option, options[option]));
+            btn.addEventListener("click", async () => await handleOptionClick(option, options[option]));
 
             // Append the timestamp inside the button
             btn.appendChild(timestampSpan);
@@ -64,50 +64,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function handleOptionClick(label, next) {
+    async function handleOptionClick(label, next) {
         // show the selected option by the user
         appendMessage(label, 'user', getCurrentFormattedTimestamp());
 
-        // save the key of the botTree selected by user in the table
-        saveMessageToDB(label, 'user', is_read=true, requested_for_support=false);
+        // save the key of the botTree selected by user in the table sequentially
+        await saveMessageToDB(label, 'user', is_read=true, requested_for_support=false);
 
         // display and save other options by the bot
         if (typeof next === 'string') {
             // meaning that we are at the leaf of the botTree
             // display message, save to db, and then ask for satisfaction check
             appendMessage(next, 'bot', getCurrentFormattedTimestamp());
-            saveMessageToDB(next, 'bot', is_read=true, requested_for_support=false);
+            await saveMessageToDB(next, 'bot', is_read=true, requested_for_support=false);
 
             // check user is satisfied by the response or not only at the leaf of the tree
-            showSatisfactionOptions();
+            // Ask for satisfaction only after bot response saved
+            await showSatisfactionOptions();
         } else {
             // meaning that we are not at the leaf of the botTree
             // first save key to db, and then call renderOptions() method so that we will reach till leaf of the botTree
             const keyList = Object.keys(next).join('; ');
-            saveMessageToDB(keyList, 'bot', is_read=true, requested_for_support=false);
+            await saveMessageToDB(keyList, 'bot', is_read=true, requested_for_support=false);
             renderOptions(next);
         }
         scrollToBottom();
     }
 
-    function showSatisfactionOptions() {
+    async function showSatisfactionOptions() {
         const wrapper = document.createElement("div");
         wrapper.className = "message-wrapper";
 
+        const question = "Are you satisfied with the answer?\n Yes, I'm satisfied. \n No, Connect with the Support Team";
         appendMessage("Are you satisfied with the answer?", 'bot', getCurrentFormattedTimestamp());
-        saveMessageToDB("Are you satisfied with the answer?\n Yes, I am satisfied \n No, Connect with the Support Team", "bot", is_read=true, requested_for_support=false); 
+        await saveMessageToDB(question, "bot", is_read=true, requested_for_support=false); 
 
         const yesBtn = document.createElement("button");
         yesBtn.className = "btn btn-success option-button";
-        yesBtn.textContent = "Yes, I'm satisfied";
-        yesBtn.onclick = () => {
+        yesBtn.textContent = "Yes, I'm satisfied.";
+        yesBtn.onclick = async () => {
             appendMessage("Yes, I'm satisfied", "user", getCurrentFormattedTimestamp()); // Show user reply
-            saveMessageToDB("Yes, I'm satisfied", "user", is_read=true, requested_for_support=false); // saving chat data for the user
+            await saveMessageToDB("Yes, I'm satisfied.", "user", is_read=true, requested_for_support=false); // saving chat data for the user
+
+            const thankYouMsg = "Thank you for connecting with SciPris Aptara.";
+            const greetMsg = "Hi! How can I help you today?";
+            const combined = `${thankYouMsg}; \n ${greetMsg}; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries`;
+
+            appendMessage(thankYouMsg, "bot", getCurrentFormattedTimestamp()); // Bot reply
+            await saveMessageToDB(combined, "bot", is_read=true, requested_for_support=false); // saving to db
             
-            appendMessage("Thank you for connecting with SciPris Aptara.", "bot", getCurrentFormattedTimestamp()); // Bot reply
-            saveMessageToDB("Thank you for connecting with SciPris Aptara.; \n Hi! How can I help you today?; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries", "bot", is_read=true, requested_for_support=false); // saving to db
-            
-            appendMessage("Hi! How can I help you today?", "bot", getCurrentFormattedTimestamp());
+            appendMessage(greetMsg, "bot", getCurrentFormattedTimestamp());
             renderOptions(botTree); // Restart options
         };
 
@@ -116,13 +122,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const supportBtn = document.createElement("button");
         supportBtn.className = "btn btn-warning option-button";
         supportBtn.textContent = "No, Connect with the Support Team";
-        supportBtn.onclick = () => {
+        supportBtn.onclick = async () => {
             appendMessage("No, Connect with Support Team", "user", getCurrentFormattedTimestamp()); // Show user reply
-            saveMessageToDB("No, Connect with Support Team", "user", is_read=true, requested_for_support=true); // saving user
+            await saveMessageToDB("No, Connect with Support Team", "user", is_read=true, requested_for_support=true); // saving user
 
+            const connectingMsg = "Connecting you to our support team...;\n Successfully connected with the support team";
             appendMessage("Connecting you to our support team...", "bot", getCurrentFormattedTimestamp()); 
             appendMessage("Successfully connected with the support team", "bot", getCurrentFormattedTimestamp()); 
-            saveMessageToDB("Connecting you to our support team...;\n Successfully connected with the support team", "bot", is_read=true, requested_for_support=true); // saving bot
+            await saveMessageToDB(connectingMsg, "bot", is_read=true, requested_for_support=true); // saving bot
 
             // connecting with the support team
             enableRealTimeChat();
@@ -243,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function saveMessageToDB(message, sender, is_read=false, requested_for_support=requested_for_support) {
-        fetch("/save_message/", {
+        return fetch("/save_message/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -284,7 +291,41 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${day}/${month}/${year} ${hourStr}:${minutes} ${ampm}`;
     }
 
-    // Initial message
-    appendMessage("Hi! How can I help you today?", "bot", getCurrentFormattedTimestamp());
-    renderOptions(botTree);
+    function greetUserWithBotTreeOptions(firstInteractionTimestamp) {
+        // First line: greeting
+        const greeting = "Hi! How can I help you today?";
+        appendMessage(greeting, "bot", firstInteractionTimestamp);
+
+        // Four lines: each top-level key of the botTree
+        Object.keys(botTree).forEach(key => {
+            appendMessage(`Bot: ${key}`, "bot", firstInteractionTimestamp);
+        });
+
+        scrollToBottom();
+    }
+
+    // On page load
+    // if user already has a support chat session, then load chat history and connect with support team for real chat
+    // otherwise, start a new chat with bot
+    fetch('/check_support_chat/')
+        .then(response => response.json())
+        .then(data => {
+            firstInteractionTimestamp = data.first_interaction_timestamp;
+            if (data.support_chat_exists) {
+                // first greeting lines and then options to start chat with the bot
+                greetUserWithBotTreeOptions(firstInteractionTimestamp);
+                // Load past support messages
+                data.messages.forEach(msg => {
+                    appendMessage(msg.message, msg.sender, msg.timestamp);
+                });
+
+                // Connect with the support team
+                enableRealTimeChat();
+            } else {
+                // Start chatbot normally
+                appendMessage("Hi! How can I help you today?", "bot", getCurrentFormattedTimestamp());
+                renderOptions(botTree);
+            }
+        });
+        
 });

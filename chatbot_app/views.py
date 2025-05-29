@@ -114,6 +114,49 @@ class MarkSupportRequestView(View):
         return JsonResponse({"status": f"User {user} successfully marked as requested for support!"})
 
 
+class CheckSupportChatView(LoginRequiredMixin, View):
+    """
+    This view checks if the current user already has support chat messages.
+    If yes, it returns them along with a flag indicating the chat should be resumed.
+    """
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        # Check if support chat exists for the current user
+
+        # Get the first interaction timestamp from the earliest message
+        first_msg = ChatMessage.objects.filter(user=user, requested_for_support=True).order_by('timestamp').first()
+
+        first_interaction_ist = None
+        if first_msg and first_msg.first_interaction_timestamp:
+            # Convert to IST for display
+            first_interaction_ist = (first_msg.first_interaction_timestamp.astimezone(ZoneInfo("Asia/Kolkata"))).strftime('%d/%m/%Y %I:%M %p')
+
+
+        # Find messages where requested_for_support is True
+        support_messages = ChatMessage.objects.filter(user=user, requested_for_support=True).order_by('timestamp')
+
+        if support_messages.exists():
+            # Prepare the past messages as a list of dicts for frontend
+            # Convert from utc to IST, since timestamp is stored in utc format in db
+            messages = [
+                {
+                    'message': msg.message,
+                    'sender': msg.sender,
+                    'timestamp': (msg.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))).strftime('%d/%m/%Y %I:%M %p'),
+                }
+                for msg in support_messages
+            ]
+    
+            return JsonResponse({
+                'support_chat_exists': True,
+                'messages': messages,
+                'first_interaction_timestamp': first_interaction_ist,
+            })
+        else:
+            # No support chat, start with the botTree flow
+            return JsonResponse({'support_chat_exists': False})
+
+
 class SaveChatMessageView(LoginRequiredMixin, View):
     def post(self, request):
         data = json.loads(request.body.decode('utf-8'))
@@ -122,6 +165,15 @@ class SaveChatMessageView(LoginRequiredMixin, View):
         has_read = data.get('is_read')
         user_id = data.get('user_id')
         requested_for_support = data.get('requested_for_support', False)
+
+        # Check if there is already a support chat message for this user
+        existing_messages = ChatMessage.objects.filter(user=request.user, requested_for_support=True).order_by('timestamp')
+        if not existing_messages.exists():
+            # If this is the first support chat, set the first interaction timestamp
+            first_interaction_timestamp = timezone.now()
+        else:
+            # Use the first interaction timestamp from the earliest message
+            first_interaction_timestamp = existing_messages.first().first_interaction_timestamp
 
         if message and sender:
             # first save IP address of the user
@@ -132,7 +184,8 @@ class SaveChatMessageView(LoginRequiredMixin, View):
                 message=message,
                 sender=sender,
                 requested_for_support=requested_for_support,
-                has_read=has_read
+                has_read=has_read,
+                first_interaction_timestamp=first_interaction_timestamp
             )
 
             # for updating user list on support dashboard

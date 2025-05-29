@@ -41,6 +41,8 @@ class ChatMessage(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     # whether user requested for support chat or not, default to False
     requested_for_support = models.BooleanField(default=False)
+    # Field for tracking the first interaction timestamp in a support session
+    first_interaction_timestamp = models.DateTimeField(null=True, blank=True)
     # whether msg sent is read or not
     has_read = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, UserLocationView
+from .views import CheckSupportChatView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, UserLocationView
 
 urlpatterns = [
     # login related
@@ -9,6 +9,7 @@ urlpatterns = [
     # user related
     path("", ChatView.as_view(), name="chat"),
     path('mark_support_request/', MarkSupportRequestView.as_view(), name='mark_support_request'),
+    path('check_support_chat/', CheckSupportChatView.as_view(), name='check_support_request'),
     path('save_message/', SaveChatMessageView.as_view(), name='save_message'),
     path('mark_as_read/<int:user_id>/', MarkAsRead.as_view(), name='mark_as_read'),
 
