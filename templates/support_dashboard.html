@@ -137,6 +137,13 @@
         button { 
             padding: 10px; 
         }
+        #selected-user{
+            height: 10%;
+            background-color: #f0f0f08f;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+        }
         
     </style>
     <script 
@@ -187,6 +194,10 @@
     </div>
 
     <div id="chat-area">
+        <div id="selected-user" style="display: none;">
+            <!-- This will be dynamically filled with the selected user's details -->
+            <span id="selected-user-name"></span>
+        </div>
         <div id="chat-messages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;"></div>
         <div id="message-input" style="display: none;">
             <input type="text" id="input-message" placeholder="Type your message...">
@@ -228,6 +239,7 @@
                 const lname = userDiv.dataset.userLastName;
                 const mobile = userDiv.dataset.userMobile;
                 const email = userDiv.dataset.userEmail;
+
                 // Displaying user details
                 document.getElementById("user-name").textContent = `Name: ${fname} ${lname}`;
                 document.getElementById("user-mobile").textContent = `Mobile: ${mobile}`;
@@ -242,6 +254,15 @@
                     indicator.textContent = '';
                     indicator.style.display = 'none';
                 }
+
+                // Update the selected user's name in the top div
+                const selectedUserName = document.getElementById("selected-user-name");
+                selectedUserName.textContent = `${fname} ${lname}`;
+                selectedUserName.setAttribute("data-user-id", selectedUserId);
+                // Show the div with 10% height
+                const selectedUserDiv = document.getElementById("selected-user");
+                selectedUserDiv.style.display = 'block';
+                selectedUserDiv.style.height = '10vh';
 
             });
         });
