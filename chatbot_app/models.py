@@ -9,13 +9,20 @@ from django.contrib.auth.models import User
 
 class ChatThread(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_threads')
-    # support_agent = models.ForeignKey(
-    #     User,
-    #     on_delete=models.SET_NULL,
-    #     related_name='assigned_threads',
-    #     null=True,
-    #     blank=True
-    # )
+    # Active support agent assigned to this thread
+    active_support_agent = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name='active_threads',
+        null=True,
+        blank=True
+    )
+    # Other support agents involved (view access, history)
+    support_agents = models.ManyToManyField(
+        User,
+        related_name='involved_threads',
+        blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)  # to track closed threads
