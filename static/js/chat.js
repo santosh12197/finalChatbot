@@ -50,8 +50,13 @@ document.addEventListener("DOMContentLoaded", () => {
             timestampSpan.className = "option-timestamp";
             timestampSpan.textContent = getCurrentFormattedTimestamp();
 
-            // Add click event
-            btn.addEventListener("click", async () => await handleOptionClick(option, options[option]));
+            btn.addEventListener("click", async () => {
+                // Disable all buttons when one is clicked
+                const allButtons = wrapper.querySelectorAll("button");
+                allButtons.forEach(button => button.disabled = true);
+
+                await handleOptionClick(option, options[option]);
+            });
 
             // Append the timestamp inside the button
             btn.appendChild(timestampSpan);
@@ -103,6 +108,10 @@ document.addEventListener("DOMContentLoaded", () => {
         yesBtn.className = "btn btn-success option-button";
         yesBtn.textContent = "Yes, I'm satisfied.";
         yesBtn.onclick = async () => {
+            // Disable all buttons when one is clicked
+            const allButtons = wrapper.querySelectorAll("button");
+            allButtons.forEach(button => button.disabled = true);
+
             appendMessage("Yes, I'm satisfied", "user", getCurrentFormattedTimestamp()); // Show user reply
             await saveMessageToDB("Yes, I'm satisfied.", "user", is_read=true, requested_for_support=false); // saving chat data for the user
 
@@ -123,6 +132,10 @@ document.addEventListener("DOMContentLoaded", () => {
         supportBtn.className = "btn btn-warning option-button";
         supportBtn.textContent = "No, Connect with the Support Team";
         supportBtn.onclick = async () => {
+            // Disable all buttons when one is clicked
+            const allButtons = wrapper.querySelectorAll("button");
+            allButtons.forEach(button => button.disabled = true);
+            
             appendMessage("No, Connect with Support Team", "user", getCurrentFormattedTimestamp()); // Show user reply
             await saveMessageToDB("No, Connect with Support Team", "user", is_read=true, requested_for_support=true); // saving user
 
@@ -355,6 +368,9 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(response => response.json())
         .then(data => {
             firstInteractionTimestamp = data.first_interaction_timestamp;
+            // if user has already started chat with support team
+            // then load the chat history and, then connect with the support team
+            // otherwise, start with the fresh chat
             if (data.support_chat_exists) {
                 // first greeting lines and then options to start chat with the bot
                 greetUserWithBotTreeOptions(firstInteractionTimestamp);
