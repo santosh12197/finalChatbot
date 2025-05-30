@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const wrapper = document.createElement("div");
         wrapper.className = "message-wrapper";
 
-        const question = "Are you satisfied with the answer?\n Yes, I'm satisfied. \n No, Connect with the Support Team";
+        const question = "Are you satisfied with the answer?;\n Yes, I'm satisfied.; \n No, Connect with the Support Team";
         appendMessage("Are you satisfied with the answer?", 'bot', getCurrentFormattedTimestamp());
         await saveMessageToDB(question, "bot", is_read=true, requested_for_support=false); 
 
@@ -217,31 +217,75 @@ document.addEventListener("DOMContentLoaded", () => {
         const messageWrapper = document.createElement("div");
         messageWrapper.classList.add("message-wrapper");
 
-        const message = document.createElement("div");
-        const messageText = document.createElement("div");
-        const timestamp = document.createElement("div");
+        // Check if bot message has semicolons
+        if (sender === 'bot' && text.includes(';')) {
+            const parts = text.split(';').map(part => part.trim()).filter(part => part !== "");
 
-        // Apply classes
-        messageText.className = "message-text";
-        timestamp.className = "timestamp";
+            parts.forEach(part => {
+                // Create a separate message bubble for each part
+                const message = document.createElement("div");
+                const messageText = document.createElement("div");
+                const timestamp = document.createElement("div");
 
-        // Set text and timestamp
-        messageText.textContent = text;
-        timestamp.textContent = timestampStr;
+                messageText.className = "message-text";
+                timestamp.className = "timestamp";
 
-        // Style based on sender
-        if (sender === 'bot') {
-            message.className = 'bot-message align-self-start message-bubble';
-        } else if (sender === 'support') {
-            message.className = 'support-message align-self-start message-bubble';
+                message.className = 'bot-message align-self-start message-bubble';
+
+                // "Bot: " prefix in bold
+                const botLabel = document.createElement("span");
+                botLabel.style.fontWeight = "bold";
+                botLabel.textContent = "Bot: ";
+
+                const messageContent = document.createElement("span");
+                messageContent.textContent = part;
+
+                messageText.appendChild(botLabel);
+                messageText.appendChild(messageContent);
+
+                timestamp.textContent = timestampStr;
+
+                message.appendChild(messageText);
+                message.appendChild(timestamp);
+                messageWrapper.appendChild(message);
+            });
+
         } else {
-            message.className = 'user-message align-self-end message-bubble';
+            // Single message bubble (bot/user/support) - normal flow
+            const message = document.createElement("div");
+            const messageText = document.createElement("div");
+            const timestamp = document.createElement("div");
+
+            messageText.className = "message-text";
+            timestamp.className = "timestamp";
+
+            if (sender === 'bot') {
+                message.className = 'bot-message align-self-start message-bubble';
+
+                const botLabel = document.createElement("span");
+                botLabel.style.fontWeight = "bold";
+                botLabel.textContent = "Bot: ";
+
+                const messageContent = document.createElement("span");
+                messageContent.textContent = text;
+
+                messageText.appendChild(botLabel);
+                messageText.appendChild(messageContent);
+            } else if (sender === 'support') {
+                message.className = 'support-message align-self-start message-bubble';
+                messageText.textContent = text;
+            } else {
+                message.className = 'user-message align-self-end message-bubble';
+                messageText.textContent = text;
+            }
+
+            timestamp.textContent = timestampStr;
+
+            message.appendChild(messageText);
+            message.appendChild(timestamp);
+            messageWrapper.appendChild(message);
         }
 
-        // Append text and timestamp inside the message bubble
-        message.appendChild(messageText);
-        message.appendChild(timestamp);
-        messageWrapper.appendChild(message);
         chatContainer.appendChild(messageWrapper);
     }
 
@@ -298,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Four lines: each top-level key of the botTree
         Object.keys(botTree).forEach(key => {
-            appendMessage(`Bot: ${key}`, "bot", firstInteractionTimestamp);
+            appendMessage(`${key}`, "bot", firstInteractionTimestamp);
         });
 
         scrollToBottom();
