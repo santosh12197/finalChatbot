@@ -1,12 +1,13 @@
 from django.db.models import Count, Q, OuterRef, Subquery
 from django.shortcuts import render, redirect
 from django.views import View
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 import requests
 
-from .models import ChatMessage, UserLocation
+from .models import ChatMessage, UserLocation, UserProfile
 from django.utils import timezone
 from datetime import date
 from django.http import JsonResponse
@@ -40,6 +41,9 @@ SUB_OPTIONS = {
 }
 
 class RegisterView(View):
+    """
+        Registration view for normal user
+    """
     def get(self, request):
         return render(request, "register.html")
 
@@ -47,16 +51,19 @@ class RegisterView(View):
         username = request.POST["username"]
         password = request.POST["password"]
         # Check if username already exists
-        if User.objects.filter(username=username).exists():
+        if UserProfile.objects.filter(username=username).exists():
             return render(request, "register.html", {
                 "error": "Username already exists. Please choose another."
             })
 
-        user = User.objects.create_user(username=username, password=password)
+        user = UserProfile.objects.create_user(username=username, password=password)
         login(request, user)
         return redirect("chat")
 
 class LoginView(View):
+    """
+        Login view for normal user
+    """
     def get(self, request):
         return render(request, "login.html")
 
@@ -71,10 +78,105 @@ class LoginView(View):
         
         return render(request, "login.html", {"error": "Invalid credentials"})
 
+
 class LogoutView(View):
-    def get(self, request):
+    """
+        Logout view for normal user and support agent
+    """
+    def post(self, request):
+
+         # Check if the current user is a support agent **before** logging out
+        is_support_agent = getattr(request.user, 'is_support_agent', False)
+        
+        # Now, log the user out
         logout(request)
-        return redirect("login")
+        
+        # Redirect based on the stored value
+        if is_support_agent:
+            return redirect("support_login")
+        else:
+            return redirect("login")
+
+
+class SupportRegisterView(View):
+    """
+        Registration view for support agent
+    """
+    template_name = 'support_register.html'
+
+    def get(self, request):
+        return render(request, self.template_name)
+    
+    def post(self, request):
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        # Basic field validation
+        if not all([first_name, email, password]):
+            messages.error(request, "first_name, email and password are required.")
+            return render(request, self.template_name)
+
+        # Email domain validation
+        # if not email.endswith('@aptaracorp.com'):
+        #     messages.error(request, "Email must be from @aptaracorp.com domain.")
+        #     return render(request, self.template_name)
+
+        # Check for unique email
+        if UserProfile.objects.filter(email=email).exists():
+            messages.error(request, f"Email {email} is already registered.")
+            return render(request, self.template_name)
+
+        # Password length check
+        # if len(password) < 8:
+        #     messages.error(request, "Password must be at least 8 characters long.")
+        #     return render(request, self.template_name)
+
+        # Create user
+        user = UserProfile.objects.create_user(
+            username=email,  # Use email as username
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_support_agent=True
+        )
+        user.save()
+
+        messages.success(request, "Registration successful! Please login.")
+        return redirect('support_login')  
+    
+
+class SupportLoginView(View):
+    """
+        Login view for support agent
+    """
+    template_name = 'support_login.html'
+
+    def get(self, request):
+        return render(request, self.template_name)
+    
+    def post(self, request):
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        # Basic field validation
+        if not email or not password:
+            messages.error(request, "Both email and password are required.")
+            return render(request, self.template_name)
+
+        # Authenticate using email as username
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None and user.is_support_agent:
+            login(request, user)
+            # messages.success(request, f"Welcome, {user.first_name}!")
+            return redirect('support_dashboard')  # redirect to support_dashboard page after login
+        else:
+            messages.error(request, "Invalid email or password.")
+            return render(request, self.template_name)
+
 
 class ChatView(LoginRequiredMixin, View):
 
@@ -207,8 +309,17 @@ class MarkAsRead(LoginRequiredMixin, View):
 
         return JsonResponse({'status': 'ok'})
 
-class SupportDashboardView(View):
+class SupportDashboardView(LoginRequiredMixin, View):
 
+    def dispatch(self, request, *args, **kwargs):
+        """ 
+            Check if the user is logged in and is a support agent, otherwise redirect to support login page
+        """
+
+        if not request.user.is_authenticated or not request.user.is_support_agent:
+            return redirect('support_login')
+        return super().dispatch(request, *args, **kwargs)
+    
     def get(self, request):
         # Get users who requested support
         users = ChatMessage.objects.filter(
@@ -225,7 +336,7 @@ class SupportDashboardView(View):
             requested_for_support=True
         ).order_by('-timestamp')
 
-        user_objs = User.objects.filter(id__in=user_ids).annotate(
+        user_objs = UserProfile.objects.filter(id__in=user_ids).annotate(
             unread_count=Count(
                 'user_messages',
                 filter=Q(user_messages__sender='user', user_messages__has_read=False)
@@ -290,7 +401,7 @@ class UserLocationView(View):
     """
     def get(self, request, user_id):
         try:
-            user = User.objects.get(id=user_id)
+            user = UserProfile.objects.get(id=user_id)
 
             # Get the most recent IP address from ChatMessage, or default
             last_message = UserLocation.objects.filter(user=user).order_by('-updated_at').first()
@@ -308,5 +419,5 @@ class UserLocationView(View):
                 })
             else:
                 return JsonResponse({'error': 'Could not fetch location'}, status=400)
-        except User.DoesNotExist:
+        except UserProfile.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)

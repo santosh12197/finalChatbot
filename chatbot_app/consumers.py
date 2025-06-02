@@ -5,7 +5,7 @@ from django.db.models import Count
 import json
 from zoneinfo import ZoneInfo
 
-from .models import ChatMessage, ChatThread
+from .models import ChatMessage, ChatThread, UserProfile
 User = get_user_model()
 
 
@@ -142,7 +142,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
     # TODO : to see: sender = bot, when user sends msg (but it should be user) -------------------------------
     @database_sync_to_async
     def get_user_by_userId(self, user_id):
-        user = User.objects.get(id=user_id)
+        user = UserProfile.objects.get(id=user_id)
         # sender = ChatMessage.objects.filter(user=user).last().sender
         return user
 

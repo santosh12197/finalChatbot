@@ -206,6 +206,15 @@
     </div>
 
     <div id="user-info">
+        <div style="display: flex; justify-content: flex-end; align-items: center; background-color: #f5f5f5; padding: 10px;">
+            <span style="margin-right: 10px;">
+                <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
+            </span>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+            </form>
+        </div>
         <div>
             <p><span id="user-name"></span></p>
             <p><span id="user-mobile"></span></p>

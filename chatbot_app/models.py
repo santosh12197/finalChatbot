@@ -1,17 +1,25 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
-# TODO : UserProfile
-# class UserProfile(User):
-    # doi = models.CharField()
-    # mobile = models.PositiveIntegerField()
+
+
+class UserProfile(AbstractUser):
+    is_support_agent = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.username
+    
+    class Meta:
+        verbose_name = "Personal Information"
+        verbose_name_plural = "Personal Information"
 
 
 class ChatThread(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_threads')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_threads')
     # Active support agent assigned to this thread
     active_support_agent = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         related_name='active_threads',
         null=True,
@@ -19,7 +27,7 @@ class ChatThread(models.Model):
     )
     # Other support agents involved (view access, history)
     support_agents = models.ManyToManyField(
-        User,
+        settings.AUTH_USER_MODEL,
         related_name='involved_threads',
         blank=True
     )
@@ -29,6 +37,10 @@ class ChatThread(models.Model):
 
     def __str__(self):
         return f"Thread with {self.user.username}" #(Support: {self.support_agent})"
+    
+    class Meta:
+        verbose_name = "Chat Thread"
+        verbose_name_plural = "Chat Thread"
 
 
 class ChatMessage(models.Model):
@@ -39,7 +51,7 @@ class ChatMessage(models.Model):
     ]
     thread = models.ForeignKey(ChatThread, on_delete=models.CASCADE, related_name='chat_messages', null=True, blank=True)
     # The user who is interacting with the bot/support team
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_messages')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_messages')
     # what was the message sent
     message = models.TextField()
     # message was sent by user, or bot or support
@@ -65,11 +77,15 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender} - {self.user.username} at {self.timestamp}"
+    
+    class Meta:
+        verbose_name = "Chat Messages"
+        verbose_name_plural = "Chat Messages"
 
 
 class UserLocation(models.Model):
     # NOTE: model to Store User Location
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ip_address = models.GenericIPAddressField()
     city = models.CharField(max_length=100, blank=True, null=True)
     region = models.CharField(max_length=100, blank=True, null=True)
@@ -80,3 +96,7 @@ class UserLocation(models.Model):
 
     def __str__(self):
         return f"Location of {self.user.username}"
+    
+    class Meta:
+        verbose_name = "User Location"
+        verbose_name_plural = "User Location"
