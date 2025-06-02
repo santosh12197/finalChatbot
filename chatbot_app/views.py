@@ -46,19 +46,38 @@ class RegisterView(View):
     """
     def get(self, request):
         return render(request, "register.html")
-
+    
     def post(self, request):
-        username = request.POST["username"]
-        password = request.POST["password"]
-        # Check if username already exists
-        if UserProfile.objects.filter(username=username).exists():
-            return render(request, "register.html", {
-                "error": "Username already exists. Please choose another."
-            })
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
 
-        user = UserProfile.objects.create_user(username=username, password=password)
-        login(request, user)
-        return redirect("chat")
+        # Basic field validation
+        if not all([first_name, email, password]):
+            messages.error(request, "first_name, email and password are required.")
+            return render(request, self.template_name)
+
+        # Check for unique email
+        if UserProfile.objects.filter(email=email).exists():
+            messages.error(request, f"Email {email} is already registered.")
+            return render(request, self.template_name)
+
+        # Create user
+        user = UserProfile.objects.create_user(
+            username=email,  # Use email as username
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_support_agent=False
+        )
+        user.save()
+
+        messages.success(request, "Registration successful! Please login.")
+        return redirect('login')  
+    
+
 
 class LoginView(View):
     """
@@ -68,10 +87,10 @@ class LoginView(View):
         return render(request, "login.html")
 
     def post(self, request):
-        username = request.POST["username"]
+        email = request.POST["email"]
         password = request.POST["password"]
         
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, username=email, password=password)
         if user:
             login(request, user)
             return redirect("chat")
