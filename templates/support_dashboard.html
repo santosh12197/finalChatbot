@@ -144,6 +144,23 @@
             align-items: center;
             padding: 5px;
         }
+
+        .dropdown-content {
+            background-color: #ffffffd3;
+            border: 1px solid #ccc;
+            /* width: 200px; */
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .dropdown-item {
+            padding: 8px;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f0f0f0f3;
+        }
         
     </style>
     <script 
@@ -163,7 +180,7 @@
                     data-user-fname="{{ user.first_name }}"
                     data-user-lname="{{ user.last_name }}"
                     data-user-mobile="{{ user.mobile }}"
-                    data-user-email="{{ user.email }}"
+                    data-user-email="{{ user.username }}"
                     data-user-lat="{{ user.lat }}"
                     data-user-lng="{{ user.lng }}">
                     <!-- Top Row: Username and Timestamp -->
@@ -194,9 +211,11 @@
     </div>
 
     <div id="chat-area">
-        <div id="selected-user" style="display: none;">
+        <div id="selected-user" style="display: none; position: relative;">
             <!-- This will be dynamically filled with the selected user's details -->
-            <span id="selected-user-name"></span>
+            <span id="selected-user-name" style="cursor: pointer;" data-user-id=""></span>
+            <!-- Dropdown container for support team members -->
+            <div id="support-members-dropdown" class="dropdown-content" style="display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; border: 1px solid #ccc; z-index: 1000;"></div>
         </div>
         <div id="chat-messages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;"></div>
         <div id="message-input" style="display: none;">
@@ -244,8 +263,8 @@
                 loadUserLocation(selectedUserId);  // Load map too
 
                 // fetching user details
-                const fname = userDiv.dataset.userFirstName;
-                const lname = userDiv.dataset.userLastName;
+                const fname = userDiv.dataset.userFname;
+                const lname = userDiv.dataset.userLname;
                 const mobile = userDiv.dataset.userMobile;
                 const email = userDiv.dataset.userEmail;
 
@@ -266,14 +285,88 @@
 
                 // Update the selected user's name in the top div
                 const selectedUserName = document.getElementById("selected-user-name");
+                selectedUserName.textContent = "";
                 selectedUserName.textContent = `${fname} ${lname}`;
                 selectedUserName.setAttribute("data-user-id", selectedUserId);
+                // selectedUserName.style.backgroundColor = 'green';
                 // Show the div with 10% height
                 const selectedUserDiv = document.getElementById("selected-user");
                 selectedUserDiv.style.display = 'block';
                 selectedUserDiv.style.height = '10vh';
+                
+
+                // to show support team members dropdown when selected user is clicked
+                // and assign the support team member if any support team member is selected
+                document.getElementById("selected-user-name").addEventListener("click", function (e) {
+                    e.stopPropagation();  // Prevent clicks outside from hiding the dropdown
+                    toggleSupportMemberDropdown(selectedUserId); // handling dropdown for support team members 
+                });
+
 
             });
+        });
+
+        function toggleSupportMemberDropdown(selectedUserId) {
+            const dropdown = document.getElementById("support-members-dropdown");
+
+            if (dropdown.style.display === "block") {
+                dropdown.style.display = "none";
+            } else {
+                fetch('/support_members/')
+                    .then(response => response.json())
+                    .then(data => {
+                        dropdown.innerHTML = '';  // Clear previous data
+
+                        data.support_agents.forEach(member => {
+                            const memberDiv = document.createElement("div");
+                            memberDiv.classList.add("dropdown-item");
+                            memberDiv.setAttribute("data-member-id", member.id);
+                            memberDiv.textContent = `${member.first_name} ${member.last_name} (${member.username})`;
+                            memberDiv.style.cursor = "pointer";
+                            memberDiv.style.padding = "5px";
+
+                            memberDiv.addEventListener("click", function (e) {
+                                e.stopPropagation();
+                                assignSupportMember(selectedUserId, member.id);
+                                dropdown.style.display = "none";
+                            });
+
+                            dropdown.appendChild(memberDiv);
+                        });
+
+                        dropdown.style.display = "block";
+                    })
+                    .catch(error => console.error("Error fetching support members:", error));
+            }
+        }
+
+        function assignSupportMember(userId, memberId) {
+            fetch('/assign_support_member/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    support_member_id: memberId,
+                    user_id: userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status == "success") {
+                    alert("Support member assigned successfully!");
+                } else {
+                    alert("Failed to assign support member.");
+                }
+            })
+            .catch(error => console.error("Error assigning support member:", error));
+        }
+
+        // Hide dropdown list for support mmbers when clicking outside
+        document.addEventListener("click", function () {
+            const dropdown = document.getElementById("support-members-dropdown");
+            dropdown.style.display = "none";
         });
 
         function loadChatHistory(userId) {
@@ -594,6 +687,28 @@
                         indicator.textContent = '';
                         indicator.style.display = 'none';
                     }
+
+                    // Update the selected user's name in the top div
+                    const selectedUserName = document.getElementById("selected-user-name");
+                    const fname = userDiv.dataset.userFname;
+                    const lname = userDiv.dataset.userLname;
+                    selectedUserName.textContent = "";
+
+                    selectedUserName.textContent = `${fname} ${lname}`;
+                    selectedUserName.setAttribute("data-user-id", selectedUserId);
+                    // selectedUserName.style.backgroundColor = 'green';
+                    // Show the div with 10% height
+                    const selectedUserDiv = document.getElementById("selected-user");
+                    selectedUserDiv.style.display = 'block';
+                    selectedUserDiv.style.height = '10vh';
+                    
+
+                    // to show support team members dropdown when selected user is clicked
+                    // and assign the support team member if any support team member is selected
+                    document.getElementById("selected-user-name").addEventListener("click", function (e) {
+                        e.stopPropagation();  // Prevent clicks outside from hiding the dropdown
+                        toggleSupportMemberDropdown(selectedUserId); // handling dropdown for support team members 
+                    });
 
                 });
 

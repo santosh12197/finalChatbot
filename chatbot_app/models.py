@@ -17,7 +17,7 @@ class UserProfile(AbstractUser):
 
 class ChatThread(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_threads')
-    # Active support agent assigned to this thread
+    # Active support agent assigned to this thread, if any
     active_support_agent = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 import requests
 
-from .models import ChatMessage, UserLocation, UserProfile
+from .models import ChatMessage, ChatThread, UserLocation, UserProfile
 from django.utils import timezone
 from datetime import date
 from django.http import JsonResponse
@@ -383,6 +383,8 @@ class SupportDashboardView(LoginRequiredMixin, View):
             user_data.append({
                 "id": user.id,
                 "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
                 "lat": loc.latitude if loc else None,
                 "lng": loc.longitude if loc else None,
                 "latest_message": user.latest_message,
@@ -440,3 +442,57 @@ class UserLocationView(View):
                 return JsonResponse({'error': 'Could not fetch location'}, status=400)
         except UserProfile.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)
+        
+
+class SupportMembersListView(LoginRequiredMixin, View):
+    """
+        List all support members except the current logged-in agent.
+    """
+    def get(self, request, *args, **kwargs):
+        current_support_agent = request.user
+        # Filter only support agents except the current user
+        support_agents = UserProfile.objects.filter(
+            is_support_agent=True
+        ).exclude(id=current_support_agent.id)
+
+        data = [
+            {
+                "id": agent.id,
+                "first_name": agent.first_name,
+                "last_name": agent.last_name,
+                "username": agent.username
+            }
+            for agent in support_agents
+        ]
+
+        return JsonResponse({"support_agents": data})
+    
+
+class AssignSupportAgentView(View):
+    def post(self, request):
+        import json
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+        support_id = data.get('support_member_id')
+
+        try:
+            # Get the user thread
+            user = UserProfile.objects.get(id=user_id)
+            support_agent = UserProfile.objects.get(
+                id=support_id,
+                is_support_agent=True
+            )
+            chat_thread = ChatThread.objects.get(
+                user=user,
+                is_active=True
+            )
+
+            # Assign the support agent
+            chat_thread.active_support_agent = support_agent
+            chat_thread.support_agents.add(support_agent)  # add to involved agents if not already
+            chat_thread.save()
+
+            return JsonResponse({'status': 'success'}, status=200)
+        except Exception as e:
+            # print(e)
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
