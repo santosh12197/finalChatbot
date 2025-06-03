@@ -198,7 +198,9 @@ class SupportLoginView(View):
 
 
 class ChatView(LoginRequiredMixin, View):
-
+    """
+        View for user's chatbot
+    """
     def get(self, request):
 
         return render(
@@ -213,6 +215,9 @@ class ChatView(LoginRequiredMixin, View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class MarkSupportRequestView(View):
+    """
+        View to mark support request by the user
+    """
     def post(self, request):
         data = json.loads(request.body)
         user = request.user
@@ -237,8 +242,8 @@ class MarkSupportRequestView(View):
 
 class CheckSupportChatView(LoginRequiredMixin, View):
     """
-    This view checks if the current user already has support chat messages.
-    If yes, it returns them along with a flag indicating the chat should be resumed.
+        This view checks if the current user already has support chat messages.
+        If yes, it returns them along with a flag indicating the chat should be resumed.
     """
     def get(self, request, *args, **kwargs):
         user = request.user
@@ -279,6 +284,9 @@ class CheckSupportChatView(LoginRequiredMixin, View):
 
 
 class SaveChatMessageView(LoginRequiredMixin, View):
+    """
+        View to save chat msg
+    """
     def post(self, request):
         data = json.loads(request.body.decode('utf-8'))
         message = data.get('message')
@@ -317,7 +325,9 @@ class SaveChatMessageView(LoginRequiredMixin, View):
 
 
 class MarkAsRead(LoginRequiredMixin, View):
-
+    """
+        View to update mark as read
+    """
     def post(self, request, user_id):
 
         ChatMessage.objects.filter(
@@ -329,7 +339,9 @@ class MarkAsRead(LoginRequiredMixin, View):
         return JsonResponse({'status': 'ok'})
 
 class SupportDashboardView(LoginRequiredMixin, View):
-
+    """
+        Listing of users on support dashboard 
+    """
     def dispatch(self, request, *args, **kwargs):
         """ 
             Check if the user is logged in and is a support agent, otherwise redirect to support login page
@@ -402,7 +414,9 @@ class SupportDashboardView(LoginRequiredMixin, View):
     
 
 class GetChatHistoryView(View):
-
+    """
+        Chat history of a user
+    """
     def get(self, request, user_id):
         chats = ChatMessage.objects.filter(user_id=user_id).order_by('timestamp')
         data = [
@@ -469,6 +483,9 @@ class SupportMembersListView(LoginRequiredMixin, View):
     
 
 class AssignSupportAgentView(View):
+    """
+        Assigning support agent to a user's chat thread
+    """
     def post(self, request):
         import json
         data = json.loads(request.body)
@@ -509,7 +526,7 @@ class CheckWelcomeMessagesView(View):
 
             success_exists = ChatMessage.objects.filter(
                 user_id=user_id,
-                sender="support",
+                sender="bot",
                 message="Successfully connected with the support team."
             ).exists()
 
