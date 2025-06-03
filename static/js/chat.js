@@ -139,11 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage("No, Connect with Support Team", "user", getCurrentFormattedTimestamp()); // Show user reply
             await saveMessageToDB("No, Connect with Support Team", "user", is_read=true, requested_for_support=true); // saving user
 
-            const connectingMsg = "Connecting you to our support team...;\n Successfully connected with the support team";
-            appendMessage("Connecting you to our support team...", "bot", getCurrentFormattedTimestamp()); 
-            appendMessage("Successfully connected with the support team", "bot", getCurrentFormattedTimestamp()); 
-            await saveMessageToDB(connectingMsg, "bot", is_read=true, requested_for_support=true); // saving bot
-
             // connecting with the support team
             enableRealTimeChat();
         };
@@ -193,6 +188,41 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.host +
             '/ws/support/' + roomName + '/'
         );
+
+        // Once connected, send initial support welcome message
+        chatSocket.onopen = async () => {
+            try {
+                const response = await fetch("/has_welcome_messages/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken(),
+                    },
+                    body: JSON.stringify({ user_id: currentUserId })
+                });
+
+                const data = await response.json();
+
+                if (!data.both_sent) {
+                    const successMessage = "Successfully connected with the support team.";
+                    const welcomeMessage = "Welcome to SciPris. How can I help you?";
+
+                    if (!data.success_sent) {
+                        appendMessage(successMessage, "bot", getCurrentFormattedTimestamp());
+                        await saveMessageToDB(successMessage, "bot", true, true);
+                    }
+
+                    if (!data.welcome_sent) {
+                        appendMessage(welcomeMessage, "support", getCurrentFormattedTimestamp());
+                        await saveMessageToDB(welcomeMessage, "support", true, true);
+                    }
+                }
+                scrollToBottom();
+
+            } catch (error) {
+                console.error("Error checking welcome messages:", error);
+            }
+        };
 
         // msg received from the backend by the frontend
         chatSocket.onmessage = function(e) {

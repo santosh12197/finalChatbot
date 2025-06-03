@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AssignSupportAgentView, CheckSupportChatView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserLocationView
+from .views import AssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserLocationView
 
 urlpatterns = [
     # normal user login related
@@ -21,4 +21,5 @@ urlpatterns = [
     path('user_location/<int:user_id>/', UserLocationView.as_view(), name='user_location'),
     path('support_members/', SupportMembersListView.as_view(), name='support_members'),
     path('assign_support_member/', AssignSupportAgentView.as_view(), name='assign_support_member'),
+    path("has_welcome_messages/", CheckWelcomeMessagesView.as_view(), name="has_welcome_messages"),
 ]

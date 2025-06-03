@@ -496,3 +496,34 @@ class AssignSupportAgentView(View):
         except Exception as e:
             # print(e)
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        
+
+class CheckWelcomeMessagesView(View):
+    """
+        Check for initial support msg, when user is connected with support team
+    """
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            user_id = data.get("user_id")
+
+            success_exists = ChatMessage.objects.filter(
+                user_id=user_id,
+                sender="support",
+                message="Successfully connected with the support team."
+            ).exists()
+
+            welcome_exists = ChatMessage.objects.filter(
+                user_id=user_id,
+                sender="support",
+                message="Welcome to SciPris. How can I help you?"
+            ).exists()
+
+            return JsonResponse({
+                "success_sent": success_exists,
+                "welcome_sent": welcome_exists,
+                "both_sent": success_exists and welcome_exists
+            })
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
