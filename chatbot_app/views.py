@@ -395,6 +395,7 @@ class SupportDashboardView(LoginRequiredMixin, View):
             user_data.append({
                 "id": user.id,
                 "username": user.username,
+                "userEmail": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "lat": loc.latitude if loc else None,
