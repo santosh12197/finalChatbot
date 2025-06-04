@@ -545,3 +545,55 @@ class CheckWelcomeMessagesView(View):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
+        
+
+class CheckOrAssignSupportAgentView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        user_id = request.GET.get("user_id")
+        if not user_id:
+            return JsonResponse({"error": "User ID required"}, status=400)
+        
+        try:
+            chat_user = UserProfile.objects.get(id=user_id)
+        except UserProfile.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
+        
+        # Ensure only support agents can access
+        if not request.user.is_support_agent:
+            return JsonResponse({"error": "Logged in user is not a support agent!"}, status=403)
+
+        thread, created = ChatThread.objects.get_or_create(user=chat_user)
+
+        if thread.active_support_agent:
+            if thread.active_support_agent == request.user:
+                return JsonResponse({"status": "assigned_to_you"})
+            else:
+                return JsonResponse({
+                    "status": "assigned_to_other",
+                    "assigned_to": thread.active_support_agent.username
+                })
+        else:
+            return JsonResponse({"status": "unassigned"})
+
+    # @method_decorator(csrf_exempt)
+    def post(self, request, *args, **kwargs):
+
+        if not request.user.is_authenticated or not request.user.is_support_agent:
+            return JsonResponse({"error": "Logged in user is not a support agent!"}, status=403)
+
+        data = json.loads(request.body)
+        user_id = data.get("user_id")
+
+        try:
+            chat_user = UserProfile.objects.get(id=user_id)
+        except UserProfile.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
+
+        thread, _ = ChatThread.objects.get_or_create(user=chat_user)
+
+        # Assign current support member
+        thread.active_support_agent = request.user
+        thread.support_agents.add(request.user)  # track involvement
+        thread.save()
+
+        return JsonResponse({"status": "assigned", "assigned_to": request.user.username})

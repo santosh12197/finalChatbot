@@ -15,6 +15,7 @@
             width: 25%; 
             border-right: 1px solid #ccc; 
             overflow-y: auto; 
+            margin: 20px; 
         }
         .user:hover {
             background-color: #f9f9f9;
@@ -161,6 +162,13 @@
         .dropdown-item:hover {
             background-color: #f0f0f0f3;
         }
+
+        .system-msg {
+            padding: 5px;
+            background-color: #f0f0f0;
+            border-left: 4px solid #888;
+            margin: 10px 0;
+        }
         
     </style>
     <script 
@@ -256,17 +264,26 @@
                 // when support team clicks on any user
                 selectedUserId = userDiv.dataset.userId;
 
-                // load chat history data of that user
-                loadChatHistory(selectedUserId);
-
-                // load user location based on IP address
-                loadUserLocation(selectedUserId);  // Load map too
-
                 // fetching user details
                 const fname = userDiv.dataset.userFname;
                 const lname = userDiv.dataset.userLname;
                 const mobile = userDiv.dataset.userMobile;
                 const email = userDiv.dataset.userEmail;
+
+                // load chat history data of that user, and then
+                // Handle assignment / connection logic for support agent with user 
+                loadChatHistory(selectedUserId).then(() => {
+                    handleSupportAssignment({
+                        userId: selectedUserId,
+                        fname: fname,
+                        lname: lname,
+                        email: email
+                    });
+                });
+
+                // load user location based on IP address
+                loadUserLocation(selectedUserId);  // Load map too
+
 
                 // Displaying user details
                 document.getElementById("user-name").textContent = `Name: ${fname} ${lname}`;
@@ -305,6 +322,110 @@
 
             });
         });
+
+        async function handleSupportAssignment({ userId, fname, lname, email }) {
+            /**
+             * Handle assignment / connection logic for a user → support-agent thread.
+             * Disables the input UI until the current support agent is eligible.
+            **/
+            const inputField = document.getElementById("input-message");
+            const sendButton = document.getElementById("send-button");
+            const chatBox = document.getElementById("chat-messages");
+
+            // Always hide input first
+            inputField.disabled = true;
+            sendButton.disabled = true;
+            document.getElementById("message-input").style.display = "flex";
+
+            // Remove any previous connect box
+            const oldBox = document.getElementById("connect-box");
+            if (oldBox) oldBox.remove();
+
+            // Helper to show message
+            function appendSystemMessage(msg) {
+                const div = document.createElement("div");
+                div.className = "system-msg";
+                div.style.cssText = "padding:6px 10px;margin:6px 0;font-style:italic;color:#555;background:#f5f5f5;border-left:4px solid #888;";
+                div.textContent = msg;
+                chatBox.appendChild(div);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            try {
+                const res = await fetch(`/check_or_assign_support/?user_id=${userId}`);
+                const data = await res.json();
+
+                if (data.status === "assigned_to_you") {
+                inputField.disabled = false;
+                sendButton.disabled = false;
+                return;
+                }
+
+                if (data.status === "assigned_to_other") {
+                appendSystemMessage(
+                    `User ${fname} ${lname} is already assigned to ${data.assigned_to}.`
+                );
+                return;
+                }
+
+                // At this point: status === 'unassigned' → show connect UI
+                const connectBox = document.createElement("div");
+                connectBox.id = "connect-box";
+                connectBox.style.cssText =
+                "background:#f1f1f1;padding:12px;margin:10px;border:1px solid #ccc;border-radius:8px;display:flex;flex-direction:column;align-items:flex-start;";
+
+                const textSpan = document.createElement("span");
+                textSpan.textContent = `To start chat, first connect with ${fname} ${lname} (${email}).`;
+                textSpan.style.marginBottom = "10px";
+
+                const connectBtn = document.createElement("button");
+                connectBtn.textContent = "Connect";
+                connectBtn.className = "btn btn-success";
+
+                connectBtn.onclick = async () => {
+                if (!confirm(`Are you sure you want to connect with ${fname} ${lname}?`))
+                    return;
+
+                const postRes = await fetch(`/check_or_assign_support/`, {
+                    method: "POST",
+                    headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                    },
+                    body: JSON.stringify({ user_id: userId }),
+                });
+
+                const assignData = await postRes.json();
+
+                if (assignData.status === "assigned") {
+                    appendSystemMessage(`You are now assigned to ${fname} ${lname} (${email}).`);
+                    inputField.disabled = false;
+                    sendButton.disabled = false;
+                    connectBox.remove();
+                } else {
+                    appendSystemMessage("Failed to assign. Try again.");
+                }
+                };
+
+                connectBox.appendChild(textSpan);
+                connectBox.appendChild(connectBtn);
+                chatBox.appendChild(connectBox);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+            } catch (err) {
+                console.error("Failed to check or assign support:", err);
+                appendSystemMessage("Error checking support status. Please try again.");
+            }
+        }
+
+        function moveConnectBoxToBottom() {
+            const chatBox = document.getElementById("chat-messages");
+            const connectBox = document.getElementById("connect-box");
+            if (connectBox && chatBox.contains(connectBox)) {
+                chatBox.removeChild(connectBox);   // Remove from current position
+                chatBox.appendChild(connectBox);   // Add again at the end
+            }
+        }
 
         function toggleSupportMemberDropdown(selectedUserId) {
             const dropdown = document.getElementById("support-members-dropdown");
@@ -370,7 +491,7 @@
         });
 
         function loadChatHistory(userId) {
-            fetch(`/get_chat_history/${userId}/`)
+            return fetch(`/get_chat_history/${userId}/`)
                 .then(res => res.json())
                 .then(data => {
                     const chatBox = document.getElementById('chat-messages');
@@ -452,6 +573,7 @@
                 chatBox.appendChild(messageDiv);
 
                 scrollToBottom();
+                moveConnectBoxToBottom();  // Reposition connectBox if present
             };
 
         }
@@ -634,7 +756,6 @@
                 // Create new user div
                 const userDiv = document.createElement('div');
                 userDiv.className = 'user';
-                
                 userDiv.id = `user-${user.id}`;
 
                 // Set data attributes
@@ -645,6 +766,9 @@
                 userDiv.setAttribute('data-user-email', user.email || "");
                 userDiv.setAttribute('data-user-lat', user.lat || "");
                 userDiv.setAttribute('data-user-lng', user.lng || "");
+
+                const fname = userDiv.dataset.userFname;
+                const lname = userDiv.dataset.userLname;
 
                 // Set inner HTML
                 userDiv.innerHTML = `
@@ -668,7 +792,14 @@
 
                     selectedUserId = user.id;
                     // loading chat history
-                    loadChatHistory(selectedUserId);
+                    loadChatHistory(selectedUserId).then(() => {
+                        handleSupportAssignment({
+                            userId: selectedUserId,
+                            fname: fname,
+                            lname: lname,
+                            email: `${user.email}`
+                        });
+                    });
 
                     // loading user location
                     loadUserLocation(selectedUserId);
@@ -690,8 +821,6 @@
 
                     // Update the selected user's name in the top div
                     const selectedUserName = document.getElementById("selected-user-name");
-                    const fname = userDiv.dataset.userFname;
-                    const lname = userDiv.dataset.userLname;
                     selectedUserName.textContent = "";
 
                     selectedUserName.textContent = `${fname} ${lname}`;
