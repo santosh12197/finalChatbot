@@ -476,12 +476,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status == "success") {
-                    alert("Support member assigned successfully!");
+                    alert(`Support member ${data.support_agent} assigned to user ${data.user} successfully!`);
                 } else {
-                    alert("Failed to assign support member.");
+                    alert(data.message);
                 }
+                location.reload();
             })
             .catch(error => console.error("Error assigning support member:", error));
+            location.reload();
         }
 
         // Hide dropdown list for support mmbers when clicking outside

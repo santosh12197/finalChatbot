@@ -485,32 +485,59 @@ class SupportMembersListView(LoginRequiredMixin, View):
 
 class AssignSupportAgentView(View):
     """
-        Assigning support agent to a user's chat thread
+        - Assigning support agent to a user's chat thread
+        - Assigning of user to support agent should be done only when:
+            (1) current user for chat thread is not assigned to any support agent -> that can be done by any support agent
+            (2) if already assigned, then the assignment can be done only by the support agent who has been assigned to the user
     """
     def post(self, request):
-        import json
+        # only support agent can assign
+        if not request.user.is_support_agent:
+            return JsonResponse({'status': 'error', 'message': 'Only support agents can assign users.'}, status=403)
+
         data = json.loads(request.body)
         user_id = data.get('user_id')
         support_id = data.get('support_member_id')
 
+        if not user_id or not support_id:
+            return JsonResponse({'status': 'error', 'message': 'Both user ID and support agent ID are required.'}, status=400)
+
         try:
             # Get the user thread
-            user = UserProfile.objects.get(id=user_id)
+            user = UserProfile.objects.get(
+                id=user_id,
+                is_support_agent=False
+            )
+            if not user:
+                return JsonResponse({'status': 'error', 'message': 'User does not exist for the given user ID.'}, status=404)
+
             support_agent = UserProfile.objects.get(
                 id=support_id,
                 is_support_agent=True
             )
+            if not support_agent:
+                return JsonResponse({'status': 'error', 'message': 'Support agent does not exist for the given support agent ID.'}, status=404)
+            
             chat_thread = ChatThread.objects.get(
                 user=user,
                 is_active=True
             )
+            if not chat_thread:
+                return JsonResponse({'status': 'error', 'message': 'Active chat thread does not exist for the given user.'}, status=404)
 
-            # Assign the support agent
-            chat_thread.active_support_agent = support_agent
-            chat_thread.support_agents.add(support_agent)  # add to involved agents if not already
-            chat_thread.save()
+            # assigning support agent validation
+            if not chat_thread.active_support_agent and request.user != support_agent:
+                return JsonResponse({'status': 'error', 'message': 'You can only assign to yourself if user is not assigned to any support agent!'}, status=400)
 
-            return JsonResponse({'status': 'success'}, status=200)
+            if not chat_thread.active_support_agent or (chat_thread.active_support_agent and chat_thread.active_support_agent == request.user):
+                # Assign the support agent
+                chat_thread.active_support_agent = support_agent
+                chat_thread.support_agents.add(support_agent)  # add to involved agents if not already
+                chat_thread.save()
+                return JsonResponse({'status': 'success', "support_agent": support_agent.username, "user": user.username}, status=200)
+            else:
+                return JsonResponse({'status': 'error', 'message': 'User is already assigned to other support agent. You can not perform this operation.'}, status=400)
+            
         except Exception as e:
             # print(e)
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
