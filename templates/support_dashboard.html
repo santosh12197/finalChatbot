@@ -28,11 +28,16 @@
             max-width: 50%;
             border-right: 1px solid #ccc;
         }
-        #user-info{
+        #support-info{
             width: 25%;
             padding: 8px 12px; 
             margin: 5px;
         }
+        .support-detail{
+            border: 2px solid rgba(0, 0, 0, 0.363); /* Bold black border */
+            border-radius: 10px; 
+        }
+
         .user {
             padding: 10px;
             cursor: pointer;
@@ -144,6 +149,8 @@
             display: flex;
             align-items: center;
             padding: 5px;
+            border: 2px solid rgba(0, 0, 0, 0.363); /* Bold black border */
+            border-radius: 10px;
         }
 
         .dropdown-content {
@@ -232,9 +239,9 @@
         </div>
     </div>
 
-    <div id="user-info">
-        <div style="display: flex; justify-content: flex-end; align-items: center; background-color: #f5f5f5; padding: 10px;">
-            <span style="margin-right: 10px;">
+    <div id="support-info">
+        <div class="support-detail" style="display: flex; justify-content: flex-end; align-items: center; background-color: #f5f5f5; padding: 10px;">
+            <span style="margin-right: 10px;" class="support-username">
                 <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
             </span>
             <form method="post" action="{% url 'logout' %}">
@@ -322,6 +329,16 @@
 
             });
         });
+        // Helper to show message
+        function appendSystemMessage(msg) {
+            const chatBox = document.getElementById("chat-messages");
+            const div = document.createElement("div");
+            div.className = "system-msg";
+            div.style.cssText = "padding:6px 10px;margin:6px 0;font-style:italic;color:#555;background:#f5f5f5;border-left:4px solid #888;";
+            div.textContent = msg;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
         async function handleSupportAssignment({ userId, fname, lname, email }) {
             /**
@@ -340,16 +357,6 @@
             // Remove any previous connect box
             const oldBox = document.getElementById("connect-box");
             if (oldBox) oldBox.remove();
-
-            // Helper to show message
-            function appendSystemMessage(msg) {
-                const div = document.createElement("div");
-                div.className = "system-msg";
-                div.style.cssText = "padding:6px 10px;margin:6px 0;font-style:italic;color:#555;background:#f5f5f5;border-left:4px solid #888;";
-                div.textContent = msg;
-                chatBox.appendChild(div);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
 
             try {
                 const res = await fetch(`/check_or_assign_support/?user_id=${userId}`);
@@ -438,6 +445,15 @@
                     .then(data => {
                         dropdown.innerHTML = '';  // Clear previous data
 
+                        // Add placeholder item
+                        const placeholder = document.createElement("div");
+                        placeholder.classList.add("dropdown-item");
+                        placeholder.textContent = "Please select support agent";
+                        placeholder.style.fontWeight = "bold";
+                        placeholder.style.padding = "5px";
+                        placeholder.style.cursor = "default";
+                        dropdown.appendChild(placeholder);
+
                         data.support_agents.forEach(member => {
                             const memberDiv = document.createElement("div");
                             memberDiv.classList.add("dropdown-item");
@@ -475,15 +491,24 @@
             })
             .then(response => response.json())
             .then(data => {
+                const inputField = document.getElementById("input-message");
+                const sendButton = document.getElementById("send-button");
+
                 if (data.status == "success") {
-                    alert(`Support member ${data.support_agent} assigned to user ${data.user} successfully!`);
+                    const msg = `User ${data.user} is assigned to Support member ${data.support_agent} successfully!`;
+                    alert(msg);
+                    appendSystemMessage(msg);  // Append in chatbox
+                    
+                    // Disable input field and send button
+                    inputField.disabled = true;
+                    sendButton.disabled = true;
                 } else {
                     alert(data.message);
                 }
-                location.reload();
+                // location.reload();
             })
             .catch(error => console.error("Error assigning support member:", error));
-            location.reload();
+            // location.reload();
         }
 
         // Hide dropdown list for support mmbers when clicking outside
@@ -512,15 +537,19 @@
 
                         // Create message text element
                         const textSpan = document.createElement('span');
+                        textSpan.style.display = "flex";
+                        textSpan.style.flexDirection = "column";
 
                         if (msg.sender === 'bot') {
-                            // Create bold prefix
-                            const botPrefix = document.createElement('strong');
-                            botPrefix.textContent = 'Bot: ';
-                            textSpan.appendChild(botPrefix);
+                            const botLabel = document.createElement("div");
+                            botLabel.style.fontWeight = "bold";
+                            botLabel.textContent = "Robotica";
 
-                            // Add message text after prefix
-                            textSpan.append(msg.message);
+                            const messageContent = document.createElement("div");  // use div for new line
+                            messageContent.textContent = msg.message;
+
+                            textSpan.appendChild(botLabel);
+                            textSpan.appendChild(messageContent);
                         } else {
                             textSpan.textContent = msg.message;
                         }
@@ -680,9 +709,9 @@
             const wsUrl = `${wsProtocol}://${window.location.host}/ws/support_notifications/`;
             notificationSocket = new WebSocket(wsUrl);
 
-            notificationSocket.onopen = function () {
-                console.log('WebSocket connection opened');
-            };
+            // notificationSocket.onopen = function () {
+            //     console.log('WebSocket connection opened');
+            // };
 
             notificationSocket.onmessage = function (e) {
                 const data = JSON.parse(e.data); 

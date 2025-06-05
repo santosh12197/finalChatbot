@@ -275,10 +275,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 message.className = 'bot-message align-self-start message-bubble';
 
-                // "Robotica: " prefix in bold
-                const botLabel = document.createElement("span");
+                // "Robotica " prefix in bold
+                const botLabel = document.createElement("div");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Robotica: ";
+                botLabel.textContent = "Robotica ";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = part;
@@ -305,9 +305,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (sender === 'bot') {
                 message.className = 'bot-message align-self-start message-bubble';
 
-                const botLabel = document.createElement("span");
+                const botLabel = document.createElement("div");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Robotica: ";
+                botLabel.textContent = "Robotica";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = text;
