@@ -38,17 +38,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderOptions(options) {
         const wrapper = document.createElement("div");
-        wrapper.className = "message-wrapper";
+        wrapper.className = "message-wrapper options-wrapper";
+
+        const buttonContainer = document.createElement("div");
+        buttonContainer.className = "button-container";  // Container to hold buttons in a row
+
 
         Object.keys(options).forEach(option => {
             const btn = document.createElement("button");
             btn.className = "btn btn-outline-primary option-button btn-custom-grey";
             btn.textContent = option;
-
-            // Create a timestamp span
-            const timestampSpan = document.createElement("span");
-            timestampSpan.className = "option-timestamp";
-            timestampSpan.textContent = getCurrentFormattedTimestamp();
 
             btn.addEventListener("click", async () => {
                 // Disable all buttons when one is clicked
@@ -58,12 +57,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 await handleOptionClick(option, options[option]);
             });
 
-            // Append the timestamp inside the button
-            btn.appendChild(timestampSpan);
-
-            wrapper.appendChild(btn);
+            buttonContainer.appendChild(btn);
         });
 
+        // Create a shared timestamp div
+        const timestampSpan  = document.createElement("span");
+        timestampSpan.className = "options-timestamp";
+        timestampSpan.textContent = getCurrentFormattedTimestamp();
+
+        wrapper.appendChild(buttonContainer);
+        wrapper.appendChild(timestampSpan );
         chatContainer.appendChild(wrapper);
         scrollToBottom();
     }
