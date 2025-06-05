@@ -262,16 +262,29 @@ class CheckSupportChatView(LoginRequiredMixin, View):
         support_messages = ChatMessage.objects.filter(user=user, requested_for_support=True).order_by('timestamp')
 
         if support_messages.exists():
-            # Prepare the past messages as a list of dicts for frontend
-            # Convert from utc to IST, since timestamp is stored in utc format in db
-            messages = [
-                {
+            messages = []
+            for msg in support_messages:
+                # Default values
+                support_full_name = ""
+                if msg.thread and msg.thread.active_support_agent:
+                    first_name = msg.thread.active_support_agent.first_name or ""
+                    last_name = msg.thread.active_support_agent.last_name or ""
+                    support_full_name = f"{first_name} {last_name}".strip()
+
+                # Safe timestamp conversion
+                timestamp = ""
+                if msg.timestamp:
+                    try:
+                        timestamp = msg.timestamp.astimezone(ZoneInfo("Asia/Kolkata")).strftime('%d/%m/%Y %I:%M %p')
+                    except Exception as e:
+                        timestamp = "Invalid Time"
+
+                messages.append({
                     'message': msg.message,
                     'sender': msg.sender,
-                    'timestamp': (msg.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))).strftime('%d/%m/%Y %I:%M %p'),
-                }
-                for msg in support_messages
-            ]
+                    'support_full_name': support_full_name,
+                    'timestamp': timestamp,
+                })
     
             return JsonResponse({
                 'support_chat_exists': True,

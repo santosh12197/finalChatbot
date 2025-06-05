@@ -228,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             if (data.message && data.timestamp) {
-                appendMessage(data.message,  data.sender, data.timestamp);
+                appendMessage(data.message,  data.sender, data.timestamp, data.support_full_name);
                 // saveMessageToDB(data.message, sender);
                 scrollToBottom();
             }
@@ -256,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
 
-    function appendMessage(text, sender, timestampStr) {
+    function appendMessage(text, sender, timestampStr, supportFullName="") {
         const messageWrapper = document.createElement("div");
         messageWrapper.classList.add("message-wrapper");
 
@@ -316,7 +316,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 messageText.appendChild(messageContent);
             } else if (sender === 'support') {
                 message.className = 'support-message align-self-start message-bubble';
-                messageText.textContent = text;
+                // Support name and msg are in seperate lines
+                const supportName = document.createElement("div");
+                supportName.style.fontWeight = "bold";
+                supportName.textContent = supportFullName;
+
+                const messageLine = document.createElement("div");
+                messageLine.textContent = text;
+
+                messageText.appendChild(supportName);
+                messageText.appendChild(messageLine);
             } else {
                 message.className = 'user-message align-self-end message-bubble';
                 messageText.textContent = text;
@@ -406,7 +415,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 greetUserWithBotTreeOptions(firstInteractionTimestamp);
                 // Load past support messages
                 data.messages.forEach(msg => {
-                    appendMessage(msg.message, msg.sender, msg.timestamp);
+                    const supportName = msg.support_full_name ? msg.support_full_name : null;
+                    appendMessage(msg.message, msg.sender, msg.timestamp, supportName);
                 });
 
                 // Connect with the support team

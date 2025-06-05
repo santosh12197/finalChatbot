@@ -50,6 +50,11 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         # Save message to DB
         chat = await self.save_message(thread, user, message, sender)#, support_agent)
         
+        # support agent name
+        support_full_name = ""
+        if sender == "support":
+            support_full_name = await self.get_support_full_name(chat)
+
         # Convert from utc to IST, since timestamp is stored in utc format in db
         chat_time_ist = chat.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))
         # Format as desired
@@ -62,6 +67,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message', # triggers a method called chat_message()
                 'message': message,
                 'sender': sender,  # Assuming user is authenticated
+                'support_full_name': support_full_name,
                 'username': user.username,
                 'timestamp': timestamp
             }
@@ -119,14 +125,22 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         sender = event['sender']
         username = event['username']
         timestamp = event['timestamp']
+        support_full_name = event.get('support_full_name', '')
 
         # Send message to WebSocket: Sends message back to all connected clients in that room using .send()
         await self.send(text_data=json.dumps({
             'message': message,
             'sender': sender,
             'username': username,
-            'timestamp': timestamp
+            'timestamp': timestamp,
+            'support_full_name': support_full_name
         }))
+
+    @database_sync_to_async
+    def get_support_full_name(self, chat):
+        if chat.thread and chat.thread.active_support_agent:
+            return f"{chat.thread.active_support_agent.first_name} {chat.thread.active_support_agent.last_name}"
+        return ""
 
     @database_sync_to_async
     def get_unread_msg_count(self, user, thread) :
