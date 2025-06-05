@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
             await saveMessageToDB("Yes, I'm satisfied.", "user", is_read=true, requested_for_support=false); // saving chat data for the user
 
             const thankYouMsg = "Thank you for connecting with SciPris Aptara.";
-            const greetMsg = "Hi! How can I help you today?";
+            const greetMsg = "Hi, I'm Robotica. How can I help you today?";
             const combined = `${thankYouMsg}; \n ${greetMsg}; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries`;
 
             appendMessage(thankYouMsg, "bot", getCurrentFormattedTimestamp()); // Bot reply
@@ -275,10 +275,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 message.className = 'bot-message align-self-start message-bubble';
 
-                // "Bot: " prefix in bold
+                // "Robotica: " prefix in bold
                 const botLabel = document.createElement("span");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Bot: ";
+                botLabel.textContent = "Robotica: ";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = part;
@@ -307,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const botLabel = document.createElement("span");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Bot: ";
+                botLabel.textContent = "Robotica: ";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = text;
@@ -380,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function greetUserWithBotTreeOptions(firstInteractionTimestamp) {
         // First line: greeting
-        const greeting = "Hi! How can I help you today?";
+        const greeting = "Hi, I'm Robotica. How can I help you today?";
         appendMessage(greeting, "bot", firstInteractionTimestamp);
 
         // Four lines: each top-level key of the botTree
@@ -413,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 enableRealTimeChat();
             } else {
                 // Start chatbot normally
-                appendMessage("Hi! How can I help you today?", "bot", getCurrentFormattedTimestamp());
+                appendMessage("Hi, I'm Robotica. How can I help you today?", "bot", getCurrentFormattedTimestamp());
                 renderOptions(botTree);
             }
         });

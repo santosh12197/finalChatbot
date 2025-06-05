@@ -527,7 +527,7 @@ class AssignSupportAgentView(View):
 
             # assigning support agent validation
             if not chat_thread.active_support_agent and request.user != support_agent:
-                return JsonResponse({'status': 'error', 'message': 'You can only assign to yourself if user is not assigned to any support agent!'}, status=400)
+                return JsonResponse({'status': 'error', 'message': 'You can only assign user to yourself if user is not assigned to any support agent!'}, status=400)
 
             if not chat_thread.active_support_agent or (chat_thread.active_support_agent and chat_thread.active_support_agent == request.user):
                 # Assign the support agent
