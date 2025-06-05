@@ -363,16 +363,57 @@
                 const data = await res.json();
 
                 if (data.status === "assigned_to_you") {
-                inputField.disabled = false;
-                sendButton.disabled = false;
-                return;
+                    inputField.disabled = false;
+                    sendButton.disabled = false;
+                    return;
                 }
 
                 if (data.status === "assigned_to_other") {
-                appendSystemMessage(
-                    `User ${fname} ${lname} is already assigned to ${data.assigned_to}.`
-                );
-                return;
+                // appendSystemMessage(
+                //     `User ${fname} ${lname} is already assigned to ${data.assigned_to}.`
+                // );
+                // return;
+
+                    // Remove previous infoBox if exists to avoid duplicates
+                    const existingBox = document.getElementById("assigned-info-box");
+                    if (existingBox) {
+                        existingBox.remove();
+                    }
+
+                    // Create the box
+                    const infoBox = document.createElement("div");
+                    infoBox.id = "assigned-info-box";  // Give it a fixed ID so we can manage it
+                    infoBox.classList.add("assigned-info-box");
+                    infoBox.style.cssText = `
+                        background: #fff3cd;
+                        padding: 12px;
+                        margin: 10px;
+                        border: 1px solid #ffeeba;
+                        border-radius: 8px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-start;
+                    `;
+
+                    const msgText = document.createElement("span");
+                    msgText.textContent = `User ${fname} ${lname} is already assigned to ${data.assigned_to}.`;
+                    msgText.style.color = "#856404";
+                    msgText.style.fontWeight = "500";
+
+                    infoBox.appendChild(msgText);
+
+                    // Append to chat container at the end
+                    chatBox.appendChild(infoBox);
+
+                    // Disable input field and send button
+                    inputField.disabled = true;
+                    sendButton.disabled = true;
+
+                    // Scroll to bottom
+                    chatBox.scrollTop = chatBox.scrollHeight;
+
+                    return;
+
                 }
 
                 // At this point: status === 'unassigned' → show connect UI
@@ -423,6 +464,20 @@
                 console.error("Failed to check or assign support:", err);
                 appendSystemMessage("Error checking support status. Please try again.");
             }
+        }
+
+        function moveImportantElementsToBottom() {
+            const chatBox = document.getElementById("chat-messages");
+
+            const selectors = [".assigned-info-box", "#connect-box"];
+            selectors.forEach(selector => {
+                const elements = chatBox.querySelectorAll(selector);
+                elements.forEach(el => {
+                    chatBox.appendChild(el);  // Appending again moves it to the bottom
+                });
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function moveConnectBoxToBottom() {
@@ -604,7 +659,8 @@
                 chatBox.appendChild(messageDiv);
 
                 scrollToBottom();
-                moveConnectBoxToBottom();  // Reposition connectBox if present
+                // moveConnectBoxToBottom();  // Reposition connectBox if present
+                moveImportantElementsToBottom();
             };
 
         }
