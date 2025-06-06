@@ -54,11 +54,6 @@
             margin: 8px 0;
         }
 
-        .option-button {
-            margin-top: 5px;
-            margin-right: auto;
-        }
-
         .btn-custom-grey {
             background-color: #d3d3d3;
             color: #000;
@@ -78,24 +73,30 @@
         .message-bubble {
             /* background-color: #dee2e6; */
             border-radius: 8px;
-            padding: 8px 12px;
+            /* padding: 10px 10px; */
             margin: 5px 10px;
             position: relative;
             display: inline-block;
             word-wrap: break-word;
+            width: fit-content;
+           /*  max-width: 100%; */
+            display: flex;
+            flex-direction: column;
         }
 
         .message-text {
             font-size: 14px;
             color: #000;
+            word-wrap: break-word;
+            padding: 10px;
         }
 
         .timestamp {
             font-size: 12px;
             color: #110606ad;
             text-align: right;
-            margin-top: 4px;
             align-self: flex-end;
+            margin-top: 8px;
         }
 
         .option-timestamp {
@@ -107,35 +108,37 @@
         }
 
         .options-wrapper {
-        display: inline-block;
-        max-width: 90%;
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
+            display: inline-block;
+            max-width: 90%;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
         }
 
         .button-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .option-button {
-        white-space: nowrap;
-        padding: 6px 12px;
-        border-radius: 5px;
-        font-size: 0.9em;
-        flex-shrink: 0;
+            margin-top: 5px;
+            margin-right: auto;
+            white-space: nowrap;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            flex-shrink: 0;
         }
 
         .options-timestamp {
-        font-size: 0.75em;
-        color: #6c757d;
-        display: block;
-        text-align: right;
-        margin-top: 5px;
+            font-size: 0.75em;
+            color: #6c757d;
+            display: block;
+            text-align: right;
+            margin-top: 5px;
         }
 
         .grey-bg-color{
@@ -174,10 +177,6 @@
             max-width: 90%;
         }
 
-        .custom-options-bubble {
-            background-color: #f8f9fa;  /* Light grey */
-        }
-
         /* Inline option bubbles */
         .bubble-row {
             display: flex;
@@ -191,6 +190,7 @@
             border-radius: 6px;
             font-size: 13px;
             white-space: nowrap;
+            background-color: #dee2e6;
         }
 
         /* Shared timestamp */
@@ -202,161 +202,65 @@
         }
 
         /* Common styles for all message groups */
-.group-wrapper {
-    display: flex;
-    flex-direction: column;
-    clear: both;
-    max-width: 90%;
-    margin-bottom: 16px;
-    padding: 12px;
-    border-radius: 16px;
-    word-wrap: break-word;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
+        .group-wrapper {
+            display: flex;
+            flex-direction: column;
+            clear: both;
+            max-width: 90%;
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
 
-/* Alignment */
-.align-self-start {
-    align-self: flex-start;
-    margin-right: auto;
-}
+        .align-self-start {
+            align-self: flex-start;
+            margin-right: auto;
+        }
 
-.align-self-end {
-    align-self: flex-end;
-    margin-left: auto;
-}
+        .align-self-end {
+            align-self: flex-end;
+            margin-left: auto;
+        }
 
-/* Specific background for each sender */
-.bot-group {
-    background-color: #e6f7ff;
-    width: fit-content;
-}
+        /* Specific background for each sender */
+        .bot-group {
+            width: fit-content;
+            background-color: #f0f0f0;
+        }
 
-.user-group {
-    background-color: #d4f7dc;
-    width: fit-content;
-}
+        .user-group {
+            background-color: #d4f7dc;
+            width: fit-content;
+        }
 
-.support-group {
-    background-color: #fff3cd;
-    width: fit-content;
-}
+        .support-group {
+            background-color: #f0f0f0;
+            width: fit-content;
+        }
 
-.message-bubble {
-    padding: 6px 10px;
-    margin: 4px 0;
-    /* border-radius: 6px; */
-    display: inline-block;
-    width: fit-content;
-    max-width: 100%;
-}
+        /* Support name (only in support group) */
+        .support-name {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
 
-/* Support name (only in support group) */
-.support-name {
-    font-weight: bold;
-    margin-bottom: 6px;
-}
+        /* Label above each group */
+        .sender-label {
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
 
-/* Timestamp inside the group aligned to bottom-right */
-.timestamp {
-    font-size: 0.75em;
-    color: #777;
-    margin-top: 8px;
-    text-align: right;
-    align-self: flex-end;
-}
-
-/* Label above each group */
-.sender-label {
-    font-weight: bold;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-}
-
-/* Shared group wrapper */
-.group-wrapper {
-    display: flex;
-    flex-direction: column;
-    max-width: 90%;
-    border-radius: 14px;
-    padding: 10px;
-    margin: 12px 0;
-    word-wrap: break-word;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-
-/* Alignment */
-.align-self-start {
-    align-self: flex-start;
-    margin-right: auto;
-}
-
-.align-self-end {
-    align-self: flex-end;
-    margin-left: auto;
-}
-
-/* Background per sender */
-.user-group {
-    background-color: #c6f8f1fd;
-}
-
-.support-group {
-    background-color: #f0f0f0;
-}
-
-.bot-group {
-    background-color: #f0f0f0;
-}
-
-/* Individual message bubble */
-.message-bubble {
-    /* background-color: transparent; */
-    /* border-radius: 12px; */
-    /* padding: 4px; */
-    width: fit-content;
-    max-width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Inline bot bubbles */
-.bubble-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.bot-bubble-inline {
-    background-color: #dee2e6;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    white-space: nowrap;
-}
-
-/* Message text */
-.message-text {
-    font-size: 14px;
-    color: #000;
-    word-wrap: break-word;
-}
-
-/* Timestamp inside bubble */
-.bubble-timestamp {
-    font-size: 12px;
-    color: #555;
-    text-align: right;
-    align-self: flex-end;
-    margin-top: 4px;
-}
-
-/* Support name (optional) */
-.support-name {
-    font-weight: bold;
-    margin-bottom: 6px;
-}
-
-
+        /* Timestamp inside bubble */
+        .bubble-timestamp {
+            font-size: 12px;
+            color: #555;
+            text-align: right;
+            align-self: flex-end;
+            margin-top: 4px;
+        }
 
     </style>
 </head>
