@@ -390,15 +390,136 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${day}/${month}/${year} ${hourStr}:${minutes} ${ampm}`;
     }
 
-    function greetUserWithBotTreeOptions(firstInteractionTimestamp) {
-        // First line: greeting
-        const greeting = "Hi, I'm Robotica. How can I help you today?";
-        appendMessage(greeting, "bot", firstInteractionTimestamp);
+    function renderGroupedMessages(messages) {
+        if (!messages || messages.length === 0) return;
 
-        // Four lines: each top-level key of the botTree
-        Object.keys(botTree).forEach(key => {
-            appendMessage(`${key}`, "bot", firstInteractionTimestamp);
+        messages.forEach(msg => {
+            const sender = msg.sender;
+            const supportName = msg.support_full_name || null;
+            const content = msg.message;
+            const timestamp = msg.timestamp;
+
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("message-wrapper", "group-wrapper");
+
+            // Alignment
+            if (sender === 'user') {
+                wrapper.classList.add("align-self-end", "user-group");
+            } else if (sender === 'support') {
+                wrapper.classList.add("align-self-start", "support-group");
+            } else if (sender === 'bot') {
+                wrapper.classList.add("align-self-start", "bot-group");
+            }
+
+            // Support name
+            if (sender === 'support' && supportName) {
+                const nameDiv = document.createElement("div");
+                nameDiv.className = "support-name";
+                nameDiv.textContent = supportName;
+                wrapper.appendChild(nameDiv);
+            }
+
+            // Bot Label
+            if (sender === 'bot') {
+                const roboticaLabel = document.createElement("div");
+                roboticaLabel.textContent = "Robotica";
+                roboticaLabel.style.fontWeight = "bold";
+                roboticaLabel.style.marginBottom = "6px";
+                wrapper.appendChild(roboticaLabel);
+            }
+
+            const bubble = document.createElement("div");
+            bubble.classList.add("message-bubble");
+
+            // BOT: inline bubbles split by ;
+            if (sender === 'bot' && content.includes(";")) {
+                const row = document.createElement("div");
+                row.className = "bubble-row";
+                content.split(";").map(p => p.trim()).filter(Boolean).forEach(part => {
+                    const partBubble = document.createElement("div");
+                    partBubble.className = "bot-bubble-inline";
+                    partBubble.textContent = part;
+                    row.appendChild(partBubble);
+                });
+                bubble.appendChild(row);
+            } else {
+                // Single message for user/support/bot without semicolon
+                const textDiv = document.createElement("div");
+                textDiv.className = "message-text";
+                textDiv.textContent = content;
+                bubble.appendChild(textDiv);
+            }
+
+            // Timestamp
+            const ts = document.createElement("div");
+            ts.className = "bubble-timestamp";
+            ts.textContent = timestamp;
+            bubble.appendChild(ts);
+
+            wrapper.appendChild(bubble);
+            chatContainer.appendChild(wrapper);
         });
+
+        scrollToBottom();
+    }
+
+
+
+
+    function greetUserWithBotTreeOptions(firstInteractionTimestamp) {
+        // STEP 1: Greeting message block
+        const greetingWrapper = document.createElement("div");
+        greetingWrapper.className = "message-wrapper custom-greeting-wrapper";
+
+        const greetingBubble = document.createElement("div");
+        greetingBubble.className = "message-bubble custom-greeting-bubble bg-color-trans";
+
+        const greetingText = document.createElement("div");
+        greetingText.className = "message-text";
+
+        const botLabel = document.createElement("div");
+        botLabel.style.fontWeight = "bold";
+        botLabel.textContent = "Robotica";
+
+        const greetingContent = document.createElement("div");
+        greetingContent.textContent = "Hi, I'm Robotica. How can I help you today?";
+
+        // const timestamp = document.createElement("div");
+        // timestamp.className = "timestamp custom-timestamp";
+        // timestamp.textContent = firstInteractionTimestamp;
+
+        greetingText.appendChild(botLabel);
+        greetingText.appendChild(greetingContent);
+        greetingBubble.appendChild(greetingText);
+        // greetingBubble.appendChild(timestamp);
+        greetingWrapper.appendChild(greetingBubble);
+        chatContainer.appendChild(greetingWrapper);
+
+        // STEP 2: Inline options block
+        const optionsWrapper = document.createElement("div");
+        optionsWrapper.className = "message-wrapper custom-options-wrapper grey-bg-color";
+
+        const optionsBubble = document.createElement("div");
+        optionsBubble.className = "message-bubble custom-options-bubble";
+
+        const buttonRow = document.createElement("div");
+        buttonRow.className = "bubble-row";
+
+        Object.keys(botTree).forEach(text => {
+            const bubble = document.createElement("div");
+            bubble.className = "bot-bubble-inline";
+            bubble.textContent = text;
+            buttonRow.appendChild(bubble);
+        });
+
+        const optionsTimestamp = document.createElement("div");
+        optionsTimestamp.className = "timestamp custom-timestamp";
+        optionsTimestamp.textContent = firstInteractionTimestamp;
+
+        optionsBubble.appendChild(buttonRow);
+        optionsBubble.appendChild(optionsTimestamp);
+        optionsWrapper.appendChild(optionsBubble);
+        chatContainer.appendChild(optionsWrapper);
 
         scrollToBottom();
     }
@@ -416,12 +537,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.support_chat_exists) {
                 // first greeting lines and then options to start chat with the bot
                 greetUserWithBotTreeOptions(firstInteractionTimestamp);
-                // Load past support messages
-                data.messages.forEach(msg => {
-                    const supportName = msg.support_full_name ? msg.support_full_name : null;
-                    appendMessage(msg.message, msg.sender, msg.timestamp, supportName);
-                });
-
+                // Load past chat messages
+                renderGroupedMessages(data.messages); // Use updated function here
                 // Connect with the support team
                 enableRealTimeChat();
             } else {
