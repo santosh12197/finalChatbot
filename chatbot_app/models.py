@@ -33,7 +33,7 @@ class ChatThread(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)  # to track closed threads
+    is_closed = models.BooleanField(default=False)  # to track closed threads
 
     def __str__(self):
         return f"Thread with {self.user.username}" #(Support: {self.support_agent})"
@@ -65,15 +65,7 @@ class ChatMessage(models.Model):
     # whether msg sent is read or not
     has_read = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)
-     # nullable field: if sender or receiver is support agent
-    # support_agent = models.ForeignKey(
-    #     User,
-    #     on_delete=models.SET_NULL,
-    #     related_name='support_chats',
-    #     null=True,
-    #     blank=True,
-    #     help_text="Support agent involved in this chat (only if sender is support)"
-    # )
+    is_active  = models.BooleanField(default=True) # Important: Make is_active=False when chat thread is closed
 
     def __str__(self):
         return f"{self.sender} - {self.user.username} at {self.timestamp}"

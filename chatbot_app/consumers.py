@@ -145,8 +145,9 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_unread_msg_count(self, user, thread) :
         unread_count = ChatMessage.objects.filter(
+            is_active=True,
             thread=thread,
-            thread__is_active=True,
+            thread__is_closed=False,
             user=user,
             sender='user',
             has_read=False
@@ -163,7 +164,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_or_create_active_thread(self, user):
         # Get active thread if any, else create new
-        thread = ChatThread.objects.filter(user=user, is_active=True).first()
+        thread = ChatThread.objects.filter(user=user, is_closed=False).first()
         if thread:
             return thread
         return ChatThread.objects.create(user=user) 

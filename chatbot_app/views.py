@@ -243,14 +243,19 @@ class MarkSupportRequestView(View):
 class CheckSupportChatView(LoginRequiredMixin, View):
     """
         This view checks if the current user already has support chat messages.
-        If yes, it returns them along with a flag indicating the chat should be resumed.
+        If yes, it returns them along with a flag indicating the chat should be resumed on user side.
     """
     def get(self, request, *args, **kwargs):
         user = request.user
         # Check if support chat exists for the current user
 
         # Get the first interaction timestamp from the earliest message
-        first_msg = ChatMessage.objects.filter(user=user, requested_for_support=True).order_by('timestamp').first()
+        first_msg = ChatMessage.objects.filter(
+            user=user, 
+            requested_for_support=True,
+            is_active=True,
+            # thread__is_closed=False,
+        ).order_by('timestamp').first()
 
         first_interaction_ist = None
         if first_msg and first_msg.first_interaction_timestamp:
@@ -259,7 +264,12 @@ class CheckSupportChatView(LoginRequiredMixin, View):
 
 
         # Find messages where requested_for_support is True
-        support_messages = ChatMessage.objects.filter(user=user, requested_for_support=True).order_by('timestamp')
+        support_messages = ChatMessage.objects.filter(
+            user=user, 
+            requested_for_support=True,
+            is_active=True,
+            # thread__is_closed=False,
+        ).order_by('timestamp')
 
         if support_messages.exists():
             messages = []
@@ -432,16 +442,67 @@ class GetChatHistoryView(View):
         Chat history of a user
     """
     def get(self, request, user_id):
-        chats = ChatMessage.objects.filter(user_id=user_id).order_by('timestamp')
-        data = [
-            {
-                'sender': msg.sender,
-                'message': msg.message,
-                'timestamp': msg.timestamp.astimezone(ZoneInfo('Asia/Kolkata')).strftime("%d/%m/%Y %I:%M %p") # first convert timezone for UTC to IST timezone 
-            }
-            for msg in chats
-        ]
-        return JsonResponse(data, safe=False)
+
+        user = UserProfile.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({
+                "Error": "User does not exist!",
+                'support_chat_exists': False,
+                'messages': [],
+                'first_interaction_timestamp': None,
+            })
+        
+        # Get the first interaction timestamp from the earliest message
+        first_msg = ChatMessage.objects.filter(
+            user=user, 
+            requested_for_support=True,
+            is_active=True,
+        ).order_by('timestamp').first()
+
+        first_interaction_ist = None
+        if first_msg and first_msg.first_interaction_timestamp:
+            # Convert to IST for display
+            first_interaction_ist = (first_msg.first_interaction_timestamp.astimezone(ZoneInfo("Asia/Kolkata"))).strftime('%d/%m/%Y %I:%M %p')
+
+        chats = ChatMessage.objects.filter(
+            user_id=user_id,
+            requested_for_support=True,
+            is_active=True,
+        ).order_by('timestamp')
+
+        if chats.exists():
+            messages = []
+            for msg in chats:
+                active_support_id = None # to track support agent involved (needed to display on support dashboard)
+                if msg.thread and msg.thread.active_support_agent:
+                    active_support_id = msg.thread.active_support_agent.id
+                
+                # Safe timestamp conversion
+                timestamp = ""
+                if msg.timestamp:
+                    try:
+                        timestamp = msg.timestamp.astimezone(ZoneInfo("Asia/Kolkata")).strftime('%d/%m/%Y %I:%M %p')
+                    except Exception as e:
+                        timestamp = "Invalid Time"
+
+                messages.append({
+                    'message': msg.message,
+                    'sender': msg.sender,
+                    "active_support_id": active_support_id,
+                    'timestamp': timestamp,
+                })
+
+            return JsonResponse({
+                'support_chat_exists': True,
+                'messages': messages,
+                'first_interaction_timestamp': first_interaction_ist,
+            })
+
+        return JsonResponse({
+            'support_chat_exists': False,
+            'messages': [],
+            'first_interaction_timestamp': None,
+        })
     
 
 class UserLocationView(View):
@@ -533,7 +594,7 @@ class AssignSupportAgentView(View):
             
             chat_thread = ChatThread.objects.get(
                 user=user,
-                is_active=True
+                is_closed=False,
             )
             if not chat_thread:
                 return JsonResponse({'status': 'error', 'message': 'Active chat thread does not exist for the given user.'}, status=404)

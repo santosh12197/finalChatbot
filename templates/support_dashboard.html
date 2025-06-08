@@ -590,7 +590,7 @@
                     const chatBox = document.getElementById('chat-messages');
                     chatBox.innerHTML = '';
 
-                    data.forEach(msg => {
+                    data.messages.forEach(msg => {
                         const msgWrapper = document.createElement('div');
                         msgWrapper.classList.add('message');
 
