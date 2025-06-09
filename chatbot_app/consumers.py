@@ -138,8 +138,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_support_full_name(self, chat):
-        if chat.thread and chat.thread.active_support_agent:
-            return f"{chat.thread.active_support_agent.first_name} {chat.thread.active_support_agent.last_name}"
+        if chat.support_agent:
+            return f"{chat.support_agent.first_name} {chat.support_agent.last_name}"
         return ""
 
     @database_sync_to_async

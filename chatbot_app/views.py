@@ -276,9 +276,9 @@ class CheckSupportChatView(LoginRequiredMixin, View):
             for msg in support_messages:
                 # Default values
                 support_full_name = ""
-                if msg.thread and msg.thread.active_support_agent:
-                    first_name = msg.thread.active_support_agent.first_name or ""
-                    last_name = msg.thread.active_support_agent.last_name or ""
+                if msg.support_agent:
+                    first_name = msg.support_agent.first_name or ""
+                    last_name = msg.support_agent.last_name or ""
                     support_full_name = f"{first_name} {last_name}".strip()
 
                 # Safe timestamp conversion
