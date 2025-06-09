@@ -231,7 +231,7 @@
         }
 
         .user-group {
-            background-color: #d4f7dc;
+            background-color: #c6f8f1fd;
             width: fit-content;
         }
 
@@ -273,12 +273,14 @@
         <div id="input-wrapper" class="p-2 border-top bg-white"></div>
     </div>
 
+    <!-- first load common components and then page-specific scripts -->
+    <script src="{% static 'js/common_utils.js' %}"></script>
+    <script src="{% static 'js/chat.js' %}"></script>
 
     <script>
         const currentUsername = "{{ request.user.username|escapejs }}";
         const currentUserId = "{{ request.user.id }}";
     </script>
-    <script src="{% static 'js/chat.js' %}"></script>
 
 </body>
 </html>

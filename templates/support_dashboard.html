@@ -60,10 +60,23 @@
 
         .timestamp {
             font-size: 12px;
-            color: #555;
+            color: #110606ad;
             margin-left: 10px;
             align-self: flex-end;
             white-space: nowrap;
+        }
+        .bubble-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .bot-bubble-inline {
+            background-color: #dee2e615;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            background-color: #dee2e6;
         }
 
         .last-message {
@@ -122,6 +135,15 @@
             text-align: left;
             max-width: 90%;
             width: fit-content;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .custom-timestamp {
+            font-size: 12px;
+            color: #110606ad;
+            text-align: right;
+            margin-top: 4px;
         }
         #message-input {
             margin-top: auto; margin: 5px; 
@@ -178,6 +200,8 @@
         }
         
     </style>
+    <!-- first load common utils -->
+    <script src="{% static 'js/common_utils.js' %}"></script>
     <script 
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSj9JpJ1vEAR0HhTCXjupjzsJk3Z0E6TM&libraries=marker"
         async
@@ -232,7 +256,7 @@
             <!-- Dropdown container for support team members -->
             <div id="support-members-dropdown" class="dropdown-content" style="display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; border: 1px solid #ccc; z-index: 1000;"></div>
         </div>
-        <div id="chat-messages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;"></div>
+        <div id="chat-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;"></div>
         <div id="message-input" style="display: none;">
             <input type="text" id="input-message" placeholder="Type your message...">
             <button id="send-button" class="btn btn-primary">Send</button>
@@ -261,7 +285,7 @@
 
     <script>
         // script to handle chat data when member from support team clicks on any user (who has requested to chat with support team)
-        const chatContainer = document.getElementById('chat-messages')
+        // const chatContainer = document.getElementById('chat-container')
         let selectedUserId = null;
         let chatSocket = null;
         let support_agent_id = {{ request.user.id }};
@@ -332,7 +356,7 @@
         });
         // Helper to show message
         function appendSystemMessage(msg) {
-            const chatBox = document.getElementById("chat-messages");
+            const chatBox = document.getElementById("chat-container");
             const div = document.createElement("div");
             div.className = "system-msg";
             div.style.cssText = "padding:6px 10px;margin:6px 0;font-style:italic;color:#555;background:#f5f5f5;border-left:4px solid #888;";
@@ -348,7 +372,7 @@
             **/
             const inputField = document.getElementById("input-message");
             const sendButton = document.getElementById("send-button");
-            const chatBox = document.getElementById("chat-messages");
+            const chatBox = document.getElementById("chat-container");
 
             // Always hide input first
             inputField.disabled = true;
@@ -468,7 +492,7 @@
         }
 
         function moveImportantElementsToBottom() {
-            const chatBox = document.getElementById("chat-messages");
+            const chatBox = document.getElementById("chat-container");
 
             const selectors = [".assigned-info-box", "#connect-box"];
             selectors.forEach(selector => {
@@ -482,7 +506,7 @@
         }
 
         function moveConnectBoxToBottom() {
-            const chatBox = document.getElementById("chat-messages");
+            const chatBox = document.getElementById("chat-container");
             const connectBox = document.getElementById("connect-box");
             if (connectBox && chatBox.contains(connectBox)) {
                 chatBox.removeChild(connectBox);   // Remove from current position
@@ -555,7 +579,7 @@
                     alert(msg);
                     
                     // display success msg in chat box
-                    const chatBox = document.getElementById("chat-messages");
+                    const chatBox = document.getElementById("chat-container");
                     const div = document.createElement("div");
                     div.className = "assigned-info-box";
                     div.style.cssText = "padding:6px 10px;margin:6px 0;font-style:italic;color:#555;background:#f5f5f5;border-left:4px solid #888;";
@@ -588,9 +612,13 @@
             return fetch(`/get_chat_history/${userId}/`)
                 .then(res => res.json())
                 .then(data => {
-                    const chatBox = document.getElementById('chat-messages');
+                    const chatBox = document.getElementById('chat-container');
                     chatBox.innerHTML = '';
 
+                    // load greeting msg by Robotica first
+                    greetUserWithBotTreeOptions(data.first_interaction_timestamp, "support");
+
+                    // then load chat history
                     data.messages.forEach(msg => {
                         const msgWrapper = document.createElement('div');
                         msgWrapper.classList.add('message');
@@ -612,11 +640,30 @@
                             botLabel.style.fontWeight = "bold";
                             botLabel.textContent = "Robotica";
 
-                            const messageContent = document.createElement("div");  // use div for new line
-                            messageContent.textContent = msg.message;
+                            const messageWrapper = document.createElement("div");
+                            messageWrapper.style.backgroundColor = "#c6f8f1fd";
+                            messageWrapper.style.padding = "8px";
+                            messageWrapper.style.borderRadius = "6px";
+                            messageWrapper.style.display = "flex";
+                            messageWrapper.style.flexWrap = "wrap";
+                            messageWrapper.style.gap = "8px";
+                            messageWrapper.style.marginTop = "4px";
+
+                            const splitMessages = msg.message.split(';').map(s => s.trim()).filter(s => s);
+                            splitMessages.forEach(part => {
+                                const bubble = document.createElement("div");
+                                bubble.textContent = part;
+                                bubble.style.backgroundColor = "#dee2e6";
+                                bubble.style.padding = "6px 10px";
+                                bubble.style.borderRadius = "6px";
+                                bubble.style.display = "inline-block";
+                                bubble.style.maxWidth = "80%";
+                                bubble.style.wordBreak = "break-word";
+                                messageWrapper.appendChild(bubble);
+                            });
 
                             textSpan.appendChild(botLabel);
-                            textSpan.appendChild(messageContent);
+                            textSpan.appendChild(messageWrapper);
                         } else {
                             textSpan.textContent = msg.message;
                         }
@@ -648,7 +695,7 @@
 
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
-                const chatBox = document.getElementById('chat-messages');
+                const chatBox = document.getElementById('chat-container');
 
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message');
@@ -706,31 +753,6 @@
                 input.value = '';
                 scrollToBottom();
             }
-        }
-
-        function scrollToBottom() {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // function saveMessageToDB(message, sender) {
-        //     fetch("/save_message/", {
-        //         method: "POST",
-        //         headers: {
-        //             "Content-Type": "application/json",
-        //             "X-CSRFToken": getCSRFToken(), // CSRF is needed for POST in Django
-        //         },
-        //         body: JSON.stringify({
-        //             message: message,
-        //             sender: sender
-        //         })
-        //     });
-        // }
-        
-        function getCSRFToken() {
-            return document.cookie
-                .split('; ')
-                .find(row => row.startsWith('csrftoken='))
-                ?.split('=')[1];
         }
 
     </script>
