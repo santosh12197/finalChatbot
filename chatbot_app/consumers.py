@@ -67,6 +67,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message', # triggers a method called chat_message()
                 'message': message,
                 'sender': sender,  # Assuming user is authenticated
+                'support_agent_id': support_agent_id,
                 'support_full_name': support_full_name,
                 'username': user.username,
                 'timestamp': timestamp
@@ -125,6 +126,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         sender = event['sender']
         username = event['username']
         timestamp = event['timestamp']
+        support_agent_id = event['support_agent_id']
         support_full_name = event.get('support_full_name', '')
 
         # Send message to WebSocket: Sends message back to all connected clients in that room using .send()
@@ -133,6 +135,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             'sender': sender,
             'username': username,
             'timestamp': timestamp,
+            'support_agent_id': support_agent_id,
             'support_full_name': support_full_name
         }))
 

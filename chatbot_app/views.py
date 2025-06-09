@@ -479,9 +479,15 @@ class GetChatHistoryView(View):
         if chats.exists():
             messages = []
             for msg in chats:
-                active_support_id = None # to track support agent involved (needed to display on support dashboard)
-                if msg.thread and msg.thread.active_support_agent:
-                    active_support_id = msg.thread.active_support_agent.id
+
+                # Default values of support agent of a particular chat
+                support_full_name = ""
+                support_agent_id = None
+                if msg.support_agent:
+                    first_name = msg.support_agent.first_name or ""
+                    last_name = msg.support_agent.last_name or ""
+                    support_full_name = f"{first_name} {last_name}".strip()
+                    support_agent_id = msg.support_agent.id
                 
                 # Safe timestamp conversion
                 timestamp = ""
@@ -494,7 +500,8 @@ class GetChatHistoryView(View):
                 messages.append({
                     'message': msg.message,
                     'sender': msg.sender,
-                    "active_support_id": active_support_id,
+                    "support_agent_id": support_agent_id,
+                    "support_full_name": support_full_name,
                     'timestamp': timestamp,
                 })
 

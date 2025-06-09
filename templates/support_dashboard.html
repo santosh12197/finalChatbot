@@ -635,11 +635,20 @@
                         textSpan.style.display = "flex";
                         textSpan.style.flexDirection = "column";
 
-                        if (msg.sender === 'bot') {
-                            const botLabel = document.createElement("div");
-                            botLabel.style.fontWeight = "bold";
-                            botLabel.textContent = "Robotica";
+                        // Label for sender
+                        const senderLabel = document.createElement("div");
+                        senderLabel.style.fontWeight = "bold";
+                        senderLabel.style.marginBottom = "2px";
 
+                        if (msg.sender === 'bot') {
+                            senderLabel.textContent = "Robotica";
+                        } else if (msg.sender === 'support') {
+                            senderLabel.textContent = (msg.support_agent_id === support_agent_id) ? "You" : msg.support_full_name;
+                        }
+
+                        textSpan.appendChild(senderLabel);
+
+                        if (msg.sender === 'bot') {
                             const messageWrapper = document.createElement("div");
                             messageWrapper.style.backgroundColor = "#c6f8f1fd";
                             messageWrapper.style.padding = "8px";
@@ -662,10 +671,11 @@
                                 messageWrapper.appendChild(bubble);
                             });
 
-                            textSpan.appendChild(botLabel);
                             textSpan.appendChild(messageWrapper);
                         } else {
-                            textSpan.textContent = msg.message;
+                            const messageContent = document.createElement("div");
+                            messageContent.textContent = msg.message;
+                            textSpan.appendChild(messageContent);
                         }
 
                         // Create timestamp element
@@ -701,10 +711,27 @@
                 messageDiv.classList.add('message');
                 messageDiv.classList.add(data.sender === 'support' ? 'support-msg' : 'user-msg');
 
+                // Create wrapper for text + name
+                const messageWrapper = document.createElement('span');
+                messageWrapper.style.display = "flex";
+                messageWrapper.style.flexDirection = "column";
+
+                // Add label if sender is support
+                if (data.sender === 'support') {
+                    const nameLabel = document.createElement('div');
+                    nameLabel.style.fontWeight = "bold";
+                    nameLabel.style.marginBottom = "2px";
+                    nameLabel.textContent = (data.support_agent_id === support_agent_id) ? "You" : data.support_full_name;
+                    messageWrapper.appendChild(nameLabel);
+                }
+
                 // Create a span for the actual message text
                 const messageText = document.createElement('div');
                 messageText.classList.add('message-text');
                 messageText.textContent = data.message;
+
+                // Append message text
+                messageWrapper.appendChild(messageText);
 
                 // Create a span for the timestamp
                 const timestamp = document.createElement('span');
@@ -712,7 +739,7 @@
                 timestamp.textContent = data.timestamp || '';
 
                 // Append text and timestamp to the message
-                messageDiv.appendChild(messageText);
+                messageDiv.appendChild(messageWrapper);
                 messageDiv.appendChild(timestamp);
 
                 chatBox.appendChild(messageDiv);
