@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let conversationPath = []; // Tracks current path in the botTree
     let chatSocket; // Declare it globally to be accessible in send/receive. 
+    let support_agent_id = null;
 
     function renderOptions(options) {
         const wrapper = document.createElement("div");
@@ -77,14 +78,14 @@ document.addEventListener("DOMContentLoaded", () => {
         appendMessage(label, 'user', getCurrentFormattedTimestamp());
 
         // save the key of the botTree selected by user in the table sequentially
-        await saveMessageToDB(label, 'user', is_read=true, requested_for_support=false);
+        await saveMessageToDB(label, 'user', is_read=true, requested_for_support=false, support_agent_id=null);
 
         // display and save other options by the bot
         if (typeof next === 'string') {
             // meaning that we are at the leaf of the botTree
             // display message, save to db, and then ask for satisfaction check
             appendMessage(next, 'bot', getCurrentFormattedTimestamp());
-            await saveMessageToDB(next, 'bot', is_read=true, requested_for_support=false);
+            await saveMessageToDB(next, 'bot', is_read=true, requested_for_support=false, support_agent_id=null);
 
             // check user is satisfied by the response or not only at the leaf of the tree
             // Ask for satisfaction only after bot response saved
@@ -93,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // meaning that we are not at the leaf of the botTree
             // first save key to db, and then call renderOptions() method so that we will reach till leaf of the botTree
             const keyList = Object.keys(next).join('; ');
-            await saveMessageToDB(keyList, 'bot', is_read=true, requested_for_support=false);
+            await saveMessageToDB(keyList, 'bot', is_read=true, requested_for_support=false, support_agent_id=null);
             renderOptions(next);
         }
         scrollToBottom();
@@ -105,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const question = "Are you satisfied with the answer?;\n Yes, I'm satisfied.; \n No, Connect with the Support Team";
         appendMessage("Are you satisfied with the answer?", 'bot', getCurrentFormattedTimestamp());
-        await saveMessageToDB(question, "bot", is_read=true, requested_for_support=false); 
+        await saveMessageToDB(question, "bot", is_read=true, requested_for_support=false, support_agent_id=null); 
 
         const yesBtn = document.createElement("button");
         yesBtn.className = "btn btn-success option-button";
@@ -116,14 +117,14 @@ document.addEventListener("DOMContentLoaded", () => {
             allButtons.forEach(button => button.disabled = true);
 
             appendMessage("Yes, I'm satisfied", "user", getCurrentFormattedTimestamp()); // Show user reply
-            await saveMessageToDB("Yes, I'm satisfied.", "user", is_read=true, requested_for_support=false); // saving chat data for the user
+            await saveMessageToDB("Yes, I'm satisfied.", "user", is_read=true, requested_for_support=false, support_agent_id=null); // saving chat data for the user
 
             const thankYouMsg = "Thank you for connecting with SciPris Aptara.";
             const greetMsg = "Hi, I'm Robotica. How can I help you today?";
             const combined = `${thankYouMsg}; \n ${greetMsg}; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries`;
 
             appendMessage(thankYouMsg, "bot", getCurrentFormattedTimestamp()); // Bot reply
-            await saveMessageToDB(combined, "bot", is_read=true, requested_for_support=false); // saving to db
+            await saveMessageToDB(combined, "bot", is_read=true, requested_for_support=false, support_agent_id=null); // saving to db
             
             appendMessage(greetMsg, "bot", getCurrentFormattedTimestamp());
             renderOptions(botTree); // Restart options
@@ -140,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
             allButtons.forEach(button => button.disabled = true);
             
             appendMessage("No, Connect with Support Team", "user", getCurrentFormattedTimestamp()); // Show user reply
-            await saveMessageToDB("No, Connect with Support Team", "user", is_read=true, requested_for_support=true); // saving user
+            await saveMessageToDB("No, Connect with Support Team", "user", is_read=true, requested_for_support=true, support_agent_id=null); // saving user
 
             // connecting with the support team
             enableRealTimeChat();
@@ -212,12 +213,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (!data.success_sent) {
                         appendMessage(successMessage, "bot", getCurrentFormattedTimestamp());
-                        await saveMessageToDB(successMessage, "bot", true, true);
+                        await saveMessageToDB(successMessage, "bot", true, true, support_agent_id=null);
                     }
 
                     if (!data.welcome_sent) {
+                        // To check this section again
                         appendMessage(welcomeMessage, "support", getCurrentFormattedTimestamp());
-                        await saveMessageToDB(welcomeMessage, "support", true, true);
+                        await saveMessageToDB(welcomeMessage, "support", true, true, support_agent_id=null);
                     }
                 }
                 scrollToBottom();
@@ -242,12 +244,16 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         // user sends msg
-        sendButton.onclick = () => {
+        sendButton.onclick = async () => {
+            // get support agent id for this user having active chat
+            const support_agent_id = await fetchAssignedSupportAgent();  // Wait for backend response
+
             if (inputField.value.trim() !== '') {
                 chatSocket.send(JSON.stringify({ // send msg over websocket to the backend
                     'message': inputField.value, 
                     'sender': "user",
-                    'user_id': currentUserId
+                    'user_id': currentUserId,
+                    'support_agent_id': support_agent_id
                 }));
                 inputField.value = '';
             }
@@ -258,6 +264,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     
+    async function fetchAssignedSupportAgent() {
+        return fetch("/get_assigned_support_agent/")
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    support_agent_id = data.support_agent_id;
+                    return support_agent_id
+                }else{
+                    support_agent_id = null;
+                    return support_agent_id
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching support agent:", error);
+                return null;
+            });
+
+    }
 
     function appendMessage(text, sender, timestampStr, supportFullName="") {
         const messageWrapper = document.createElement("div");
@@ -348,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    function saveMessageToDB(message, sender, is_read=false, requested_for_support=requested_for_support) {
+    function saveMessageToDB(message, sender, is_read=false, requested_for_support=requested_for_support, support_agent_id=null) {
         return fetch("/save_message/", {
             method: "POST",
             headers: {
@@ -357,6 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             body: JSON.stringify({
                 user_id: currentUserId,
+                support_agent_id: support_agent_id,
                 message: message,
                 sender: sender,
                 is_read: is_read,

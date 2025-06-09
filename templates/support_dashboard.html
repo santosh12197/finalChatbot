@@ -264,6 +264,7 @@
         const chatContainer = document.getElementById('chat-messages')
         let selectedUserId = null;
         let chatSocket = null;
+        let support_agent_id = {{ request.user.id }};
 
         document.querySelectorAll('.user').forEach(userDiv => {
             userDiv.addEventListener('click', () => {
@@ -696,7 +697,12 @@
             const input = document.getElementById('input-message');
             const message = input.value.trim();
             if (message && chatSocket) {
-                chatSocket.send(JSON.stringify({ 'message': message, 'sender': 'support', "user_id": selectedUserId }));
+                chatSocket.send(JSON.stringify({ 
+                    'message': message, 
+                    'sender': 'support', 
+                    "user_id": selectedUserId,
+                    'support_agent_id': support_agent_id
+            }));
                 input.value = '';
                 scrollToBottom();
             }
@@ -706,19 +712,19 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        function saveMessageToDB(message, sender) {
-            fetch("/save_message/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCSRFToken(), // CSRF is needed for POST in Django
-                },
-                body: JSON.stringify({
-                    message: message,
-                    sender: sender
-                })
-            });
-        }
+        // function saveMessageToDB(message, sender) {
+        //     fetch("/save_message/", {
+        //         method: "POST",
+        //         headers: {
+        //             "Content-Type": "application/json",
+        //             "X-CSRFToken": getCSRFToken(), // CSRF is needed for POST in Django
+        //         },
+        //         body: JSON.stringify({
+        //             message: message,
+        //             sender: sender
+        //         })
+        //     });
+        // }
         
         function getCSRFToken() {
             return document.cookie

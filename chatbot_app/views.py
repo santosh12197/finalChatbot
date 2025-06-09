@@ -316,7 +316,12 @@ class SaveChatMessageView(LoginRequiredMixin, View):
         sender = data.get('sender')
         has_read = data.get('is_read')
         user_id = data.get('user_id')
+        support_agent_id = data.get('support_agent_id')
         requested_for_support = data.get('requested_for_support', False)
+
+        support_agent = None
+        if support_agent_id:
+            support_agent = UserProfile.objects.filter(id=support_agent_id).first()
 
         # Check if there is already a support chat message for this user
         existing_messages = ChatMessage.objects.filter(user=request.user, requested_for_support=True).order_by('timestamp')
@@ -333,6 +338,7 @@ class SaveChatMessageView(LoginRequiredMixin, View):
             # then save chat data of the user
             chat = ChatMessage.objects.create(
                 user=request.user,
+                support_agent=support_agent if support_agent else None,
                 message=message,
                 sender=sender,
                 requested_for_support=requested_for_support,
@@ -689,6 +695,10 @@ class CheckOrAssignSupportAgentView(LoginRequiredMixin, View):
             chat_user = UserProfile.objects.get(id=user_id)
         except UserProfile.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
+        
+        # Ensure only support agents can assign
+        if not request.user.is_support_agent:
+            return JsonResponse({"error": "Logged in user is not a support agent!"}, status=403)
 
         thread, _ = ChatThread.objects.get_or_create(user=chat_user)
 
@@ -698,3 +708,22 @@ class CheckOrAssignSupportAgentView(LoginRequiredMixin, View):
         thread.save()
 
         return JsonResponse({"status": "assigned", "assigned_to": request.user.username})
+    
+
+class GetAssignedSupportAgentView(LoginRequiredMixin, View):
+    def get(self, request):
+        try:
+            thread = ChatThread.objects.filter(
+                user=request.user,
+                is_closed=False
+            ).first()
+            if thread and thread.active_support_agent:
+                return JsonResponse({
+                    'status': 'success',
+                    'support_agent_id': thread.active_support_agent.id,
+                    'support_agent_name': thread.active_support_agent.username
+                })
+            else:
+                return JsonResponse({'status': 'no_active_agent'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})

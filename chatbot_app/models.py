@@ -66,7 +66,15 @@ class ChatMessage(models.Model):
     has_read = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)
     is_active  = models.BooleanField(default=True) # Important: Make is_active=False when chat thread is closed
-
+    # support agent involved in chat if any (if requested to chat with support team by the user): sender or receiver is support agent
+    support_agent = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name='support_chats',
+        null=True,
+        blank=True,
+        help_text="Support agent involved in this chat (only when user has requested to chat with support)"
+    )
     def __str__(self):
         return f"{self.sender} - {self.user.username} at {self.timestamp}"
     

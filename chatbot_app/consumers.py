@@ -39,16 +39,16 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         message = data['message']
         sender = data["sender"] # 'user' or 'support'
         user_id = data.get('user_id')  # to identify user if sent from support
-        # support_agent_username = data.get('support_agent')  # optional
+        support_agent_id = data.get('support_agent_id') 
 
         user = await self.get_user_by_userId(user_id)
-        # support_agent = await self.get_user_by_username(support_agent_username)
+        support_agent = await self.get_support_by_id(support_agent_id)
 
         # Get or create active thread of the user
         thread = await self.get_or_create_active_thread(user)
         
         # Save message to DB
-        chat = await self.save_message(thread, user, message, sender)#, support_agent)
+        chat = await self.save_message(thread, user, message, sender, support_agent)
         
         # support agent name
         support_full_name = ""
@@ -162,6 +162,14 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         return user
 
     @database_sync_to_async
+    def get_support_by_id(self, support_agent_id):
+        support_agent = UserProfile.objects.filter(
+            id=support_agent_id,
+            is_support_agent=True
+        ).first()
+        return support_agent
+
+    @database_sync_to_async
     def get_or_create_active_thread(self, user):
         # Get active thread if any, else create new
         thread = ChatThread.objects.filter(user=user, is_closed=False).first()
@@ -170,7 +178,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         return ChatThread.objects.create(user=user) 
     
     @database_sync_to_async
-    def save_message(self, thread, user, message, sender):#, support_agent):
+    def save_message(self, thread, user, message, sender, support_agent):
         chat = ChatMessage.objects.create(
             thread=thread,
             user=user,
@@ -178,7 +186,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             sender=sender,
             has_read=False,
             requested_for_support=True,  
-            # support_agent=support_agent if sender == 'support' else None
+            support_agent=support_agent,
         )
         return chat
 
