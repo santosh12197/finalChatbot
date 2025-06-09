@@ -734,3 +734,44 @@ class GetAssignedSupportAgentView(LoginRequiredMixin, View):
                 return JsonResponse({'status': 'no_active_agent'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+        
+
+class CloseChatThreadView(View):
+    def post(self, request, user_id):
+        try:
+            user = UserProfile.objects.filter(id=user_id).first()
+            if not user:
+                return JsonResponse({'success': False, 'error': 'No user found!'})
+
+            data = json.loads(request.body)
+            support_agent_id = data.get('support_agent_id')
+
+            thread = ChatThread.objects.filter(
+                user__id=user_id, 
+                is_closed=False
+            ).order_by("-created_at").first()
+
+            if not thread:
+                return JsonResponse({'success': False, 'error': f'No active chat message found for this user {user.first_name} {user.last_name}.'})
+
+            # support aggent validation:
+            # only assigned support agent (currently active support agent)/ user should close the chat
+            # TODO: validation for user closing the chat
+            if support_agent_id:
+                if int(thread.active_support_agent.id) != int(support_agent_id):
+                    return JsonResponse({'success': False, 'error': f'User has been assigned with other support team member. You can not close the chat for current user {user.first_name} {user.last_name}!'})
+
+            # close the thread
+            thread.is_closed = True
+            thread.save()
+
+            # Mark all messages in this thread as inactive msg
+            ChatMessage.objects.filter(thread=thread).update(
+                is_active=False,
+            )
+
+            return JsonResponse({'success': True})
+            
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})

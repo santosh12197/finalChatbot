@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, GetAssignedSupportAgentView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserLocationView
+from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAgentView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserLocationView
 
 urlpatterns = [
     # normal user login related
@@ -12,6 +12,7 @@ urlpatterns = [
     path('check_support_chat/', CheckSupportChatView.as_view(), name='check_support_chat'),
     path('save_message/', SaveChatMessageView.as_view(), name='save_message'),
     path('mark_as_read/<int:user_id>/', MarkAsRead.as_view(), name='mark_as_read'),
+    path('close_chat_thread/<int:user_id>/', CloseChatThreadView.as_view(), name='mark_as_read'),
 
     # support team related
     path("support_register/", SupportRegisterView.as_view(), name="support_register"),

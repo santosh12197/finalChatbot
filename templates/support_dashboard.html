@@ -280,6 +280,9 @@
             <p><span id="user-location"></span></p>
             <!-- User's location based on IP address -->
             <div id="map" style="width: 100%; height: 300px; margin-top: 10px;"></div>
+            <div id="chat-close-wrapper" class="chat-close" style="display: none; position: relative; margin-top: 10px;">
+                <button id="chat-close-btn" class="chat-close-btn btn btn-danger" type="button">Close The Chat</button>
+            </div>
         </div>
     </div>
 
@@ -351,6 +354,41 @@
                     toggleSupportMemberDropdown(selectedUserId); // handling dropdown for support team members 
                 });
 
+                // for closing the chat
+                // First show the "Close The Chat" button
+                document.getElementById('chat-close-wrapper').style.display = 'block';
+                // then add click event for closing the chat
+                document.getElementById('chat-close-btn').addEventListener('click', function () {
+                    if (!selectedUserId) return;
+
+                    const confirmClose = confirm(`Are you sure you want to close the chat with this user ${fname} ${lname}?`);
+                    if (!confirmClose) return;
+
+                    fetch(`/close_chat_thread/${selectedUserId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            support_agent_id: support_agent_id
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Chat has been closed successfully.");
+                            document.getElementById('chat-close-wrapper').style.display = 'none';
+                            // TODO: Optional: Disable chat input or disconnect WebSocket
+                        } else {
+                            alert("Failed to close the chat. Try again.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error closing chat:", err);
+                        alert("An error occurred. Please try again.");
+                    });
+                });
 
             });
         });
