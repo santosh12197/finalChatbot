@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAgentView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserLocationView
+from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAndThreadIdView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserLocationView
 
 urlpatterns = [
     # normal user login related
@@ -24,5 +24,5 @@ urlpatterns = [
     path('assign_support_member/', AssignSupportAgentView.as_view(), name='assign_support_member'),
     path("has_welcome_messages/", CheckWelcomeMessagesView.as_view(), name="has_welcome_messages"),
     path('check_or_assign_support/', CheckOrAssignSupportAgentView.as_view(), name='check_or_assign_support'),
-    path('get_assigned_support_agent/', GetAssignedSupportAgentView.as_view(), name='get_assigned_support_agent'),
+    path('assigned_support_and_thread_id/', GetAssignedSupportAndThreadIdView.as_view(), name='assigned_support_and_thread_id'),
 ]

@@ -160,7 +160,10 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def get_user_by_thread_id(self, chat_thread_id):
-        chat_thread = ChatThread.objects.filter(id=chat_thread_id).first()
+        chat_thread = ChatThread.objects.filter(
+            id=chat_thread_id,
+            is_closed=False
+        ).first()
         if chat_thread:
             return chat_thread.user
         # sender = ChatMessage.objects.filter(user=user).last().sender

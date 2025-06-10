@@ -1,7 +1,41 @@
-document.addEventListener("DOMContentLoaded", () => {
+
+
+async function fetchAssignedSupportAndThreadId() {
+    return fetch("/assigned_support_and_thread_id/")
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                return {
+                    status: "success",
+                    support_agent_id: data.support_agent_id, 
+                    thread_id: data.thread_id
+                }
+            }else if(data.status === "no_active_support_on_thread"){
+                return { 
+                    status: "no_active_support_on_thread",
+                    support_agent_id: null, 
+                    thread_id: data.thread_id 
+                };
+            }
+            else{
+                return { 
+                    status: "no_active_thread",
+                    support_agent_id: null, 
+                    thread_id: null };
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching support agent and thread ID:", error);
+            // Return an object indicating an error, not just null
+            return { support_agent_id: null, thread_id: null, status: 'error', error: error.message };
+        });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
     const chatContainer = document.getElementById("chat-container")
     let chatSocket; // Declare it globally to be accessible in send/receive. 
     let support_agent_id = null;
+    let chat_thread_id = null;
 
     function renderOptions(options) {
         const wrapper = document.createElement("div");
@@ -131,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Content-Type": "application/json",
                 "X-CSRFToken": getCSRFToken(),
             },
-            body: JSON.stringify({ requested: true })
+            body: JSON.stringify({ requested: true , chat_thread_id: chat_thread_id })
         });
 
         // creating "input field" where user can type msg to chat with the support team
@@ -151,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         scrollToBottom();
         // TODO: replace currentUserId with support agent involved
-        const roomName = "support_" + currentUserId; // currentUserId is from html file chat.html
+        const roomName = "support_" + chat_thread_id; // currentUserId is from html file chat.html
         // websocket connection of current user
         chatSocket = new WebSocket(
             (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
@@ -211,42 +245,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // user sends msg
         sendButton.onclick = async () => {
-            // get support agent id for this user having active chat
-            const support_agent_id = await fetchAssignedSupportAgent();  // Wait for backend response
 
-            if (inputField.value.trim() !== '') {
-                chatSocket.send(JSON.stringify({ // send msg over websocket to the backend
-                    'message': inputField.value, 
-                    'sender': "user",
-                    'user_id': currentUserId,
-                    'support_agent_id': support_agent_id
-                }));
-                inputField.value = '';
+            if (chat_thread_id) {
+                if (inputField.value.trim() !== '') {
+                    chatSocket.send(JSON.stringify({ // send msg over websocket to the backend
+                        'message': inputField.value, 
+                        'sender': "user",
+                        // 'user_id': currentUserId,
+                        "chat_thread_id": chat_thread_id,
+                        'support_agent_id': support_agent_id
+                    }));
+                    inputField.value = '';
+                }
             }
         };
     
         inputField.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendButton.click();
         });
-    }
-    
-    async function fetchAssignedSupportAgent() {
-        return fetch("/get_assigned_support_agent/")
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    support_agent_id = data.support_agent_id;
-                    return support_agent_id
-                }else{
-                    support_agent_id = null;
-                    return support_agent_id
-                }
-            })
-            .catch(error => {
-                console.error("Error fetching support agent:", error);
-                return null;
-            });
-
     }
 
     function appendMessage(text, sender, timestampStr, supportFullName="") {
@@ -424,6 +440,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
         scrollToBottom();
     }
+
+    async function initializeChat() {
+        // function to update global variables chat_thread_id and support_agent_id when page completely loads
+
+        const result = await fetchAssignedSupportAndThreadId();
+
+        if (result.status == "success") {
+            support_agent_id = result.support_agent_id;
+            chat_thread_id = result.thread_id;
+        }else if(result.status == "no_active_support_on_thread"){
+            support_agent_id = null;
+            chat_thread_id = result.thread_id;
+        }
+        else{
+            support_agent_id=null;
+            chat_thread_id=null;
+        }
+    }
+
+    const chatInitialized = await initializeChat();
 
     // On page load
     // if user already has a support chat session, then load chat history and connect with support team for real chat

@@ -213,7 +213,7 @@ class ChatView(LoginRequiredMixin, View):
         pass
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+# @method_decorator(csrf_exempt, name='dispatch')
 class MarkSupportRequestView(View):
     """
         View to mark support request by the user
@@ -221,22 +221,22 @@ class MarkSupportRequestView(View):
     def post(self, request):
         data = json.loads(request.body)
         user = request.user
-
-        # get all the chat data for the user, and update requested_for_support as True
+        chat_thread_id = data["chat_thread_id"]
+        # get all the chat data for the chat trhread id, and update requested_for_support as True
+        if not chat_thread_id:
+            return JsonResponse({"status": "Error"})
+        
+        chat_thread = ChatThread.objects.filter(id=chat_thread_id).first()
+        if not chat_thread:
+            return JsonResponse({"status": "No chat thread"})
+        
         ChatMessage.objects.filter(
-            user=user, 
-            # sender="user"
+            thread=chat_thread, 
+            thread__is_closed=False
         ).update(
             requested_for_support=True,
-            has_read=True
+            has_read=True,
         )
-        # ChatMessage.objects.create(
-        #     user=user,
-        #     message="User requested support",
-        #     sender="user",
-        #     requested_for_support=True,
-        #     has_read=True
-        # )
         return JsonResponse({"status": f"User {user} successfully marked as requested for support!"})
 
 
@@ -788,21 +788,30 @@ class CheckOrAssignSupportAgentView(LoginRequiredMixin, View):
         return JsonResponse({"status": "assigned", "assigned_to": request.user.username})
     
 
-class GetAssignedSupportAgentView(LoginRequiredMixin, View):
+class GetAssignedSupportAndThreadIdView(LoginRequiredMixin, View):
     def get(self, request):
         try:
             thread = ChatThread.objects.filter(
                 user=request.user,
                 is_closed=False
             ).first()
-            if thread and thread.active_support_agent:
-                return JsonResponse({
-                    'status': 'success',
-                    'support_agent_id': thread.active_support_agent.id,
-                    'support_agent_name': thread.active_support_agent.username
-                })
+            if thread:
+                if thread.active_support_agent:
+                    return JsonResponse({
+                        'status': 'success',
+                        'thread_id': thread.id,
+                        'support_agent_id': thread.active_support_agent.id,
+                        'support_agent_name': f"{thread.active_support_agent.first_name} {thread.active_support_agent.last_name}"
+                    })
+                else:
+                    return JsonResponse({
+                        'status': 'no_active_support_on_thread',
+                        'thread_id': thread.id
+                    })
             else:
-                return JsonResponse({'status': 'no_active_agent'})
+                return JsonResponse({
+                    'status': 'no_active_thread'
+                })
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
         
