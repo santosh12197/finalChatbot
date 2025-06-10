@@ -210,6 +210,7 @@
 </head>
 <body>
 
+    <!-- left most part of screen -->
     <div id="thread-list">
         {% if threads %}
             {% for thread in threads %}
@@ -255,6 +256,7 @@
         {% endif %}
     </div>
 
+    <!-- middle part of screen -->
     <div id="chat-area">
         <div id="selected-user" style="display: none; position: relative;">
             <!-- This will be dynamically filled with the selected user's details -->
@@ -269,6 +271,7 @@
         </div>
     </div>
 
+    <!-- right most part of screen -->
     <div id="support-info">
         <div class="support-detail" style="display: flex; justify-content: flex-end; align-items: center; background-color: #f5f5f5; padding: 10px;">
             <span style="margin-right: 10px;" class="support-username">
