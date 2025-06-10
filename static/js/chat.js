@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
         inputWrapper.appendChild(sendButton);
 
         scrollToBottom();
-
+        // TODO: replace currentUserId with support agent involved
         const roomName = "support_" + currentUserId; // currentUserId is from html file chat.html
         // websocket connection of current user
         chatSocket = new WebSocket(

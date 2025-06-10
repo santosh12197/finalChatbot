@@ -376,102 +376,171 @@ class MarkAsRead(LoginRequiredMixin, View):
     """
         View to update mark as read
     """
-    def post(self, request, user_id):
+    def post(self, request, chat_thread_id):
 
         ChatMessage.objects.filter(
-            user_id=user_id,
-            sender='user',
+            thread__id=chat_thread_id,
             has_read=False
         ).update(has_read=True, read_at=timezone.now())
 
         return JsonResponse({'status': 'ok'})
 
+# class SupportDashboardView(LoginRequiredMixin, View):
+#     """
+#         Listing of users on support dashboard 
+#     """
+#     def dispatch(self, request, *args, **kwargs):
+#         """ 
+#             Check if the user is logged in and is a support agent, otherwise redirect to support login page
+#         """
+
+#         if not request.user.is_authenticated or not request.user.is_support_agent:
+#             return redirect('support_login')
+#         return super().dispatch(request, *args, **kwargs)
+    
+#     def get(self, request):
+#         # Get users who requested support
+#         users = ChatMessage.objects.filter(
+#             sender='user',  
+#             requested_for_support=True
+#         ).values('user').distinct()
+
+#         user_ids = [u['user'] for u in users]
+
+#         # Subqueries to fetch latest message timestamp and message
+#         latest_msg_subquery = ChatMessage.objects.filter(
+#             user=OuterRef('pk'),
+#             sender='user',
+#             requested_for_support=True
+#         ).order_by('-timestamp')
+
+#         user_objs = UserProfile.objects.filter(id__in=user_ids).annotate(
+#             unread_count=Count(
+#                 'user_messages',
+#                 filter=Q(user_messages__sender='user', user_messages__has_read=False)
+#             ),
+#             latest_message=Subquery(latest_msg_subquery.values('message')[:1]),
+#             latest_timestamp=Subquery(latest_msg_subquery.values('timestamp')[:1])
+#         )
+
+#         ist = ZoneInfo("Asia/Kolkata")
+#         user_data = []
+
+#         for user in user_objs:
+#             try:
+#                 loc = UserLocation.objects.get(user=user)
+#             except UserLocation.DoesNotExist:
+#                 loc = None
+            
+#             # Convert UTC to IST safely (only if timestamp exists)
+#             if user.latest_timestamp:
+#                 ist_timestamp = user.latest_timestamp.astimezone(ist)
+#                 formatted_timestamp = ist_timestamp.strftime('%d/%m/%Y %I:%M %p')
+#             else:
+#                 formatted_timestamp = None
+
+#             user_data.append({
+#                 "id": user.id,
+#                 "username": user.username,
+#                 "userEmail": user.email,
+#                 "first_name": user.first_name,
+#                 "last_name": user.last_name,
+#                 "lat": loc.latitude if loc else None,
+#                 "lng": loc.longitude if loc else None,
+#                 "latest_message": user.latest_message,
+#                 "latest_timestamp": formatted_timestamp,
+#                 "unread_count": user.unread_count,
+#             })
+
+#         context = {
+#             'users': user_data,
+#             # "user_data": user_data
+#         }
+#         template_name = 'support_dashboard.html'
+
+#         return render(request, template_name, context=context)
+
+
+  
 class SupportDashboardView(LoginRequiredMixin, View):
     """
-        Listing of users on support dashboard 
+    Display all chat threads (active or closed) requested for support.
     """
-    def dispatch(self, request, *args, **kwargs):
-        """ 
-            Check if the user is logged in and is a support agent, otherwise redirect to support login page
-        """
 
+    def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_support_agent:
             return redirect('support_login')
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get(self, request):
-        # Get users who requested support
-        users = ChatMessage.objects.filter(
-            sender='user',  
-            requested_for_support=True
-        ).values('user').distinct()
+        # Get all threads where at least one message requested support
+        threads = ChatThread.objects.filter(
+            chat_messages__requested_for_support=True
+        ).distinct().prefetch_related(
+            'user'
+        ).annotate(
+            unread_count=Count(
+                'chat_messages',
+                filter=Q(chat_messages__sender='user', chat_messages__has_read=False)
+            )
+        )
 
-        user_ids = [u['user'] for u in users]
-
-        # Subqueries to fetch latest message timestamp and message
+        # Subquery: latest message content & timestamp (from user)
         latest_msg_subquery = ChatMessage.objects.filter(
-            user=OuterRef('pk'),
-            sender='user',
-            requested_for_support=True
+            thread=OuterRef('pk'),
+            sender='user'
         ).order_by('-timestamp')
 
-        user_objs = UserProfile.objects.filter(id__in=user_ids).annotate(
-            unread_count=Count(
-                'user_messages',
-                filter=Q(user_messages__sender='user', user_messages__has_read=False)
-            ),
+        threads = threads.annotate(
             latest_message=Subquery(latest_msg_subquery.values('message')[:1]),
             latest_timestamp=Subquery(latest_msg_subquery.values('timestamp')[:1])
         )
 
         ist = ZoneInfo("Asia/Kolkata")
-        user_data = []
+        thread_data = []
 
-        for user in user_objs:
+        for thread in threads:
+            user = thread.user
             try:
                 loc = UserLocation.objects.get(user=user)
             except UserLocation.DoesNotExist:
                 loc = None
-            
-            # Convert UTC to IST safely (only if timestamp exists)
-            if user.latest_timestamp:
-                ist_timestamp = user.latest_timestamp.astimezone(ist)
-                formatted_timestamp = ist_timestamp.strftime('%d/%m/%Y %I:%M %p')
-            else:
-                formatted_timestamp = None
 
-            user_data.append({
-                "id": user.id,
-                "username": user.username,
-                "userEmail": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "lat": loc.latitude if loc else None,
-                "lng": loc.longitude if loc else None,
-                "latest_message": user.latest_message,
-                "latest_timestamp": formatted_timestamp,
-                "unread_count": user.unread_count,
+            formatted_timestamp = None
+            if thread.latest_timestamp:
+                formatted_timestamp = thread.latest_timestamp.astimezone(ist).strftime('%d/%m/%Y %I:%M %p')
+
+            thread_data.append({
+                'thread_id': thread.id,
+                'user_id': user.id,
+                'username': user.username,
+                'userEmail': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'lat': loc.latitude if loc else None,
+                'lng': loc.longitude if loc else None,
+                'latest_message': thread.latest_message,
+                'latest_timestamp': formatted_timestamp,
+                'unread_count': thread.unread_count,
+                'is_closed': thread.is_closed,
             })
 
         context = {
-            'users': user_data,
-            # "user_data": user_data
+            'threads': thread_data
         }
-        template_name = 'support_dashboard.html'
 
-        return render(request, template_name, context=context)
-    
+        return render(request, 'support_dashboard.html', context)  
 
 class GetChatHistoryView(View):
     """
         Chat history of a user
     """
-    def get(self, request, user_id):
+    def get(self, request, chat_thread_id):
 
-        user = UserProfile.objects.filter(id=user_id).first()
-        if not user:
+        chat_thread = ChatThread.objects.filter(id=chat_thread_id).first()
+        if not chat_thread:
             return JsonResponse({
-                "Error": "User does not exist!",
+                "Error": "Chat thread does not exist!",
                 'support_chat_exists': False,
                 'messages': [],
                 'first_interaction_timestamp': None,
@@ -479,7 +548,7 @@ class GetChatHistoryView(View):
         
         # Get the first interaction timestamp from the earliest message
         first_msg = ChatMessage.objects.filter(
-            user=user, 
+            user=chat_thread.user, 
             requested_for_support=True,
             is_active=True,
         ).order_by('timestamp').first()
@@ -490,7 +559,7 @@ class GetChatHistoryView(View):
             first_interaction_ist = (first_msg.first_interaction_timestamp.astimezone(ZoneInfo("Asia/Kolkata"))).strftime('%d/%m/%Y %I:%M %p')
 
         chats = ChatMessage.objects.filter(
-            user_id=user_id,
+            user=chat_thread.user,
             requested_for_support=True,
             is_active=True,
         ).order_by('timestamp')
@@ -602,21 +671,14 @@ class AssignSupportAgentView(View):
             return JsonResponse({'status': 'error', 'message': 'Only support agents can assign users.'}, status=403)
 
         data = json.loads(request.body)
-        user_id = data.get('user_id')
+        chat_thread_id = data.get('chat_thread_id')
         support_id = data.get('support_member_id')
 
-        if not user_id or not support_id:
-            return JsonResponse({'status': 'error', 'message': 'Both user ID and support agent ID are required.'}, status=400)
+        if not chat_thread_id or not support_id:
+            return JsonResponse({'status': 'error', 'message': 'Both chat thread ID and support agent ID are required.'}, status=400)
 
         try:
-            # Get the user thread
-            user = UserProfile.objects.get(
-                id=user_id,
-                is_support_agent=False
-            )
-            if not user:
-                return JsonResponse({'status': 'error', 'message': 'User does not exist for the given user ID.'}, status=404)
-
+            # support validation
             support_agent = UserProfile.objects.get(
                 id=support_id,
                 is_support_agent=True
@@ -624,8 +686,9 @@ class AssignSupportAgentView(View):
             if not support_agent:
                 return JsonResponse({'status': 'error', 'message': 'Support agent does not exist for the given support agent ID.'}, status=404)
             
+            # chat thread validation
             chat_thread = ChatThread.objects.get(
-                user=user,
+                id=chat_thread_id,
                 is_closed=False,
             )
             if not chat_thread:
@@ -640,7 +703,7 @@ class AssignSupportAgentView(View):
                 chat_thread.active_support_agent = support_agent
                 chat_thread.support_agents.add(support_agent)  # add to involved agents if not already
                 chat_thread.save()
-                return JsonResponse({'status': 'success', "support_agent": support_agent.username, "user": user.username}, status=200)
+                return JsonResponse({'status': 'success', "support_agent": support_agent.username, "user": chat_thread.user.username}, status=200)
             else:
                 return JsonResponse({'status': 'error', 'message': 'User is already assigned to other support agent. You can not perform this operation.'}, status=400)
             
@@ -682,20 +745,16 @@ class CheckWelcomeMessagesView(View):
 
 class CheckOrAssignSupportAgentView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        user_id = request.GET.get("user_id")
-        if not user_id:
-            return JsonResponse({"error": "User ID required"}, status=400)
-        
-        try:
-            chat_user = UserProfile.objects.get(id=user_id)
-        except UserProfile.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=404)
+
+        chat_thread_id = request.GET.get("chat_thread_id")
+        if not chat_thread_id:
+            return JsonResponse({"error": "Chat thread ID required!"}, status=400)
         
         # Ensure only support agents can access
         if not request.user.is_support_agent:
             return JsonResponse({"error": "Logged in user is not a support agent!"}, status=403)
 
-        thread, created = ChatThread.objects.get_or_create(user=chat_user)
+        thread, created = ChatThread.objects.get_or_create(id=chat_thread_id)
 
         if thread.active_support_agent:
             if thread.active_support_agent == request.user:
@@ -708,29 +767,22 @@ class CheckOrAssignSupportAgentView(LoginRequiredMixin, View):
         else:
             return JsonResponse({"status": "unassigned"})
 
-    # @method_decorator(csrf_exempt)
     def post(self, request, *args, **kwargs):
 
         if not request.user.is_authenticated or not request.user.is_support_agent:
             return JsonResponse({"error": "Logged in user is not a support agent!"}, status=403)
 
         data = json.loads(request.body)
-        user_id = data.get("user_id")
-
-        try:
-            chat_user = UserProfile.objects.get(id=user_id)
-        except UserProfile.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=404)
+        chat_thread_id = data.get("chat_thread_id")
         
-        # Ensure only support agents can assign
-        if not request.user.is_support_agent:
-            return JsonResponse({"error": "Logged in user is not a support agent!"}, status=403)
+        if not chat_thread_id:
+            return JsonResponse({"error": "Chat thread ID is required!"}, status=403)
 
-        thread, _ = ChatThread.objects.get_or_create(user=chat_user)
+        thread, _ = ChatThread.objects.get_or_create(id=chat_thread_id)
 
         # Assign current support member
         thread.active_support_agent = request.user
-        thread.support_agents.add(request.user)  # track involvement
+        thread.support_agents.add(request.user)  # track support agents involvement
         thread.save()
 
         return JsonResponse({"status": "assigned", "assigned_to": request.user.username})
@@ -763,7 +815,7 @@ class CloseChatThreadView(View):
                 return JsonResponse({'success': False, 'error': 'No user found!'})
 
             data = json.loads(request.body)
-            support_agent_id = data.get('support_agent_id')
+            support_agent_id = data.get('support_agent_id') # support agent id who is requesting to close the chat
 
             thread = ChatThread.objects.filter(
                 user__id=user_id, 
@@ -771,14 +823,17 @@ class CloseChatThreadView(View):
             ).order_by("-created_at").first()
 
             if not thread:
-                return JsonResponse({'success': False, 'error': f'No active chat message found for this user {user.first_name} {user.last_name}.'})
+                return JsonResponse({'success': False, 'error': f'No active chat thread found for the user {user.first_name} {user.last_name}!', 'message': 'no_active_thread'})
 
-            # support aggent validation:
             # only assigned support agent (currently active support agent)/ user should close the chat
-            # TODO: validation for user closing the chat
+            # user validation
+            if not request.user.is_support_agent:
+                if request.user != user:
+                    return JsonResponse({'success': False, 'error': f'Not a valid user to close the chat with user {user.first_name} {user.last_name}!'})
+            # support agent validation
             if support_agent_id:
                 if int(thread.active_support_agent.id) != int(support_agent_id):
-                    return JsonResponse({'success': False, 'error': f'User has been assigned with other support team member. You can not close the chat for current user {user.first_name} {user.last_name}!'})
+                    return JsonResponse({'success': False, 'error': f'User {user.first_name} {user.last_name} has been assigned with support member {thread.active_support_agent.first_name} {thread.active_support_agent.last_name}. You can not close the chat for current user!'})
 
             # close the thread
             thread.is_closed = True
@@ -790,7 +845,6 @@ class CloseChatThreadView(View):
             )
 
             return JsonResponse({'success': True})
-            
 
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})

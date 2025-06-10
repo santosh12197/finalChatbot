@@ -11,13 +11,13 @@
             height: 100vh; 
             margin: 0; 
         }
-        #user-list { 
+        #thread-list { 
             width: 25%; 
             border-right: 1px solid #ccc; 
             overflow-y: auto; 
             margin: 20px; 
         }
-        .user:hover {
+        .user-thread:hover {
             background-color: #f9f9f9;
         }
         #chat-area { 
@@ -38,7 +38,7 @@
             border-radius: 10px; 
         }
 
-        .user {
+        .user-thread {
             padding: 10px;
             cursor: pointer;
             border-bottom: 1px solid #ddd;
@@ -210,42 +210,48 @@
 </head>
 <body>
 
-    <div id="user-list">
-        {% if users %}
-            {% for user in users %}
-                <div class="user" 
-                    id="user-{{ user.id }}"
-                    data-user-id="{{ user.id }}"
-                    data-user-fname="{{ user.first_name }}"
-                    data-user-lname="{{ user.last_name }}"
-                    data-user-mobile="{{ user.mobile }}"
-                    data-user-email="{{ user.userEmail }}"
-                    data-user-lat="{{ user.lat }}"
-                    data-user-lng="{{ user.lng }}">
+    <div id="thread-list">
+        {% if threads %}
+            {% for thread in threads %}
+                <div class="user-thread" 
+                    id="thread-{{ thread.thread_id }}"
+                    data-user-id="{{ thread.user_id }}"
+                    data-thread-id="{{ thread.thread_id }}"
+                    data-user-fname="{{ thread.first_name }}"
+                    data-user-lname="{{ thread.last_name }}"
+                    data-user-mobile="{{ thread.mobile }}"
+                    data-user-email="{{ thread.userEmail }}"
+                    data-user-lat="{{ thread.lat }}"
+                    data-user-lng="{{ thread.lng }}"
+                    data-is-closed="{{ thread.is_closed }}">
                     <!-- Top Row: Username and Timestamp -->
                     <div class="user-row user-header">
-                        <span class="username" id="username-{{user.id}}">{{ user.username }}</span>
-                        <span class="timestamp" id="timestamp-{{user.id}}">{{ user.latest_timestamp }}</span>
+                        <span class="username">{{ thread.username }}</span>
+                        <span class="timestamp">{{ thread.latest_timestamp }}</span>
                     </div>
 
                     <!-- Bottom Row: Last Message and Unread Bubble -->
                     <div class="user-row user-body">
                         <span class="last-message">
-                            {{ user.latest_message|slice:":30" }}{% if user.latest_message|length > 30 %}...{% endif %}
+                            {{ thread.latest_message|slice:":30" }}{% if thread.latest_message|length > 30 %}...{% endif %}
                         </span>
-                        <span id="user-indicator-{{user.id}}" class="unread-count {% if user.unread_count > 0 %}unread-indicator{% endif %}">
-                            {% if user.unread_count > 0 %}
-                                {{ user.unread_count }}
+                        <span class="unread-count {% if thread.unread_count > 0 %}unread-indicator{% endif %}">
+                            {% if thread.unread_count > 0 %}
+                                {{ thread.unread_count }}
                             {% endif %}
                         </span>
                     </div>
-                    
+                    {% if thread.is_closed %}
+                        <div class="badge bg-secondary">Closed</div>
+                    {% else %}
+                        <div class="badge bg-success">Active</div>
+                    {% endif %}
                 </div>
             {% endfor %}
         {% else %}
-            <div id="no-users">
-                <span>No user to chat!</span>
-            </div>
+        <di class="no-thread">
+            <p>No chat available.</p>
+        </di>
         {% endif %}
     </div>
 
@@ -281,7 +287,9 @@
             <!-- User's location based on IP address -->
             <div id="map" style="width: 100%; height: 300px; margin-top: 10px;"></div>
             <div id="chat-close-wrapper" class="chat-close" style="display: none; position: relative; margin-top: 10px;">
-                <button id="chat-close-btn" class="chat-close-btn btn btn-danger" type="button">Close The Chat</button>
+                <button id="chat-close-btn" class="chat-close-btn btn btn-danger" type="button">
+                    Close Chat
+                </button>
             </div>
         </div>
     </div>
@@ -290,14 +298,16 @@
         // script to handle chat data when member from support team clicks on any user (who has requested to chat with support team)
         // const chatContainer = document.getElementById('chat-container')
         let selectedUserId = null;
+        let selectedThreadId = null;
         let chatSocket = null;
         let support_agent_id = "{{ request.user.id }}";
 
-        document.querySelectorAll('.user').forEach(userDiv => {
+        document.querySelectorAll('.user-thread').forEach(userDiv => {
             userDiv.addEventListener('click', () => {
                 
                 // when support team clicks on any user
                 selectedUserId = userDiv.dataset.userId;
+                selectedThreadId = userDiv.dataset.threadId;
 
                 // fetching user details
                 const fname = userDiv.dataset.userFname;
@@ -307,9 +317,10 @@
 
                 // load chat history data of that user, and then
                 // Handle assignment / connection logic for support agent with user 
-                loadChatHistory(selectedUserId).then(() => {
+                loadChatHistory(selectedThreadId, selectedUserId).then(() => {
                     handleSupportAssignment({
-                        userId: selectedUserId,
+                        selectedThreadId: selectedThreadId,
+                        // userId: selectedUserId,
                         fname: fname,
                         lname: lname,
                         email: email
@@ -326,7 +337,7 @@
                 document.getElementById("user-email").textContent = `Email: ${email}`;
 
                 // mark as read for msg of selected user
-                markMessagesAsRead(selectedUserId);
+                markMessagesAsRead(selectedThreadId);
 
                 // reseting unread to read
                 const indicator = document.getElementById(`user-indicator-${selectedUserId}`);
@@ -351,17 +362,17 @@
                 // and assign the support team member if any support team member is selected
                 document.getElementById("selected-user-name").addEventListener("click", function (e) {
                     e.stopPropagation();  // Prevent clicks outside from hiding the dropdown
-                    toggleSupportMemberDropdown(selectedUserId); // handling dropdown for support team members 
+                    toggleSupportMemberDropdown(selectedThreadId); // handling dropdown for support team members 
                 });
 
-                // for closing the chat
-                // First show the "Close The Chat" button
+                // For closing the chat
+                // first show the "Close The Chat" button
                 document.getElementById('chat-close-wrapper').style.display = 'block';
                 // then add click event for closing the chat
                 document.getElementById('chat-close-btn').addEventListener('click', function () {
                     if (!selectedUserId) return;
 
-                    const confirmClose = confirm(`Are you sure you want to close the chat with this user ${fname} ${lname}?`);
+                    const confirmClose = confirm(`Are you sure you want to close the chat with the user ${fname} ${lname}?`);
                     if (!confirmClose) return;
 
                     fetch(`/close_chat_thread/${selectedUserId}/`, {
@@ -381,11 +392,11 @@
                             document.getElementById('chat-close-wrapper').style.display = 'none';
                             // TODO: Optional: Disable chat input or disconnect WebSocket
                         } else {
-                            alert("Failed to close the chat. Try again.");
+                            alert(data.error);
                         }
                     })
                     .catch(err => {
-                        console.error("Error closing chat:", err);
+                        // console.error("Error closing chat:", err);
                         alert("An error occurred. Please try again.");
                     });
                 });
@@ -403,7 +414,7 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        async function handleSupportAssignment({ userId, fname, lname, email }) {
+        async function handleSupportAssignment({ selectedThreadId, fname, lname, email }) {
             /**
              * Handle assignment / connection logic for a user → support-agent thread.
              * Disables the input UI until the current support agent is eligible.
@@ -422,7 +433,7 @@
             if (oldBox) oldBox.remove();
 
             try {
-                const res = await fetch(`/check_or_assign_support/?user_id=${userId}`);
+                const res = await fetch(`/check_or_assign_support/?chat_thread_id=${selectedThreadId}`);
                 const data = await res.json();
 
                 if (data.status === "assigned_to_you") {
@@ -503,7 +514,7 @@
                     "Content-Type": "application/json",
                     "X-CSRFToken": getCSRFToken(),
                     },
-                    body: JSON.stringify({ user_id: userId }),
+                    body: JSON.stringify({ chat_thread_id: selectedThreadId }),
                 });
 
                 const assignData = await postRes.json();
@@ -552,7 +563,7 @@
             }
         }
 
-        function toggleSupportMemberDropdown(selectedUserId) {
+        function toggleSupportMemberDropdown(selectedThreadId) {
             const dropdown = document.getElementById("support-members-dropdown");
 
             if (dropdown.style.display === "block") {
@@ -582,7 +593,7 @@
 
                             memberDiv.addEventListener("click", function (e) {
                                 e.stopPropagation();
-                                assignSupportMember(selectedUserId, member.id);
+                                assignSupportMember(selectedThreadId, member.id);
                                 dropdown.style.display = "none";
                             });
 
@@ -595,7 +606,7 @@
             }
         }
 
-        function assignSupportMember(userId, memberId) {
+        function assignSupportMember(selectedThreadId, memberId) {
             fetch('/assign_support_member/', {
                 method: 'POST',
                 headers: {
@@ -604,7 +615,7 @@
                 },
                 body: JSON.stringify({
                     support_member_id: memberId,
-                    user_id: userId
+                    chat_thread_id: selectedThreadId
                 })
             })
             .then(response => response.json())
@@ -646,8 +657,8 @@
             dropdown.style.display = "none";
         });
 
-        function loadChatHistory(userId) {
-            return fetch(`/get_chat_history/${userId}/`)
+        function loadChatHistory(selectedThreadId, userId) {
+            return fetch(`/get_chat_history/${selectedThreadId}/`)
                 .then(res => res.json())
                 .then(data => {
                     const chatBox = document.getElementById('chat-container');
@@ -728,18 +739,18 @@
                     });
 
                     document.getElementById('message-input').style.display = 'flex';
-                    connectWebSocket(userId);
+                    connectWebSocket(selectedThreadId);
                     scrollToBottom();
                 });
         }
 
-        function connectWebSocket(userId) {
+        function connectWebSocket(selectedThreadId) {
             if (chatSocket) {
                 chatSocket.close();
             }
             // websocket connection for chat with the support team
             const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-            chatSocket = new WebSocket(`${wsProtocol}://${window.location.host}/ws/support/support_${userId}/`);
+            chatSocket = new WebSocket(`${wsProtocol}://${window.location.host}/ws/support/support_${selectedThreadId}/`);
 
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
@@ -792,7 +803,7 @@
         // clicking Send btn to send msg
         // document.getElementById('send-button').addEventListener('click', sendMessage);
         document.getElementById('send-button').addEventListener('click', () => {
-            sendMessage(selectedUserId);
+            sendMessage(selectedThreadId);
         });
 
         const inputField = document.getElementById('input-message');
@@ -800,19 +811,20 @@
         // Press Enter to send message
         inputField.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
-                sendMessage(selectedUserId);
+                sendMessage(selectedThreadId);
             }
         });
 
         // function to send msg
-        function sendMessage(selectedUserId) {
+        function sendMessage(selectedThreadId) {
             const input = document.getElementById('input-message');
             const message = input.value.trim();
             if (message && chatSocket) {
                 chatSocket.send(JSON.stringify({ 
                     'message': message, 
                     'sender': 'support', 
-                    "user_id": selectedUserId,
+                    'chat_thread_id': selectedThreadId,
+                    // "user_id": selectedUserId,
                     'support_agent_id': support_agent_id
             }));
                 input.value = '';
@@ -910,8 +922,8 @@
                 notificationSocket.close();  // Trigger reconnect logic
             };
         }
-        function markMessagesAsRead(userId) {
-            fetch(`/mark_as_read/${userId}/`, {
+        function markMessagesAsRead(selectedThreadId) {
+            fetch(`/mark_as_read/${selectedThreadId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCSRFToken(),  // implement this if needed
@@ -922,11 +934,11 @@
         }
 
         function addOrUpdateUser(user) {
-            const userList = document.getElementById('user-list');
+            const userList = document.getElementById('thread-list');
             const existingUser = document.getElementById(`user-${user.id}`);
 
             // Remove "No user to chat!" if exists
-            const noUsersDiv = document.getElementById('no-users');
+            const noUsersDiv = document.getElementById('no-thread');
             if (noUsersDiv) {
                 noUsersDiv.remove();
             }

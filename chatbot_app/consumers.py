@@ -38,14 +38,15 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         message = data['message']
         sender = data["sender"] # 'user' or 'support'
-        user_id = data.get('user_id')  # to identify user if sent from support
+        # user_id = data.get('user_id')  # to identify user if sent from support
+        chat_thread_id = data["chat_thread_id"]
         support_agent_id = data.get('support_agent_id') 
 
-        user = await self.get_user_by_userId(user_id)
+        user = await self.get_user_by_thread_id(chat_thread_id)
         support_agent = await self.get_support_by_id(support_agent_id)
 
         # Get or create active thread of the user
-        thread = await self.get_or_create_active_thread(user)
+        thread = await self.get_or_create_active_thread(chat_thread_id, user)
         
         # Save message to DB
         chat = await self.save_message(thread, user, message, sender, support_agent)
@@ -158,10 +159,12 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         return unread_count
     
     @database_sync_to_async
-    def get_user_by_userId(self, user_id):
-        user = UserProfile.objects.get(id=user_id)
+    def get_user_by_thread_id(self, chat_thread_id):
+        chat_thread = ChatThread.objects.filter(id=chat_thread_id).first()
+        if chat_thread:
+            return chat_thread.user
         # sender = ChatMessage.objects.filter(user=user).last().sender
-        return user
+        return None
 
     @database_sync_to_async
     def get_support_by_id(self, support_agent_id):
@@ -172,9 +175,12 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         return support_agent
 
     @database_sync_to_async
-    def get_or_create_active_thread(self, user):
+    def get_or_create_active_thread(self, chat_thread_id, user):
         # Get active thread if any, else create new
-        thread = ChatThread.objects.filter(user=user, is_closed=False).first()
+        thread = ChatThread.objects.filter(
+            id=chat_thread_id,
+            is_closed=False
+        ).first()
         if thread:
             return thread
         return ChatThread.objects.create(user=user) 
