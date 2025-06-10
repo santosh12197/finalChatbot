@@ -308,7 +308,9 @@ class CheckSupportChatView(LoginRequiredMixin, View):
 
 class SaveChatMessageView(LoginRequiredMixin, View):
     """
-        View to save chat msg
+        View to save chat msg:
+        - when user starts chat with bot, then create or retrieve active chat thread of user and save chat in that thread.
+        - user chat is tracked through this actice chat thread unless it is closed by user or support agent.
     """
     def post(self, request):
         data = json.loads(request.body.decode('utf-8'))
@@ -319,9 +321,29 @@ class SaveChatMessageView(LoginRequiredMixin, View):
         support_agent_id = data.get('support_agent_id')
         requested_for_support = data.get('requested_for_support', False)
 
-        support_agent = None
-        if support_agent_id:
-            support_agent = UserProfile.objects.filter(id=support_agent_id).first()
+        if not (message and sender and user_id):
+            return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+
+        user = UserProfile.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+
+        support_agent = UserProfile.objects.filter(id=support_agent_id).first() if support_agent_id else None
+
+        # Get or create an active ChatThread
+        thread = ChatThread.objects.filter(
+            user=user, 
+            is_closed=False
+        ).first()
+
+        if not thread:
+            thread = ChatThread.objects.create(
+                user=user, 
+                active_support_agent=support_agent
+            )
+            if support_agent:
+                thread.support_agents.add(support_agent)
+
 
         # Check if there is already a support chat message for this user
         existing_messages = ChatMessage.objects.filter(user=request.user, requested_for_support=True).order_by('timestamp')
@@ -332,25 +354,22 @@ class SaveChatMessageView(LoginRequiredMixin, View):
             # Use the first interaction timestamp from the earliest message
             first_interaction_timestamp = existing_messages.first().first_interaction_timestamp
 
-        if message and sender:
-            # first save IP address of the user
-            # save_user_location(request, request.user)
-            # then save chat data of the user
-            chat = ChatMessage.objects.create(
-                user=request.user,
-                support_agent=support_agent if support_agent else None,
-                message=message,
-                sender=sender,
-                requested_for_support=requested_for_support,
-                has_read=has_read,
-                first_interaction_timestamp=first_interaction_timestamp
-            )
+        # Create the ChatMessage
+        ChatMessage.objects.create(
+            thread=thread,
+            user=user,
+            support_agent=support_agent,
+            message=message,
+            sender=sender,
+            requested_for_support=requested_for_support,
+            has_read=has_read,
+            first_interaction_timestamp=first_interaction_timestamp,
+        )
 
             # for updating user list on support dashboard
             # notify_support_of_unread(request.user.id)
             
-            return JsonResponse({'status': 'success'})
-        return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+        return JsonResponse({'status': 'success'})
 
 
 class MarkAsRead(LoginRequiredMixin, View):

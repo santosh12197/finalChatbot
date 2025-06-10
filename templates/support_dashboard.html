@@ -291,7 +291,7 @@
         // const chatContainer = document.getElementById('chat-container')
         let selectedUserId = null;
         let chatSocket = null;
-        let support_agent_id = {{ request.user.id }};
+        let support_agent_id = "{{ request.user.id }}";
 
         document.querySelectorAll('.user').forEach(userDiv => {
             userDiv.addEventListener('click', () => {

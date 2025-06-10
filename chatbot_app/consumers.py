@@ -157,7 +157,6 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         ).count()
         return unread_count
     
-    # TODO : to see: sender = bot, when user sends msg (but it should be user) -------------------------------
     @database_sync_to_async
     def get_user_by_userId(self, user_id):
         user = UserProfile.objects.get(id=user_id)
