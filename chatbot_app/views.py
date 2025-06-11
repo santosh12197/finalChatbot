@@ -380,6 +380,7 @@ class MarkAsRead(LoginRequiredMixin, View):
 
         ChatMessage.objects.filter(
             thread__id=chat_thread_id,
+            thread__is_closed=False,
             has_read=False
         ).update(has_read=True, read_at=timezone.now())
 

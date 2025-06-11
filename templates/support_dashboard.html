@@ -227,16 +227,16 @@
                     data-is-closed="{{ thread.is_closed }}">
                     <!-- Top Row: Username and Timestamp -->
                     <div class="user-row user-header">
-                        <span class="username">{{ thread.username }}</span>
-                        <span class="timestamp">{{ thread.latest_timestamp }}</span>
+                        <span class="username" id="username-{{thread.thread_id}}">{{ thread.username }}</span>
+                        <span class="timestamp" id="timestamp-{{thread.thread_id}}">{{ thread.latest_timestamp }}</span>
                     </div>
 
                     <!-- Bottom Row: Last Message and Unread Bubble -->
                     <div class="user-row user-body">
-                        <span class="last-message">
+                        <span class="last-message" id="message-{{thread.thread_id}}">
                             {{ thread.latest_message|slice:":30" }}{% if thread.latest_message|length > 30 %}...{% endif %}
                         </span>
-                        <span class="unread-count {% if thread.unread_count > 0 %}unread-indicator{% endif %}">
+                        <span id="thread-indicator-{{thread.thread_id}}" class="unread-count {% if thread.unread_count > 0 %}unread-indicator{% endif %}">
                             {% if thread.unread_count > 0 %}
                                 {{ thread.unread_count }}
                             {% endif %}
@@ -250,9 +250,9 @@
                 </div>
             {% endfor %}
         {% else %}
-        <di class="no-thread">
+        <div class="no-thread" id="no-thread">
             <p>No chat available.</p>
-        </di>
+        </div>
         {% endif %}
     </div>
 
@@ -303,6 +303,7 @@
         let selectedUserId = null;
         let selectedThreadId = null;
         let chatSocket = null;
+        let notificationSocket = null;
         let support_agent_id = "{{ request.user.id }}";
 
         document.querySelectorAll('.user-thread').forEach(userDiv => {
@@ -320,7 +321,7 @@
 
                 // load chat history data of that user, and then
                 // Handle assignment / connection logic for support agent with user 
-                loadChatHistory(selectedThreadId, selectedUserId).then(() => {
+                loadChatHistory(selectedThreadId).then(() => {
                     handleSupportAssignment({
                         selectedThreadId: selectedThreadId,
                         // userId: selectedUserId,
@@ -343,7 +344,7 @@
                 markMessagesAsRead(selectedThreadId);
 
                 // reseting unread to read
-                const indicator = document.getElementById(`user-indicator-${selectedUserId}`);
+                const indicator = document.getElementById(`thread-indicator-${selectedThreadId}`);
                 if (indicator) {
                     indicator.textContent = '';
                     indicator.style.display = 'none';
@@ -660,7 +661,7 @@
             dropdown.style.display = "none";
         });
 
-        function loadChatHistory(selectedThreadId, userId) {
+        function loadChatHistory(selectedThreadId) {
             return fetch(`/get_chat_history/${selectedThreadId}/`)
                 .then(res => res.json())
                 .then(data => {
@@ -877,8 +878,6 @@
     </script>
 
     <script>
-        let notificationSocket = null;
-
         function connectNotificationWebSocket() {
             const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
             const wsUrl = `${wsProtocol}://${window.location.host}/ws/support_notifications/`;
@@ -892,20 +891,21 @@
                 const data = JSON.parse(e.data); 
 
                 if (data.type === 'new_support_thread') {
-                    const isCurrentUserOpen = Number(selectedUserId) === Number(data.user.id);
+                    // const isCurrentUserOpen = Number(selectedUserId) === Number(data.user.id);
+                    const isCurrentThreadOpen = Number(selectedThreadId) === Number(data.user.chat_thread_id);
 
                     // Update latest message and timestamp
                     updateLastMessageAndTimestamp(data.user);
 
-                    if (!isCurrentUserOpen) {
+                    if (!isCurrentThreadOpen) {
                         // Only update unread count if this user is NOT currently being viewed
                         addOrUpdateUser(data.user);
                     }else{
                         // if current user sends a msg, and that user is already opened on support dashboard to chat, then 
                         // 1. mark that msg as read
-                        markMessagesAsRead(data.user.id);
+                        markMessagesAsRead(data.user.chat_thread_id);
                         // 2. Remove unread indicator bubble
-                        const indicator = document.getElementById(`user-indicator-${data.user.id}`);
+                        const indicator = document.getElementById(`thread-indicator-${data.user.chat_thread_id}`);
                         if (indicator) {
                             indicator.classList.remove('unread-indicator');
                         }
@@ -925,6 +925,7 @@
                 notificationSocket.close();  // Trigger reconnect logic
             };
         }
+
         function markMessagesAsRead(selectedThreadId) {
             fetch(`/mark_as_read/${selectedThreadId}/`, {
                 method: 'POST',
@@ -938,7 +939,7 @@
 
         function addOrUpdateUser(user) {
             const userList = document.getElementById('thread-list');
-            const existingUser = document.getElementById(`user-${user.id}`);
+            const existingUser = document.getElementById(`thread-${user.chat_thread_id}`);
 
             // Remove "No user to chat!" if exists
             const noUsersDiv = document.getElementById('no-thread');
@@ -951,7 +952,7 @@
                 userList.prepend(existingUser);
 
                 // unread notification span
-                const indicator = document.getElementById(`user-indicator-${user.id}`);
+                const indicator = document.getElementById(`thread-indicator-${user.chat_thread_id}`);
                 if (indicator) {
                     // let currentCount = parseInt(indicator.textContent || '0', 10);
                     indicator.className = "unread-indicator";
@@ -961,17 +962,20 @@
             } else {    
                 // Create new user div
                 const userDiv = document.createElement('div');
-                userDiv.className = 'user';
-                userDiv.id = `user-${user.id}`;
+                userDiv.className = 'user-thread';
+                userDiv.id = `thread-${user.chat_thread_id}`;
 
                 // Set data attributes
                 userDiv.setAttribute('data-user-id', user.id);
+                userDiv.setAttribute('data-thread-id', user.chat_thread_id);
                 userDiv.setAttribute('data-user-fname', user.first_name || "");
                 userDiv.setAttribute('data-user-lname', user.last_name || "");
                 userDiv.setAttribute('data-user-mobile', user.mobile || "");
                 userDiv.setAttribute('data-user-email', user.email || "");
                 userDiv.setAttribute('data-user-lat', user.lat || "");
                 userDiv.setAttribute('data-user-lng', user.lng || "");
+                userDiv.setAttribute('data-is-closed', user.is_closed);
+
 
                 const fname = userDiv.dataset.userFname;
                 const lname = userDiv.dataset.userLname;
@@ -980,15 +984,15 @@
                 userDiv.innerHTML = `
                     <!-- Top Row: Username and Timestamp -->
                     <div class="user-row user-header">
-                        <span class="username" id="username-${user.id}">${user.username}</span>
-                        <span class="timestamp" id="timestamp-${user.id}">${user.timestamp || ''}</span>
+                        <span class="username" id="username-${user.chat_thread_id}">${user.username}</span>
+                        <span class="timestamp" id="timestamp-${user.chat_thread_id}">${user.timestamp || ''}</span>
                     </div>
                     <!-- Bottom Row: Last Message and Unread Bubble -->
                     <div class="user-row user-body">
-                        <span class="last-message" id="message-${user.id}">
+                        <span class="last-message" id="message-${user.chat_thread_id}">
                             ${user.message ? user.message.slice(0, 30) : 'No messages yet'}
                         </span>
-                        <span id="user-indicator-${user.id}" class="unread-count ${user.unread_count > 0 ? 'unread-indicator' : ''}">
+                        <span id="thread-indicator-${user.chat_thread_id}" class="unread-count ${user.unread_count > 0 ? 'unread-indicator' : ''}">
                             ${user.unread_count > 0 ? user.unread_count : ''}
                         </span>
                     </div>
@@ -997,10 +1001,12 @@
                 userDiv.addEventListener('click', () => {
 
                     selectedUserId = user.id;
+                    selectedThreadId = user.chat_thread_id;
                     // loading chat history
-                    loadChatHistory(selectedUserId).then(() => {
+                    loadChatHistory(user.chat_thread_id).then(() => {
                         handleSupportAssignment({
-                            userId: selectedUserId,
+                            selectedThreadId: selectedThreadId,
+                            // userId: selectedUserId,
                             fname: fname,
                             lname: lname,
                             email: `${user.email}`
@@ -1016,10 +1022,10 @@
                     document.getElementById("user-email").textContent = `Email: ${user.email}`;
 
                     // mark as read when the current user is selected to chat
-                    markMessagesAsRead(selectedUserId);
+                    markMessagesAsRead(selectedThreadId);
 
                     // reseting unread to read
-                    const indicator = document.getElementById(`user-indicator-${user.id}`);
+                    const indicator = document.getElementById(`thread-indicator-${selectedThreadId}`);
                     if (indicator) {
                         indicator.textContent = '';
                         indicator.style.display = 'none';
@@ -1042,7 +1048,7 @@
                     // and assign the support team member if any support team member is selected
                     document.getElementById("selected-user-name").addEventListener("click", function (e) {
                         e.stopPropagation();  // Prevent clicks outside from hiding the dropdown
-                        toggleSupportMemberDropdown(selectedUserId); // handling dropdown for support team members 
+                        toggleSupportMemberDropdown(selectedThreadId); // handling dropdown for support team members 
                     });
 
                 });
@@ -1053,12 +1059,12 @@
         }
 
         function updateLastMessageAndTimestamp(user) {
-            let userElement = document.getElementById(`user-${user.id}`);
+            let userElement = document.getElementById(`thread-${user.chat_thread_id}`);
 
             if (!userElement) {
                 // User block doesn't exist, create it
                 addOrUpdateUser(user);
-                userElement = document.getElementById(`user-${user.id}`);
+                userElement = document.getElementById(`thread-${user.chat_thread_id}`);
             }
 
             if (!userElement) return; // Still not found, abort
@@ -1077,7 +1083,7 @@
             }
 
             // Update timestamp
-            const timestampSpan = document.getElementById(`timestamp-${user.id}`);
+            const timestampSpan = document.getElementById(`timestamp-${user.chat_thread_id}`);
             if (timestampSpan) {
                 timestampSpan.textContent = user.timestamp || '';
             }

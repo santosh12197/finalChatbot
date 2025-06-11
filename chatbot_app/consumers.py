@@ -66,6 +66,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'chat_message', # triggers a method called chat_message()
+                'chat_thread_id': chat_thread_id,
                 'message': message,
                 'sender': sender,  # Assuming user is authenticated
                 'support_agent_id': support_agent_id,
@@ -77,17 +78,9 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
 
         # Notify, this msg as unread, to support dashboard if the message is from user
         if sender == 'user':
-            # support_msg_count = await database_sync_to_async(ChatMessage.objects.filter(
-            #     user=chat.user,
-            #     requested_for_support=True
-            # ).count)()
-            # print("support_msg_count: ", support_msg_count)
 
             # Get unread message count from this user
             unread_count = await self.get_unread_msg_count(user, thread)
-            
-            # Check if it's a new support thread (first support message from user)
-            # if support_msg_count == 1:
 
             # new msg from user to support
             await self.channel_layer.group_send(
@@ -96,6 +89,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                     'type': 'new_support_thread',
                     'user': {
                         'id': chat.user.id,
+                        'chat_thread_id': chat_thread_id,
                         'username': chat.user.username,
                         'first_name': chat.user.first_name,
                         'last_name': chat.user.last_name,
@@ -106,6 +100,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                         "unread_count": unread_count,
                         "timestamp": timestamp,
                         "message": message,
+                        "is_closed": thread.is_closed
                     }
                 }
             )
@@ -123,6 +118,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
 
     # Receive message from room group: Django sends the message back to clients
     async def chat_message(self, event):
+        chat_thread_id = event['chat_thread_id']
         message = event['message']
         sender = event['sender']
         username = event['username']
@@ -132,6 +128,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
 
         # Send message to WebSocket: Sends message back to all connected clients in that room using .send()
         await self.send(text_data=json.dumps({
+            'chat_thread_id': chat_thread_id,
             'message': message,
             'sender': sender,
             'username': username,
