@@ -806,11 +806,16 @@ class GetAssignedSupportAndThreadIdView(LoginRequiredMixin, View):
                 else:
                     return JsonResponse({
                         'status': 'no_active_support_on_thread',
-                        'thread_id': thread.id
+                        'thread_id': thread.id,
+                        'support_agent_id': None,
+                        'support_agent_name': None
                     })
             else:
                 return JsonResponse({
-                    'status': 'no_active_thread'
+                    'status': 'no_active_thread',
+                    'thread_id': None,
+                    'support_agent_id': None,
+                    'support_agent_name': None
                 })
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})

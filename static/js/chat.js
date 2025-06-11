@@ -37,7 +37,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     let support_agent_id = null;
     let chat_thread_id = null;
 
-    function renderOptions(options) {
+    async function renderOptions(options) {
+        const supportAndThreadIds = await updateSupportAndThreadId();
         const wrapper = document.createElement("div");
         wrapper.className = "message-wrapper options-wrapper";
 
@@ -441,7 +442,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         scrollToBottom();
     }
 
-    async function initializeChat() {
+    async function updateSupportAndThreadId() {
         // function to update global variables chat_thread_id and support_agent_id when page completely loads
 
         const result = await fetchAssignedSupportAndThreadId();
@@ -459,7 +460,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    const chatInitialized = await initializeChat();
+    const supportAndThreadIds = await updateSupportAndThreadId();
 
     // On page load
     // if user already has a support chat session, then load chat history and connect with support team for real chat
