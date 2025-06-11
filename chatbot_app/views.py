@@ -863,3 +863,12 @@ class CloseChatThreadView(View):
 
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
+        
+
+class SciPRIndexView(View):
+    """
+        Integrate ChatBot on SciPR index page
+    """
+    def get(self, request):
+        return render(request, 'scipr_index.html') 
+
