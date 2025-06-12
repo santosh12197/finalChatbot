@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Info</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background: #eee;
+      border-radius: 5px 5px 0 0;
+      font-weight: bold;
+    }
+
+    .tab.active {
+      background: #007bff;
+      color: white;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .text-danger{
+      color: rgba(139, 0, 0, 0.966)
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <div>
+      <p>Hi, I'm Lily. </p>
+      <P>Please provide your details in order to start chat.</P>
+    </div>
+
+    <div id="signup-form" class="form-section active">
+      <form method="POST" action="/register/">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="signup-name">Full Name <span class="text-danger">*</span></label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Email <span class="text-danger">*</span></label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="doi">DOI / Article Number <span class="text-danger">*</span></label>
+          <input type="text" id="doi" name="doi" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-doi">Query <span class="text-danger">*</span></label>
+          <input type="text" id="msg" name="doi" required>
+        </div>
+        
+        <button type="submit">Start Chat</button>
+      </form>
+    </div>
+
+</body>
+</html>

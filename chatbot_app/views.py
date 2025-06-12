@@ -77,6 +77,11 @@ class RegisterView(View):
         messages.success(request, "Registration successful! Please login.")
         return redirect('login')  
     
+@iframe_exempt
+class UserDetailsView(View):
+
+    def get(self, request):
+        return render(request, "user_details.html") 
 
 
 class LoginView(View):
@@ -197,7 +202,7 @@ class SupportLoginView(View):
             return render(request, self.template_name)
 
 
-@iframe_exempt
+# @iframe_exempt
 class ChatView(LoginRequiredMixin, View):
     """
         View for user's chatbot
