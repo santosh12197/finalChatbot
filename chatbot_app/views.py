@@ -731,7 +731,7 @@ class CheckWelcomeMessagesView(View):
             welcome_exists = ChatMessage.objects.filter(
                 user_id=user_id,
                 sender="support",
-                message="Welcome to SciPris. How can I help you?"
+                message="Welcome to Aptara. How can I help you?"
             ).exists()
 
             return JsonResponse({

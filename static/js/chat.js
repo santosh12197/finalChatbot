@@ -120,10 +120,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             appendMessage("Yes, I'm satisfied", "user", getCurrentFormattedTimestamp()); // Show user reply
             await saveMessageToDB("Yes, I'm satisfied.", "user", is_read=true, requested_for_support=false, support_agent_id=null); // saving chat data for the user
 
-            const thankYouMsg = "Thank you for connecting with SciPris Aptara.";
-            const greetMsg = "Hi, I'm Robotica. How can I help you today?";
-            const combined = `${thankYouMsg}; \n ${greetMsg}; \n Payment Failure; \n Refund Issues; \n Invoice Requests; \n Other Payment Queries`;
-
+            const thankYouMsg = "Thank you for connecting with Aptara.";
+            const greetMsg = "Hi, I'm Lily. How can I help you today?";
+            // Extract top-level keys from botTree dynamically
+            const botTreeKeys = Object.keys(botTree).join('; \n'); 
+            const combined = `${thankYouMsg}; \n ${greetMsg}; \n ${botTreeKeys}`; // Use dynamically extracted keys
+            
             appendMessage(thankYouMsg, "bot", getCurrentFormattedTimestamp()); // Bot reply
             await saveMessageToDB(combined, "bot", is_read=true, requested_for_support=false, support_agent_id=null); // saving to db
             
@@ -210,7 +212,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 if (!data.both_sent) {
                     const successMessage = "Successfully connected with the support team.";
-                    const welcomeMessage = "Welcome to SciPris. How can I help you?";
+                    const welcomeMessage = "Welcome to Aptara. How can I help you?";
 
                     if (!data.success_sent) {
                         appendMessage(successMessage, "bot", getCurrentFormattedTimestamp());
@@ -285,10 +287,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 message.className = 'bot-message align-self-start message-bubble';
 
-                // "Robotica " prefix in bold
+                // "Lily " prefix in bold
                 const botLabel = document.createElement("div");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Robotica ";
+                botLabel.textContent = "Lily ";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = part;
@@ -317,7 +319,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 const botLabel = document.createElement("div");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Robotica";
+                botLabel.textContent = "Lily";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = text;
@@ -401,7 +403,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Bot Label
             if (sender === 'bot') {
                 const roboticaLabel = document.createElement("div");
-                roboticaLabel.textContent = "Robotica";
+                roboticaLabel.textContent = "Lily";
                 roboticaLabel.style.fontWeight = "bold";
                 roboticaLabel.style.marginBottom = "6px";
                 wrapper.appendChild(roboticaLabel);
@@ -481,7 +483,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 enableRealTimeChat();
             } else {
                 // Start chatbot normally
-                appendMessage("Hi, I'm Robotica. How can I help you today?", "bot", getCurrentFormattedTimestamp());
+                appendMessage("Hi, I'm Lily. How can I help you today?", "bot", getCurrentFormattedTimestamp());
                 renderOptions(botTree);
             }
         });

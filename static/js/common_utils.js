@@ -1,36 +1,72 @@
 
 
+// botTree for SciPris
+// const botTree = {
+//     "Payment Failure": {
+//         "Card Payment Failure": {
+//             "Master Card": "Thank you for connecting. You can try again with Master Card.",
+//             "Visa Card": "Thank you for connecting. You can try again. You can try again with Visa Card.",
+//             "Other Card": "We only use Visa or Master card for payment. Please use these cards only."
+//         },
+//         "Bank Transfer Failure": "Thank you for connecting. Pls try again."
+//     },
+//     "Refund Issues": {
+//         "Refund Status": "Your refund is being processed.",
+//         "Refund Delay": "Sorry for the delay, it's being reviewed.",
+//         "Refund Request": "Refund request submitted."
+//     },
+//     "Invoice Requests": {
+//         "Invoice not received": "We'll send your invoice shortly.",
+//         "Incorrect Invoice": "Please share the correct invoice details."
+//     },
+//     "Other Payment Queries": {
+//         "General Payment Inquiry": "Please describe your issue.",
+//         "Payer Change/Modification": "We can help with that. Connecting...",
+//         "Payment Method Inquiry": "Available methods: Card, Bank, Wallet.",
+//         "Membership/Account Inquiry": "Please specify your account issue.",
+//         "Hold Payment Request": "Your request has been noted.",
+//         "License / Billing Info": "Please provide your license ID.",
+//         "Installments/Discount": "Installments can be discussed further.",
+//         "Waiver/Other Issues": "Our team will review your waiver.",
+//         "Signed Document Request": "Please upload your document.",
+//         "Payment Receipt Request": "We will resend your receipt shortly."
+//     }
+// };
 
+
+// botTree for SciPR
 const botTree = {
-    "Payment Failure": {
-        "Card Payment Failure": {
-            "Master Card": "Thank you for connecting. You can try again with Master Card.",
-            "Visa Card": "Thank you for connecting. You can try again. You can try again with Visa Card.",
-            "Other Card": "We only use Visa or Master card for payment. Please use these cards only."
+    "Submission or Revision Process": {
+        "Stuck during revision (e.g., Incomplete Status, Portal Crash, Can't Edit)": "Follow the standard resubmission steps: (1) Click 'Approve Submission' (2) Edit details & click 'Next' (3) Upload revised files",
+        "Manuscript submission locked or prematurely submitted": "Support team reverts manuscript to editable draft.",
+        "Abstract word count error blocking submission": "The word count issue has been fixed by the support team.",
+        "Co-author field warning persists after adding authors": "Ignore message and submit, fix is being developed.",
+        "Need to cancel/undo submission for fresh submission": "Support enables 'resubmission option' for existing manuscript."
+    },
+    "Manuscript Information":{
+        "Co-author's name wrongly registered post-submission":{
+            "Need to cancel/undo submission for fresh submission" :"Support enables 'resubmission option' for existing manuscript."
         },
-        "Bank Transfer Failure": "Thank you for connecting. Pls try again."
+        "Need to change the Corresponding Author": " The support team performs this update in the backend.",
+        "Trouble saving the Co-Author list": "The system auto-saves. No 'Save' button is needed. Close the window after adding."
     },
-    "Refund Issues": {
-        "Refund Status": "Your refund is being processed.",
-        "Refund Delay": "Sorry for the delay, it's being reviewed.",
-        "Refund Request": "Refund request submitted."
+    "System Access or Reviewer Issues":{
+        "Peer Reviewer's invitation link is not working": "The support team resolves the technical access issue for the reviewer.",
+        " Manuscript doesn't appear on reviewer dashboard after self-assignment" : " Immediate: Backend rectified; Long-term: Replicating for permanent fix."
     },
-    "Invoice Requests": {
-        "Invoice not received": "We'll send your invoice shortly.",
-        "Incorrect Invoice": "Please share the correct invoice details."
-    },
-    "Other Payment Queries": {
-        "General Payment Inquiry": "Please describe your issue.",
-        "Payer Change/Modification": "We can help with that. Connecting...",
-        "Payment Method Inquiry": "Available methods: Card, Bank, Wallet.",
-        "Membership/Account Inquiry": "Please specify your account issue.",
-        "Hold Payment Request": "Your request has been noted.",
-        "License / Billing Info": "Please provide your license ID.",
-        "Installments/Discount": "Installments can be discussed further.",
-        "Waiver/Other Issues": "Our team will review your waiver.",
-        "Signed Document Request": "Please upload your document.",
-        "Payment Receipt Request": "We will resend your receipt shortly."
+    "Post Submission Process":{
+        "Automated system sends receipt confirmation to author": {
+            "Editor's Review": {
+                "Manuscript passes initial in-house screening": "Manuscript sent to two independent peer reviewers"
+            }
+        },
+        "Submitting agent emails 'Author Form Package' to editor": {
+            "Editor's Review": {
+                "Manuscript passes initial in-house screening": "Manuscript sent to two independent peer reviewers"
+            }
+        }
     }
+
 };
 
 function scrollToBottom() {
@@ -76,10 +112,10 @@ function greetUserWithBotTreeOptions(firstInteractionTimestamp, context = 'user'
 
     const botLabel = document.createElement("div");
     botLabel.style.fontWeight = "bold";
-    botLabel.textContent = "Robotica";
+    botLabel.textContent = "Lily";
 
     const greetingContent = document.createElement("div");
-    greetingContent.textContent = "Hi, I'm Robotica. How can I help you today?";
+    greetingContent.textContent = "Hi, I'm Lily. How can I help you today?";
 
     greetingText.appendChild(botLabel);
     greetingText.appendChild(greetingContent);

@@ -202,11 +202,7 @@
     </style>
     <!-- first load common utils -->
     <script src="{% static 'js/common_utils.js' %}"></script>
-    <script 
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSj9JpJ1vEAR0HhTCXjupjzsJk3Z0E6TM&libraries=marker"
-        async
-        defer>
-    </script>
+    <!-- To add script for google map having key-->
 </head>
 <body>
 
@@ -288,7 +284,7 @@
             <p><span id="user-email"></span></p>
             <p><span id="user-location"></span></p>
             <!-- User's location based on IP address -->
-            <div id="map" style="width: 100%; height: 300px; margin-top: 10px;"></div>
+            <!-- <div id="map" style="width: 100%; height: 300px; margin-top: 10px;"></div> -->
             <div id="chat-close-wrapper" class="chat-close" style="display: none; position: relative; margin-top: 10px;">
                 <button id="chat-close-btn" class="chat-close-btn btn btn-danger" type="button">
                     Close Chat
@@ -332,7 +328,7 @@
                 });
 
                 // load user location based on IP address
-                loadUserLocation(selectedUserId);  // Load map too
+                // loadUserLocation(selectedUserId);  // Load map too
 
 
                 // Displaying user details
@@ -668,7 +664,7 @@
                     const chatBox = document.getElementById('chat-container');
                     chatBox.innerHTML = '';
 
-                    // load greeting msg by Robotica first
+                    // load greeting msg by Lily first
                     greetUserWithBotTreeOptions(data.first_interaction_timestamp, "support");
 
                     // then load chat history
@@ -694,7 +690,7 @@
                         senderLabel.style.marginBottom = "2px";
 
                         if (msg.sender === 'bot') {
-                            senderLabel.textContent = "Robotica";
+                            senderLabel.textContent = "Lily";
                         } else if (msg.sender === 'support') {
                             senderLabel.textContent = (msg.support_agent_id === support_agent_id) ? "You" : msg.support_full_name;
                         }
@@ -1014,7 +1010,7 @@
                     });
 
                     // loading user location
-                    loadUserLocation(selectedUserId);
+                    // loadUserLocation(selectedUserId);
 
                     // setting user details
                     document.getElementById("user-name").textContent = `Name: ${user.first_name} ${user.last_name}`;
