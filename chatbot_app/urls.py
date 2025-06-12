@@ -7,8 +7,6 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    
-    # normal user related
     path("", ChatView.as_view(), name="chat"),
     path('mark_support_request/', MarkSupportRequestView.as_view(), name='mark_support_request'),
     path('check_support_chat/', CheckSupportChatView.as_view(), name='check_support_chat'),

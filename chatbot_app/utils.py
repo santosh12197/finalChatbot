@@ -3,6 +3,8 @@ import requests
 from chatbot_app.models import ChatMessage, UserLocation
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 def get_client_ip(request):
     """
@@ -57,7 +59,9 @@ def save_user_location(request, user):
             }
         )
 
-    # wherever the user escalates to support (e.g. view)
+
+
+# wherever the user escalates to support (e.g. view)
 def notify_support_of_unread(user_id):
     unread_count = ChatMessage.objects.filter(user_id=user_id, sender='user', has_read=False).count()
     channel_layer = get_channel_layer()
@@ -70,3 +74,13 @@ def notify_support_of_unread(user_id):
             'unread_count': unread_count
         }
     )
+
+
+def iframe_exempt(view_cls):
+    """
+        Decorator to apply xframe_options_exempt to class-based views so that.
+        The view which uses this decorator can be embedded into html
+    """
+    decorator = method_decorator(xframe_options_exempt)
+    view_cls.dispatch = decorator(view_cls.dispatch)
+    return view_cls

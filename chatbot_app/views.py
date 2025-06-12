@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from .utils import notify_support_of_unread, get_client_ip, get_location_from_ip, save_user_location
+from .utils import notify_support_of_unread, get_client_ip, get_location_from_ip, save_user_location, iframe_exempt
 
 INITIAL_OPTIONS = [
     "Payment Failure",
@@ -197,6 +197,7 @@ class SupportLoginView(View):
             return render(request, self.template_name)
 
 
+@iframe_exempt
 class ChatView(LoginRequiredMixin, View):
     """
         View for user's chatbot
@@ -207,10 +208,6 @@ class ChatView(LoginRequiredMixin, View):
             request, 
             "chat.html"
         )
-    
-    def post(self, request):
-
-        pass
 
 
 # @method_decorator(csrf_exempt, name='dispatch')
