@@ -361,120 +361,254 @@
       text-align: center;
     }
   }
+
+  
+    #chatbot-icon {
+        position: fixed;
+        bottom: 120px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+    }
+
+    #chatbot-popup {
+        position: fixed;
+        bottom: 10px;
+        right: 20px;
+        width: 450px;
+        height: 600px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        animation: fadeIn 0.3s ease-in-out;
+        z-index: 999;
+    }
+
+    #chatbot-header {
+        height: 35px;
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        font-size: 14px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #chatbot-close {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+    }   
+
+    #chatbot-popup iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .fade-in {
+        animation: fadeInIcon 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeInIcon {
+        from {
+            opacity: 1;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .chatbot-container {
+    position: relative;
+    /* z-index: 1000; */
+}
 </style>
 </head>
 <body>
-<header>
-  <!-- <div class="brand" aria-label="SciPris brand logo text">SciPris</div> -->
-   <div class="logo">
-    <span class="sci">Sci</span><span class="pris">Pris</span>
-  </div>
-  <div class="chat-live" role="button" tabindex="0" aria-label="Chat live, status online">
-    <div class="status-dot" aria-hidden="true"></div>
-    Chat Live
-  </div>
-</header>
-
-<nav class="navbar" role="navigation" aria-label="Publisher navigation bar">
-  <img 
-    src="{% static 'publisher.png' %}"
-    alt="Publisher Logo here in navy blue navbar"
-    class="logo-publisher" 
-    width="140" 
-    height="48"
-    loading="lazy"
-  />
-</nav>
-
-<main>
-  <section class="steps-container" aria-label="Checkout steps progress">
-    <div class="step" aria-current="false" tabindex="-1">
-      <div class="step-circle">1</div>
-      <span class="step-label">Welcome</span>
+    <header>
+    <!-- <div class="brand" aria-label="SciPris brand logo text">SciPris</div> -->
+    <div class="logo">
+        <span class="sci">Sci</span><span class="pris">Pris</span>
     </div>
-    <div class="step active" aria-current="step" tabindex="0">
-      <div class="step-circle" aria-label="Current step 2">2</div>
-      <span class="step-label"><strong>Register/Sign In</strong></span>
+    <div class="chat-live" role="button" tabindex="0" aria-label="Chat live, status online">
+        <div class="status-dot" aria-hidden="true"></div>
+        Chat Live
     </div>
-    <div class="step" aria-current="false" tabindex="-1">
-      <div class="step-circle">3</div>
-      <span class="step-label">Select a license</span>
-    </div>
-    <div class="step" aria-current="false" tabindex="-1">
-      <div class="step-circle">4</div>
-      <span class="step-label">Arrange payment</span>
-    </div>
-    <div class="step" aria-current="false" tabindex="-1">
-      <div class="step-circle">5</div>
-      <span class="step-label">Confirmation</span>
-    </div>
-  </section>
+    </header>
 
-  <section class="signin-form-container" aria-labelledby="signin-heading">
-    <h2 id="signin-heading">Sign In</h2>
-    <p>Sign in to your Publisher SciPris account.</p>
-    <form id="signin-form" autocomplete="off" novalidate>
-      <label for="author" class="required">Author</label>
-      <select name="author" id="author" required aria-required="true" aria-describedby="author-desc">
-        <option value="lupna" selected>Lupna Arya</option>
-        <!-- Additional authors could go here -->
-      </select>
-
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" value="lupna.arya@aptaracorp.com" readonly aria-readonly="true" />
-
-      <label for="password">Password</label>
-      <div class="password-wrapper">
-        <input type="password" id="password" name="password" placeholder="Enter Password" aria-describedby="password-desc" required />
-        <button type="button" aria-label="Toggle password visibility" class="toggle-password">
-          <span class="material-icons" aria-hidden="true">visibility</span>
-        </button>
-      </div>
-
-      <a href="#" class="forgot-password" tabindex="0">Forgotten Password</a>
-
-      <button type="submit" class="btn-signin">Sign in</button>
-    </form>
-  </section>
-</main>
-
-<footer>
-  <div class="container" role="contentinfo">
-    <nav aria-label="Footer navigation" class="footer-links" style="display:flex; gap:16px; flex-wrap:wrap;">
-      <a href="#" tabindex="0">Contact</a>
-      <a href="#" tabindex="0">Help</a>
-      <a href="#" tabindex="0">Terms &amp; Conditions</a>
-      <a href="#" tabindex="0">Privacy Policy</a>
+    <nav class="navbar" role="navigation" aria-label="Publisher navigation bar">
+    <img 
+        src="{% static 'publisher.png' %}"
+        alt="Publisher Logo here in navy blue navbar"
+        class="logo-publisher" 
+        width="140" 
+        height="48"
+        loading="lazy"
+    />
     </nav>
-    <div style="margin-left:auto; color:#555; flex-shrink:0;" aria-label="Copyright information">&copy; 2025 <a href="#" style="color:#0a78cc;" tabindex="0">Publisher</a></div>
-  </div>
-</footer>
 
-<script>
-  // Toggle password visibility
-  const passwordInput = document.getElementById('password');
-  const toggleButton = document.querySelector('.toggle-password');
-  const icon = toggleButton.querySelector('.material-icons');
+    <main>
+    <section class="steps-container" aria-label="Checkout steps progress">
+        <div class="step" aria-current="false" tabindex="-1">
+        <div class="step-circle">1</div>
+        <span class="step-label">Welcome</span>
+        </div>
+        <div class="step active" aria-current="step" tabindex="0">
+        <div class="step-circle" aria-label="Current step 2">2</div>
+        <span class="step-label"><strong>Register/Sign In</strong></span>
+        </div>
+        <div class="step" aria-current="false" tabindex="-1">
+        <div class="step-circle">3</div>
+        <span class="step-label">Select a license</span>
+        </div>
+        <div class="step" aria-current="false" tabindex="-1">
+        <div class="step-circle">4</div>
+        <span class="step-label">Arrange payment</span>
+        </div>
+        <div class="step" aria-current="false" tabindex="-1">
+        <div class="step-circle">5</div>
+        <span class="step-label">Confirmation</span>
+        </div>
+    </section>
 
-  toggleButton.addEventListener('click', () => {
-    if (passwordInput.type === 'password') {
-      passwordInput.type = 'text';
-      icon.textContent = 'visibility_off';
-    } else {
-      passwordInput.type = 'password';
-      icon.textContent = 'visibility';
-    }
-    passwordInput.focus();
-  });
+    <section class="signin-form-container" aria-labelledby="signin-heading">
+        <h2 id="signin-heading">Sign In</h2>
+        <p>Sign in to your Publisher SciPris account.</p>
+        <form id="signin-form" autocomplete="off" novalidate>
+        <label for="author" class="required">Author</label>
+        <select name="author" id="author" required aria-required="true" aria-describedby="author-desc">
+            <option value="lupna" selected>Lupna Arya</option>
+            <!-- Additional authors could go here -->
+        </select>
 
-  // Accessibility: Enable toggle with keyboard (Enter/Space)
-  toggleButton.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      toggleButton.click();
-    }
-  });
-</script>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="lupna.arya@aptaracorp.com" readonly aria-readonly="true" />
+
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+            <input type="password" id="password" name="password" placeholder="Enter Password" aria-describedby="password-desc" required />
+            <button type="button" aria-label="Toggle password visibility" class="toggle-password">
+            <span class="material-icons" aria-hidden="true">visibility</span>
+            </button>
+        </div>
+
+        <a href="#" class="forgot-password" tabindex="0">Forgotten Password</a>
+
+        <button type="submit" class="btn-signin">Sign in</button>
+        </form>
+    </section>
+    
+    <section>
+        <div class="chatbot-container">
+            <!-- Floating chat icon -->
+            <button id="chatbot-icon">💬</button>
+
+            <!-- Chat popup with header and close button -->
+            <div id="chatbot-popup">
+                <div id="chatbot-header">
+                    <span>Ask Eva</span>
+                    <button id="chatbot-close" title="Close">✖</button>
+                </div>
+                <iframe src="/user_details/" title="ChatBot"></iframe>
+            </div>
+        </div>
+    </section>
+    </main>
+    
+    <footer>
+    <div class="container" role="contentinfo">
+        <nav aria-label="Footer navigation" class="footer-links" style="display:flex; gap:16px; flex-wrap:wrap;">
+        <a href="#" tabindex="0">Contact</a>
+        <a href="#" tabindex="0">Help</a>
+        <a href="#" tabindex="0">Terms &amp; Conditions</a>
+        <a href="#" tabindex="0">Privacy Policy</a>
+        </nav>
+        <div style="margin-left:auto; color:#555; flex-shrink:0;" aria-label="Copyright information">&copy; 2025 <a href="#" style="color:#0a78cc;" tabindex="0">Publisher</a></div>
+    </div>
+    </footer>
+
+    <script>
+        const chatbotIcon = document.getElementById('chatbot-icon');
+        const chatbotPopup = document.getElementById('chatbot-popup');
+        const chatbotHeader = document.getElementById('chatbot-header');
+        const chatbotClose = document.getElementById('chatbot-close');
+
+        chatbotIcon.addEventListener('click', () => {
+            chatbotPopup.style.display = 'flex';     // Show the popup
+            chatbotIcon.style.display = 'none';      // Hide the icon
+        });
+
+        chatbotClose.addEventListener('click', () => {
+            chatbotPopup.style.display = 'none';    // Hide the popup
+            // Delay the reappearance of the icon
+            setTimeout(() => {
+                chatbotIcon.style.display = 'block';
+                chatbotIcon.classList.add('fade-in');
+
+            // Remove animation class after it runs once to allow repeat
+            setTimeout(() => {
+                chatbotIcon.classList.remove('fade-in');
+                }, 500); // Duration of fade-in animation
+            }); // Delay before icon shows again
+        });
+        
+    </script>
+
+    <script>
+    // Toggle password visibility
+    const passwordInput = document.getElementById('password');
+    const toggleButton = document.querySelector('.toggle-password');
+    const icon = toggleButton.querySelector('.material-icons');
+
+    toggleButton.addEventListener('click', () => {
+        if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.textContent = 'visibility_off';
+        } else {
+        passwordInput.type = 'password';
+        icon.textContent = 'visibility';
+        }
+        passwordInput.focus();
+    });
+
+    // Accessibility: Enable toggle with keyboard (Enter/Space)
+    toggleButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleButton.click();
+        }
+    });
+    </script>
 </body>
 </html>
 

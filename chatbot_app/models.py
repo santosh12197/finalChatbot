@@ -17,6 +17,8 @@ class UserProfile(AbstractUser):
 
 class ChatThread(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_threads')
+    # one doi (or article number) per thread (for a particular user)
+    doi_or_article_number = models.CharField(max_length=255) 
     # Active support agent assigned to this thread, if any
     active_support_agent = models.ForeignKey(
         settings.AUTH_USER_MODEL,

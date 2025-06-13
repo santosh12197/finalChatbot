@@ -88,12 +88,12 @@
 
   <div class="form-container">
     <div>
-      <p>Hi, I'm Lily. </p>
+      <p>Hi, I'm Eva. Welcome to Aptara.</p>
       <P>Please provide your details in order to start chat.</P>
     </div>
 
     <div id="signup-form" class="form-section active">
-      <form method="POST" action="/register/">
+      <form method="POST" action="/start_chat/">
         {% csrf_token %}
         <div class="form-group">
           <label for="signup-name">Full Name <span class="text-danger">*</span></label>
@@ -107,10 +107,10 @@
           <label for="doi">DOI / Article Number <span class="text-danger">*</span></label>
           <input type="text" id="doi" name="doi" required>
         </div>
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label for="signup-doi">Query <span class="text-danger">*</span></label>
-          <input type="text" id="msg" name="doi" required>
-        </div>
+          <input type="text" id="msg" name="query" required>
+        </div> -->
         
         <button type="submit">Start Chat</button>
       </form>

@@ -664,7 +664,7 @@
                     const chatBox = document.getElementById('chat-container');
                     chatBox.innerHTML = '';
 
-                    // load greeting msg by Lily first
+                    // load greeting msg by Eva first
                     greetUserWithBotTreeOptions(data.first_interaction_timestamp, "support");
 
                     // then load chat history
@@ -690,7 +690,7 @@
                         senderLabel.style.marginBottom = "2px";
 
                         if (msg.sender === 'bot') {
-                            senderLabel.textContent = "Lily";
+                            senderLabel.textContent = "Eva";
                         } else if (msg.sender === 'support') {
                             senderLabel.textContent = (msg.support_agent_id === support_agent_id) ? "You" : msg.support_full_name;
                         }

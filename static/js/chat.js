@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             await saveMessageToDB("Yes, I'm satisfied.", "user", is_read=true, requested_for_support=false, support_agent_id=null); // saving chat data for the user
 
             const thankYouMsg = "Thank you for connecting with Aptara.";
-            const greetMsg = "Hi, I'm Lily. How can I help you today?";
+            const greetMsg = "Hi, I'm Eva. How can I help you today?";
             // Extract top-level keys from botTree dynamically
             const botTreeKeys = Object.keys(botTree).join('; \n'); 
             const combined = `${thankYouMsg}; \n ${greetMsg}; \n ${botTreeKeys}`; // Use dynamically extracted keys
@@ -287,10 +287,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 message.className = 'bot-message align-self-start message-bubble';
 
-                // "Lily " prefix in bold
+                // "Eva " prefix in bold
                 const botLabel = document.createElement("div");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Lily ";
+                botLabel.textContent = "Eva ";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = part;
@@ -319,7 +319,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 const botLabel = document.createElement("div");
                 botLabel.style.fontWeight = "bold";
-                botLabel.textContent = "Lily";
+                botLabel.textContent = "Eva";
 
                 const messageContent = document.createElement("span");
                 messageContent.textContent = text;
@@ -403,7 +403,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Bot Label
             if (sender === 'bot') {
                 const roboticaLabel = document.createElement("div");
-                roboticaLabel.textContent = "Lily";
+                roboticaLabel.textContent = "Eva";
                 roboticaLabel.style.fontWeight = "bold";
                 roboticaLabel.style.marginBottom = "6px";
                 wrapper.appendChild(roboticaLabel);
@@ -483,7 +483,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 enableRealTimeChat();
             } else {
                 // Start chatbot normally
-                appendMessage("Hi, I'm Lily. How can I help you today?", "bot", getCurrentFormattedTimestamp());
+                appendMessage("Hi, I'm Eva. How can I help you today?", "bot", getCurrentFormattedTimestamp());
                 renderOptions(botTree);
             }
         });

@@ -15,6 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
 from zoneinfo import ZoneInfo
+from django.contrib.auth.hashers import make_password
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -39,6 +40,55 @@ SUB_OPTIONS = {
         "Payment Receipt Request"
     ]
 }
+
+
+class StartChatView(View):
+    def post(self, request):
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        doi = request.POST.get("doi")
+        # query = request.POST.get("query")
+
+        if not all([name, email, doi]):
+            return JsonResponse({"success": False, "error": "All fields are required."}, status=400)
+        
+        # Split full name into first and last name
+        name_parts = name.strip().split()
+        first_name = name_parts[0]
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
+        # Get or create user
+        user, created = UserProfile.objects.get_or_create(
+            username=email,
+            email=email,
+            defaults={
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'password': make_password('start@123')
+            }
+        )
+
+        # Log user in
+        user.backend = "django.contrib.auth.backends.ModelBackend"
+        login(request, user)
+
+        # Check for existing open thread
+        thread = ChatThread.objects.filter(
+            user=user, 
+            doi_or_article_number=doi, 
+            is_closed=False
+        ).first()
+
+        if not thread:
+            thread = ChatThread.objects.create(
+                user=user, 
+                doi_or_article_number=doi
+            )
+
+        # Redirect to chat interface
+        return redirect("chat")  # This resolves to `path("", ChatView.as_view(), name="chat")`
+
 
 class RegisterView(View):
     """
@@ -202,7 +252,7 @@ class SupportLoginView(View):
             return render(request, self.template_name)
 
 
-# @iframe_exempt
+@iframe_exempt
 class ChatView(LoginRequiredMixin, View):
     """
         View for user's chatbot

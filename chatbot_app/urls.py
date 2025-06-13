@@ -1,10 +1,10 @@
 from django.urls import path
-from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAndThreadIdView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SciPrisIndexView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserDetailsView, UserLocationView
+from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAndThreadIdView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SciPrisIndexView, StartChatView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserDetailsView, UserLocationView
 
 urlpatterns = [
 
     # normal user login
-    # path('submit_initial_chat/', SubmitInitialChatDetailsView.as_view(), name='submit_initial_chat'),
+    path('start_chat/', StartChatView.as_view(), name='start_chat'),
     path("user_details/", UserDetailsView.as_view(), name="user_details"),
 
     path("register/", RegisterView.as_view(), name="register"),
