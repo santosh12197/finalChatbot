@@ -1,0 +1,480 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SciPris - Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+<!-- Google Material Icons -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<style>
+  /* Reset + Base */
+  * {
+    box-sizing: border-box;
+  }
+  .logo {
+      font-size: 40px;
+      font-weight: bold;
+      font-family: Arial, sans-serif;
+    }
+
+    .logo .sci {
+      color: #005377; /* Dark Blue */
+    }
+
+    .logo .pris {
+      color: #3CB3D8; /* Light Blue */
+    }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #fff;
+    color: #222;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a {
+    color: #0a78cc;
+    text-decoration: none;
+  }
+  a:hover,
+  a:focus {
+    text-decoration: underline;
+  }
+  /* Utility */
+  .container {
+    max-width: 1140px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #ddd;
+    background-color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #0c4a6e; /* blue-green from logo color */
+  }
+  .chat-live {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #0a78cc;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chat-live .status-dot {
+    width: 10px;
+    height: 10px;
+    background: #24b24b;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Navbar beneath header */
+  nav.navbar {
+    background-color: #002855; /* navy blue */
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  nav.navbar img.logo-publisher {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* Step progress */
+  .steps-container {
+    max-width: 800px;
+    margin: 32px auto 48px;
+    padding: 0 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    gap: 0 12px;
+  }
+  .step {
+    flex: 1 1 0;
+    text-align: center;
+    color: #666;
+    font-weight: 600;
+    font-size: 0.9rem;
+    position: relative;
+    padding-top: 32px;
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: #e6ebf2;
+    color: #444;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    cursor: default;
+    user-select: none;
+  }
+  .step.active .step-circle,
+  .step.completed .step-circle {
+    background: #222222;
+    color: #fff;
+  }
+  .step.completed .step-circle {
+    background: #0a78cc;
+  }
+  /* Step labels */
+  .step-label {
+    margin-top: 8px;
+    display: block;
+    font-weight: 500;
+    color: #444;
+  }
+  .step.active .step-label {
+    font-weight: 700;
+    color: #222222;
+  }
+  /* Connecting lines between step circles */
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: calc(50% + 16px);
+    right: -50%;
+    height: 2px;
+    background: #ddd;
+    z-index: 1;
+  }
+  .step.completed:not(:last-child)::after {
+    background: #0a78cc;
+  }
+
+  /* Sign In form */
+  .signin-form-container {
+    max-width: 420px;
+    margin: 0 auto 80px;
+    padding: 24px 32px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .signin-form-container h2 {
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 1.25rem;
+    color: #222;
+  }
+  .signin-form-container p {
+    margin-top: 0;
+    font-size: 0.95rem;
+    color: #444;
+    margin-bottom: 22px;
+  }
+  form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #222;
+  }
+  form label.required::after {
+    content: ' *';
+    color: #d43f3a;
+  }
+  select,
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    padding: 10px 12px;
+    color: #444;
+    outline-offset: 2px;
+    outline-color: transparent;
+    transition: outline-color 0.25s ease;
+  }
+  select:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    outline-color: #0a78cc;
+    border-color: #0a78cc;
+  }
+  input[readonly] {
+    background-color: #f2f6fb;
+    color: #555;
+    cursor: default;
+  }
+
+  /* Password input wrapper for eye icon button */
+  .password-wrapper {
+    position: relative;
+  }
+  .password-wrapper input[type="password"],
+  .password-wrapper input[type="text"] {
+    padding-right: 40px;
+  }
+  .password-wrapper .toggle-password {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #d1d9e6;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    transition: background 0.3s ease;
+  }
+  .password-wrapper .toggle-password:hover,
+  .password-wrapper .toggle-password:focus {
+    background: #0a78cc;
+    color: white;
+    outline-offset: 2px;
+    outline-color: #0a78cc;
+  }
+
+  /* Forgotten password link */
+  .forgot-password {
+    font-size: 0.9rem;
+    margin-top: 8px;
+    display: inline-block;
+    color: #0a78cc;
+    cursor: pointer;
+  }
+  .forgot-password:hover,
+  .forgot-password:focus {
+    text-decoration: underline;
+  }
+
+  /* Sign in button */
+  .btn-signin {
+    margin-top: 20px;
+    background-color: #0a78cc;
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+  }
+  .btn-signin:hover,
+  .btn-signin:focus {
+    background-color: #075a9a;
+    outline-offset: 2px;
+    outline-color: #075a9a;
+  }
+
+  /* Footer */
+  footer {
+    background: #f9fafb;
+    padding: 24px 0;
+    font-size: 0.9rem;
+    color: #555;
+    border-top: 1px solid #ddd;
+  }
+  footer .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  footer-links {
+    display: flex;
+    gap: 16px;
+  }
+  footer a {
+    color: #0a78cc;
+  }
+  footer a:hover,
+  footer a:focus {
+    text-decoration: underline;
+  }
+
+  /* Responsive */
+  @media (max-width: 767px) {
+    /* Header */
+    header {
+      padding: 12px 16px;
+    }
+    nav.navbar {
+      justify-content: center;
+    }
+    .steps-container {
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 0 8px;
+      margin: 24px 0 32px;
+      gap: 32px;
+    }
+    .step {
+      min-width: 100px;
+      flex: none;
+      padding-top: 30px;
+    }
+    .step:not(:last-child)::after {
+      display: none;
+    }
+
+    .signin-form-container {
+      margin: 0 16px 64px;
+      padding: 24px 20px;
+      max-width: none;
+    }
+    footer .container {
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+<header>
+  <!-- <div class="brand" aria-label="SciPris brand logo text">SciPris</div> -->
+   <div class="logo">
+    <span class="sci">Sci</span><span class="pris">Pris</span>
+  </div>
+  <div class="chat-live" role="button" tabindex="0" aria-label="Chat live, status online">
+    <div class="status-dot" aria-hidden="true"></div>
+    Chat Live
+  </div>
+</header>
+
+<nav class="navbar" role="navigation" aria-label="Publisher navigation bar">
+  <img 
+    src="{% static 'publisher.png' %}"
+    alt="Publisher Logo here in navy blue navbar"
+    class="logo-publisher" 
+    width="140" 
+    height="48"
+    loading="lazy"
+  />
+</nav>
+
+<main>
+  <section class="steps-container" aria-label="Checkout steps progress">
+    <div class="step" aria-current="false" tabindex="-1">
+      <div class="step-circle">1</div>
+      <span class="step-label">Welcome</span>
+    </div>
+    <div class="step active" aria-current="step" tabindex="0">
+      <div class="step-circle" aria-label="Current step 2">2</div>
+      <span class="step-label"><strong>Register/Sign In</strong></span>
+    </div>
+    <div class="step" aria-current="false" tabindex="-1">
+      <div class="step-circle">3</div>
+      <span class="step-label">Select a license</span>
+    </div>
+    <div class="step" aria-current="false" tabindex="-1">
+      <div class="step-circle">4</div>
+      <span class="step-label">Arrange payment</span>
+    </div>
+    <div class="step" aria-current="false" tabindex="-1">
+      <div class="step-circle">5</div>
+      <span class="step-label">Confirmation</span>
+    </div>
+  </section>
+
+  <section class="signin-form-container" aria-labelledby="signin-heading">
+    <h2 id="signin-heading">Sign In</h2>
+    <p>Sign in to your Publisher SciPris account.</p>
+    <form id="signin-form" autocomplete="off" novalidate>
+      <label for="author" class="required">Author</label>
+      <select name="author" id="author" required aria-required="true" aria-describedby="author-desc">
+        <option value="lupna" selected>Lupna Arya</option>
+        <!-- Additional authors could go here -->
+      </select>
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" value="lupna.arya@aptaracorp.com" readonly aria-readonly="true" />
+
+      <label for="password">Password</label>
+      <div class="password-wrapper">
+        <input type="password" id="password" name="password" placeholder="Enter Password" aria-describedby="password-desc" required />
+        <button type="button" aria-label="Toggle password visibility" class="toggle-password">
+          <span class="material-icons" aria-hidden="true">visibility</span>
+        </button>
+      </div>
+
+      <a href="#" class="forgot-password" tabindex="0">Forgotten Password</a>
+
+      <button type="submit" class="btn-signin">Sign in</button>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <div class="container" role="contentinfo">
+    <nav aria-label="Footer navigation" class="footer-links" style="display:flex; gap:16px; flex-wrap:wrap;">
+      <a href="#" tabindex="0">Contact</a>
+      <a href="#" tabindex="0">Help</a>
+      <a href="#" tabindex="0">Terms &amp; Conditions</a>
+      <a href="#" tabindex="0">Privacy Policy</a>
+    </nav>
+    <div style="margin-left:auto; color:#555; flex-shrink:0;" aria-label="Copyright information">&copy; 2025 <a href="#" style="color:#0a78cc;" tabindex="0">Publisher</a></div>
+  </div>
+</footer>
+
+<script>
+  // Toggle password visibility
+  const passwordInput = document.getElementById('password');
+  const toggleButton = document.querySelector('.toggle-password');
+  const icon = toggleButton.querySelector('.material-icons');
+
+  toggleButton.addEventListener('click', () => {
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      passwordInput.type = 'password';
+      icon.textContent = 'visibility';
+    }
+    passwordInput.focus();
+  });
+
+  // Accessibility: Enable toggle with keyboard (Enter/Space)
+  toggleButton.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleButton.click();
+    }
+  });
+</script>
+</body>
+</html>
+

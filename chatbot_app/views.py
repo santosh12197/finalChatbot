@@ -867,10 +867,12 @@ class CloseChatThreadView(View):
             return JsonResponse({'success': False, 'error': str(e)})
         
 
-class SciPRIndexView(View):
+class SciPrisIndexView(View):
     """
-        Integrate ChatBot on SciPR index page
+        Integrate ChatBot on SciPris index page
     """
     def get(self, request):
-        return render(request, 'scipr_index.html') 
+        # return render(request, 'scipris_index.html') 
+        return render(request, 'scipris_login.html') 
+    
 
