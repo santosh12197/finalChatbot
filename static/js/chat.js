@@ -210,21 +210,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 const data = await response.json();
 
-                if (!data.both_sent) {
-                    const successMessage = "Successfully connected with the support team.";
-                    const welcomeMessage = "Welcome to Aptara. How can I help you?";
+                const successMessage = "Successfully connected with the support team.";
+                const welcomeMessage = "Welcome to Aptara. How can I help you?";
 
-                    if (!data.success_sent) {
-                        appendMessage(successMessage, "bot", getCurrentFormattedTimestamp());
-                        await saveMessageToDB(successMessage, "bot", true, true, support_agent_id=null);
-                    }
+                appendMessage(successMessage, "bot", getCurrentFormattedTimestamp());
+                await saveMessageToDB(successMessage, "bot", true, true, support_agent_id=null);
+                appendMessage(welcomeMessage, "support", getCurrentFormattedTimestamp());
+                await saveMessageToDB(welcomeMessage, "support", true, true, support_agent_id=null);
 
-                    if (!data.welcome_sent) {
-                        // To check this section again
-                        appendMessage(welcomeMessage, "support", getCurrentFormattedTimestamp());
-                        await saveMessageToDB(welcomeMessage, "support", true, true, support_agent_id=null);
-                    }
-                }
+                // if (!data.both_sent) {
+                //     const successMessage = "Successfully connected with the support team.";
+                //     const welcomeMessage = "Welcome to Aptara. How can I help you?";
+
+                //     if (!data.success_sent) {
+                //         appendMessage(successMessage, "bot", getCurrentFormattedTimestamp());
+                //         await saveMessageToDB(successMessage, "bot", true, true, support_agent_id=null);
+                //     }
+
+                //     if (!data.welcome_sent) {
+                //         // To check this section again
+                //         appendMessage(welcomeMessage, "support", getCurrentFormattedTimestamp());
+                //         await saveMessageToDB(welcomeMessage, "support", true, true, support_agent_id=null);
+                //     }
+                // }
                 scrollToBottom();
 
             } catch (error) {
