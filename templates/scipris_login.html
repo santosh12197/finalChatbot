@@ -539,7 +539,7 @@
                     <span>Ask Eva</span>
                     <button id="chatbot-close" title="Close">✖</button>
                 </div>
-                <iframe src="/user_details/" title="ChatBot"></iframe>
+                <iframe id="chatbot-iframe" src="/user_details/" title="ChatBot"></iframe>
             </div>
         </div>
     </section>
@@ -562,14 +562,25 @@
         const chatbotPopup = document.getElementById('chatbot-popup');
         const chatbotHeader = document.getElementById('chatbot-header');
         const chatbotClose = document.getElementById('chatbot-close');
+        const chatbotIframe = document.getElementById('chatbot-iframe');
 
         chatbotIcon.addEventListener('click', () => {
             chatbotPopup.style.display = 'flex';     // Show the popup
             chatbotIcon.style.display = 'none';      // Hide the icon
+
+            // Reset iframe to login page every time it's opened
+            chatbotIframe.src = '/user_details/';
         });
 
         chatbotClose.addEventListener('click', () => {
             chatbotPopup.style.display = 'none';    // Hide the popup
+
+            // clear iframe src to reset internal state (for security/fresh load)
+            // TODO : -------------------------------------------------------------------------
+            // (1) either, we may think of closing the chat 
+            // (2) or, may think about closing the chat session 
+            chatbotIframe.src = '';
+
             // Delay the reappearance of the icon
             setTimeout(() => {
                 chatbotIcon.style.display = 'block';

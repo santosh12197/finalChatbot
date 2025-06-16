@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const data = JSON.parse(e.data);
             if (data.message && data.timestamp) {
                 appendMessage(data.message,  data.sender, data.timestamp, data.support_full_name);
-                // saveMessageToDB(data.message, sender);
+                // saveMessageToDB(data.message, sender); // saving of chat data is done in consumer, hence no need to save here
                 scrollToBottom();
             }
         };
@@ -464,28 +464,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const supportAndThreadIds = await updateSupportAndThreadId();
 
-    // On page load
+    // On page load -> commented for loading chat history if already requested to chat and had chat with support team previously
     // if user already has a support chat session, then load chat history and connect with support team for real chat
     // otherwise, start a new chat with bot
-    fetch('/check_support_chat/')
-        .then(response => response.json())
-        .then(data => {
-            firstInteractionTimestamp = data.first_interaction_timestamp;
-            // if user has already started chat with support team
-            // then load the chat history and, then connect with the support team
-            // otherwise, start with the fresh chat
-            if (data.support_chat_exists) {
-                // first greeting lines and then options to start chat with the bot
-                greetUserWithBotTreeOptions(firstInteractionTimestamp);
-                // Load past chat messages
-                renderGroupedMessages(data.messages); // Use updated function here
-                // Connect with the support team
-                enableRealTimeChat();
-            } else {
-                // Start chatbot normally
-                appendMessage("Hi, I'm Eva. How can I help you today?", "bot", getCurrentFormattedTimestamp());
-                renderOptions(botTree);
-            }
-        });
+    // fetch('/check_support_chat/')
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         firstInteractionTimestamp = data.first_interaction_timestamp;
+    //         // if user has already started chat with support team
+    //         // then load the chat history and, then connect with the support team
+    //         // otherwise, start with the fresh chat
+    //         if (data.support_chat_exists) {
+    //             // first greeting lines and then options to start chat with the bot
+    //             greetUserWithBotTreeOptions(firstInteractionTimestamp);
+    //             // Load past chat messages
+    //             renderGroupedMessages(data.messages); // Use updated function here
+    //             // Connect with the support team
+    //             enableRealTimeChat();
+    //         } else {
+    //             // Start chatbot normally
+    //             appendMessage("Hi, I'm Eva. How can I help you today?", "bot", getCurrentFormattedTimestamp());
+    //             renderOptions(botTree);
+    //         }
+    //     });
+
+    // On Page load, start with the fresh bot chat
+    appendMessage("Hi, I'm Eva. How can I help you today?", "bot", getCurrentFormattedTimestamp());
+    renderOptions(botTree);
         
 });
