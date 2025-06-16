@@ -526,9 +526,10 @@ class SupportDashboardView(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):
-        # Get all threads where at least one message requested support
+        # Get all active threads where at least one message requested support
         threads = ChatThread.objects.filter(
-            chat_messages__requested_for_support=True
+            chat_messages__requested_for_support=True,
+            is_closed=False,
         ).distinct().prefetch_related(
             'user'
         ).annotate(
@@ -875,36 +876,45 @@ class GetAssignedSupportAndThreadIdView(LoginRequiredMixin, View):
         
 
 class CloseChatThreadView(View):
-    def post(self, request, user_id):
+    def post(self, request, chat_thread_id):
         try:
-            user = UserProfile.objects.filter(id=user_id).first()
-            if not user:
-                return JsonResponse({'success': False, 'error': 'No user found!'})
+            thread = ChatThread.objects.filter(
+                id=chat_thread_id,
+                is_closed=False
+            ).order_by("-created_at").first()
 
             data = json.loads(request.body)
             support_agent_id = data.get('support_agent_id') # support agent id who is requesting to close the chat
 
-            thread = ChatThread.objects.filter(
-                user__id=user_id, 
-                is_closed=False
-            ).order_by("-created_at").first()
-
             if not thread:
-                return JsonResponse({'success': False, 'error': f'No active chat thread found for the user {user.first_name} {user.last_name}!', 'message': 'no_active_thread'})
+                return JsonResponse({'success': False, 'error': 'No active chat thread found!', 'message': 'no_active_thread'})
 
             # only assigned support agent (currently active support agent)/ user should close the chat
             # user validation
             if not request.user.is_support_agent:
-                if request.user != user:
-                    return JsonResponse({'success': False, 'error': f'Not a valid user to close the chat with user {user.first_name} {user.last_name}!'})
+                if request.user != thread.user:
+                    return JsonResponse({'success': False, 'error': f'Not a valid user to close the chat with user {thread.user.first_name} {thread.user.last_name}!'})
             # support agent validation
+            # if chat thread is assigned to any support, then, active support of the chat thread should be the support member who is requesting to close the chat.
+            # or, if chat thread is not assigned to any support, then any support member can close the chat.
             if support_agent_id:
-                if int(thread.active_support_agent.id) != int(support_agent_id):
-                    return JsonResponse({'success': False, 'error': f'User {user.first_name} {user.last_name} has been assigned with support member {thread.active_support_agent.first_name} {thread.active_support_agent.last_name}. You can not close the chat for current user!'})
+                if thread.active_support_agent:
+                    if int(thread.active_support_agent.id) != int(support_agent_id):
+                        return JsonResponse({'success': False, 'error': f'User {thread.user.first_name} {thread.user.last_name} has been assigned with support member {thread.active_support_agent.first_name} {thread.active_support_agent.last_name}. You can not close the chat for current user!'})
 
             # close the thread
             thread.is_closed = True
             thread.save()
+
+            # Broadcast a “chat closed” event from the view
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"support_{thread.id}",  # Same as room_group_name in consumer
+                {
+                    "type": "chat_close_notify",  # Triggers `chat_close_notify` method in consumer
+                    "message": "This chat has been closed by support.",
+                }
+            )
 
             # Mark all messages in this thread as inactive msg
             ChatMessage.objects.filter(thread=thread).update(

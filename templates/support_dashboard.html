@@ -220,7 +220,7 @@
                     data-user-email="{{ thread.userEmail }}"
                     data-user-lat="{{ thread.lat }}"
                     data-user-lng="{{ thread.lng }}"
-                    data-is-closed="{{ thread.is_closed }}">
+                    data-is-closed="{{ thread.is_closed|yesno:'true,false' }}">
                     <!-- Top Row: Username and Timestamp -->
                     <div class="user-row user-header">
                         <span class="username" id="username-{{thread.thread_id}}">{{ thread.username }}</span>
@@ -247,7 +247,7 @@
             {% endfor %}
         {% else %}
         <div class="no-thread" id="no-thread">
-            <p>No chat available.</p>
+            <p>No active chat available.</p>
         </div>
         {% endif %}
     </div>
@@ -300,6 +300,7 @@
         let selectedThreadId = null;
         let chatSocket = null;
         let notificationSocket = null;
+        let isClosed;
         let support_agent_id = "{{ request.user.id }}";
 
         document.querySelectorAll('.user-thread').forEach(userDiv => {
@@ -308,6 +309,7 @@
                 // when support team clicks on any user
                 selectedUserId = userDiv.dataset.userId;
                 selectedThreadId = userDiv.dataset.threadId;
+                isClosed = userDiv.dataset.isClosed;
 
                 // fetching user details
                 const fname = userDiv.dataset.userFname;
@@ -368,39 +370,83 @@
                 // For closing the chat
                 // first show the "Close The Chat" button
                 document.getElementById('chat-close-wrapper').style.display = 'block';
-                // then add click event for closing the chat
-                document.getElementById('chat-close-btn').addEventListener('click', function () {
-                    if (!selectedUserId) return;
+                const closeBtn = document.getElementById('chat-close-btn')
+                
+                // Disable Connect button if it exists
+                const connectBox = document.getElementById("connect-box");
+                const connectBtn = connectBox?.querySelector("button");
 
-                    const confirmClose = confirm(`Are you sure you want to close the chat with the user ${fname} ${lname}?`);
-                    if (!confirmClose) return;
+                if (isClosed == "true" || isClosed == "True") {
+                    // isClosed is of type string, and not boolean type
+                    // disable Close Chat btn
+                    closeBtn.disabled = true;
+                    closeBtn.textContent = "Chat Already Closed";
+                    closeBtn.title = "This chat has already been closed.";
 
-                    fetch(`/close_chat_thread/${selectedUserId}/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCSRFToken()
-                        },
-                        body: JSON.stringify({
-                            support_agent_id: support_agent_id
+                    // Disable input & send button
+                    document.getElementById("input-message").disabled = true;
+                    document.getElementById("send-button").disabled = true;
+
+                    // remove the Connect btn
+                    if (connectBox) connectBox.remove();
+                }else {
+                    closeBtn.disabled = false;
+                    closeBtn.textContent = "Close Chat";
+                    closeBtn.title = "";
+
+                     // Prevent duplicate event listeners
+                    const newCloseBtn = closeBtn.cloneNode(true);
+                    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+
+                    newCloseBtn.addEventListener('click', function () { 
+
+                        // then add click event for closing the chat
+                        if (!selectedThreadId) return;
+
+                        const confirmClose = confirm(`Are you sure you want to close the chat with the user ${fname} ${lname}?`);
+                        if (!confirmClose) return;
+
+                        fetch(`/close_chat_thread/${selectedThreadId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCSRFToken()
+                            },
+                            body: JSON.stringify({
+                                support_agent_id: support_agent_id
+                            })
                         })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert("Chat has been closed successfully.");
-                            document.getElementById('chat-close-wrapper').style.display = 'none';
-                            // TODO: Optional: Disable chat input or disconnect WebSocket
-                        } else {
-                            alert(data.error);
-                        }
-                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Chat has been closed successfully.");
+                                location.reload();
+
+                                // // Disable everything
+                                // newCloseBtn.disabled = true;
+                                // newCloseBtn.textContent = "Chat Already Closed";
+                                // newCloseBtn.title = "This chat has already been closed.";
+
+                                // document.getElementById("input-message").disabled = true;
+                                // document.getElementById("send-button").disabled = true;
+
+                                // const connectBox = document.getElementById("connect-box");
+
+                                // // Remove connect box
+                                // if (connectBox) connectBox.remove();
+
+                            } else {
+                                alert(data.error);
+                            }
+                        })
                     .catch(err => {
                         // console.error("Error closing chat:", err);
                         alert("An error occurred. Please try again.");
                     });
-                });
 
+                    });
+
+                };
             });
         });
         // Helper to show message
@@ -937,7 +983,7 @@
             const userList = document.getElementById('thread-list');
             const existingUser = document.getElementById(`thread-${user.chat_thread_id}`);
 
-            // Remove "No user to chat!" if exists
+            // Remove "No active chat available." if exists
             const noUsersDiv = document.getElementById('no-thread');
             if (noUsersDiv) {
                 noUsersDiv.remove();
@@ -1046,6 +1092,54 @@
                         e.stopPropagation();  // Prevent clicks outside from hiding the dropdown
                         toggleSupportMemberDropdown(selectedThreadId); // handling dropdown for support team members 
                     });
+
+                    // For closing the chat
+                    // Show or hide the Close Chat button based on chat status
+                    document.getElementById('chat-close-wrapper').style.display = 'block';
+                    const closeBtn = document.getElementById('chat-close-btn');
+
+                    if (user.is_closed === true || user.is_closed === 'true') {
+                        closeBtn.disabled = true;
+                        closeBtn.textContent = "Chat Already Closed";
+                        closeBtn.title = "This chat has already been closed.";
+                    } else{
+                        closeBtn.disabled = false;
+                        closeBtn.textContent = "Close Chat";
+                        closeBtn.title = "";
+
+                        // Attach close logic
+                        closeBtn.onclick = () => {
+                            if (!selectedThreadId) return;
+
+                            const confirmClose = confirm(`Are you sure you want to close the chat with the user ${fname} ${lname}?`);
+                            if (!confirmClose) return;
+
+                            fetch(`/close_chat_thread/${selectedThreadId}/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCSRFToken()
+                                },
+                                body: JSON.stringify({
+                                    support_agent_id: support_agent_id
+                                })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert("Chat has been closed successfully.");
+                                    location.reload();  // Reload page after success
+                                } else {
+                                    alert(data.error);
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Error closing chat:", err);
+                                alert("An error occurred. Please try again.");
+                            });
+                        };
+
+                    }
 
                 });
 

@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         scrollToBottom();
         // TODO: replace currentUserId with support agent involved
-        const roomName = "support_" + chat_thread_id; // currentUserId is from html file chat.html
+        const roomName = chat_thread_id; // currentUserId is from html file chat.html
         // websocket connection of current user
         chatSocket = new WebSocket(
             (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
@@ -243,6 +243,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         // msg received from the backend by the frontend
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
+
+            if (data.type === 'chat_closed') {
+                // if chat is closed by support
+                // disable input field and Send btn for this chat thread
+                alert(data.message);
+
+                // Disable input and send button
+                if (inputField) inputField.disabled = true;
+                if (sendButton) sendButton.disabled = true;
+
+                // Optional: add visual cue
+                inputField.placeholder = "This chat has been closed by support.";
+            }
+
             if (data.message && data.timestamp) {
                 appendMessage(data.message,  data.sender, data.timestamp, data.support_full_name);
                 // saveMessageToDB(data.message, sender); // saving of chat data is done in consumer, hence no need to save here

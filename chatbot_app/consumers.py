@@ -137,6 +137,12 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             'support_full_name': support_full_name
         }))
 
+    async def chat_close_notify(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'chat_closed',
+            'message': event['message']
+        }))
+
     @database_sync_to_async
     def get_support_full_name(self, chat):
         if chat.support_agent:

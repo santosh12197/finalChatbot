@@ -15,7 +15,7 @@ urlpatterns = [
     path('check_support_chat/', CheckSupportChatView.as_view(), name='check_support_chat'),
     path('save_message/', SaveChatMessageView.as_view(), name='save_message'),
     path('mark_as_read/<int:chat_thread_id>/', MarkAsRead.as_view(), name='mark_as_read'),
-    path('close_chat_thread/<int:user_id>/', CloseChatThreadView.as_view(), name='mark_as_read'),
+    path('close_chat_thread/<int:chat_thread_id>/', CloseChatThreadView.as_view(), name='mark_as_read'),
 
     # support team
     path("support_register/", SupportRegisterView.as_view(), name="support_register"),
