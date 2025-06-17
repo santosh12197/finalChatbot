@@ -397,8 +397,8 @@
     }
 
     #chatbot-header {
-        height: 35px;
-        background-color: #007bff;
+        height: 50px;
+        background-color: #4786c9c2;
         color: white;
         padding: 5px 10px;
         font-size: 14px;
@@ -536,7 +536,7 @@
             <!-- Chat popup with header and close button -->
             <div id="chatbot-popup">
                 <div id="chatbot-header">
-                    <span>Ask Eva</span>
+                    <span>Ask EVA</span>
                     <button id="chatbot-close" title="Close">✖</button>
                 </div>
                 <iframe id="chatbot-iframe" src="/user_details/" title="ChatBot"></iframe>
@@ -564,6 +564,15 @@
         const chatbotClose = document.getElementById('chatbot-close');
         const chatbotIframe = document.getElementById('chatbot-iframe');
 
+        let chatThreadId = null;
+
+        // Listen to messages from iframe
+        window.addEventListener("message", (event) => {
+            if (event.data.type === "THREAD_ID_FROM_IFRAME") {
+            chatThreadId = event.data.thread_id;
+            }
+        });
+
         chatbotIcon.addEventListener('click', () => {
             chatbotPopup.style.display = 'flex';     // Show the popup
             chatbotIcon.style.display = 'none';      // Hide the icon
@@ -574,12 +583,32 @@
 
         chatbotClose.addEventListener('click', () => {
             chatbotPopup.style.display = 'none';    // Hide the popup
-
-            // clear iframe src to reset internal state (for security/fresh load)
-            // TODO : -------------------------------------------------------------------------
-            // (1) either, we may think of closing the chat 
-            // (2) or, may think about closing the chat session 
             chatbotIframe.src = '';
+
+            if (chatThreadId) {
+
+                fetch(`/close_chat_thread/${chatThreadId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken(),
+                    },
+                    body: JSON.stringify({
+                        support_agent_id: null  // Since this is user closing the thread
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("Chat closed from user side.");
+                    } else {
+                        console.warn("Chat close failed:", data.error);
+                    }
+                })
+                .catch(err => {
+                    console.error("Error closing chat:", err);
+                });
+            }
 
             // Delay the reappearance of the icon
             setTimeout(() => {
@@ -592,6 +621,17 @@
                 }, 500); // Duration of fade-in animation
             }); // Delay before icon shows again
         });
+        
+        // Util: CSRF Token helper
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+            const [k, v] = cookie.trim().split('=');
+            if (k === name) return v;
+            }
+            return '';
+        }
         
     </script>
 

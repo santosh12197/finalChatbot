@@ -140,7 +140,10 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
     async def chat_close_notify(self, event):
         await self.send(text_data=json.dumps({
             'type': 'chat_closed',
-            'message': event['message']
+            'message': event['message'],
+            "thread_id": event["thread_id"],
+            "user_id": event["user_id"],
+            "user_name": event["user_name"]
         }))
 
     @database_sync_to_async

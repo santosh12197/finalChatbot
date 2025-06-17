@@ -800,6 +800,14 @@
 
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
+
+                if (data.type === 'chat_closed') {
+                    // if closed by user, then notify to the support,
+                    // then, reload the page
+                    alert(`Chat with ${data.user_name} has been closed.`);
+                    location.reload();
+                }
+
                 const chatBox = document.getElementById('chat-container');
 
                 const messageDiv = document.createElement('div');
@@ -953,6 +961,13 @@
                         }
                     }
                     
+                }
+
+                if (data.type === 'chat_closed') {
+                    // if closed by user, then notify to the support,
+                    // then, reload the page
+                    alert(`Chat with ${data.user_name} has been closed.`);
+                    location.reload();
                 }
             };
 

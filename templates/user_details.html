@@ -88,19 +88,19 @@
 
   <div class="form-container">
     <div>
-      <p>Hi, I'm Eva. Welcome to Aptara.</p>
+      <p>Hi, I'm EVA. Welcome to Aptara.</p>
       <P>Please provide your details in order to start chat.</P>
     </div>
 
     <div id="signup-form" class="form-section active">
-      <form method="POST" action="/start_chat/">
+      <form method="POST" action="/start_chat/" id="start-chat-form">
         {% csrf_token %}
         <div class="form-group">
-          <label for="signup-name">Full Name <span class="text-danger">*</span></label>
+          <label for="name">Full Name <span class="text-danger">*</span></label>
           <input type="text" id="name" name="name" required>
         </div>
         <div class="form-group">
-          <label for="signup-email">Email <span class="text-danger">*</span></label>
+          <label for="email">Email <span class="text-danger">*</span></label>
           <input type="email" id="email" name="email" required>
         </div>
         <div class="form-group">
@@ -115,6 +115,44 @@
         <button type="submit">Start Chat</button>
       </form>
     </div>
+  </div>
+
+  <script>
+    document.getElementById('start-chat-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // 1. Send thread_id to parent page
+          window.parent.postMessage({
+            type: "THREAD_ID_FROM_IFRAME",
+            thread_id: data.thread_id
+          }, "*");
+
+          // 2. Redirect iframe to /chat/
+          window.location.href = "/";
+        } else {
+          // alert("Error: " + data.error);
+          console.log("error: ", data.error)
+        }
+      })
+      .catch(err => {
+        console.error("Failed to start chat:", err);
+      });
+  });
+</script>
+
 
 </body>
 </html>

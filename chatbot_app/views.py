@@ -87,8 +87,8 @@ class StartChatView(View):
             )
 
         # Redirect to chat interface
-        return redirect("chat")  # This resolves to `path("", ChatView.as_view(), name="chat")`
-
+        # return redirect("chat")  # This resolves to `path("", ChatView.as_view(), name="chat")`
+        return JsonResponse({"success": True, "thread_id": thread.id})
 
 class RegisterView(View):
     """
@@ -873,7 +873,7 @@ class GetAssignedSupportAndThreadIdView(LoginRequiredMixin, View):
                 })
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
-        
+
 
 class CloseChatThreadView(View):
     def post(self, request, chat_thread_id):
@@ -912,7 +912,10 @@ class CloseChatThreadView(View):
                 f"support_{thread.id}",  # Same as room_group_name in consumer
                 {
                     "type": "chat_close_notify",  # Triggers `chat_close_notify` method in consumer
-                    "message": "This chat has been closed by support.",
+                    "message": "This chat has been closed.",
+                    "thread_id": thread.id,
+                    "user_id": thread.user.id,
+                    "user_name": f"{thread.user.first_name} {thread.user.last_name}",
                 }
             )
 
@@ -921,7 +924,7 @@ class CloseChatThreadView(View):
                 is_active=False,
             )
 
-            return JsonResponse({'success': True})
+            return JsonResponse({'success': True, "message": "Thread closed successfully."})
 
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
