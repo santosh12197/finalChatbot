@@ -796,7 +796,7 @@
             }
             // websocket connection for chat with the support team
             const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-            chatSocket = new WebSocket(`${wsProtocol}://${window.location.host}/ws/support/support_${selectedThreadId}/`);
+            chatSocket = new WebSocket(`${wsProtocol}://${window.location.host}/ws/support/${selectedThreadId}/`);
 
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
