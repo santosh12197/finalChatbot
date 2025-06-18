@@ -945,3 +945,12 @@ class SciPrisIndexView(View):
         return render(request, 'scipris_login.html') 
     
 
+class ThreadListView(View):
+    """
+        List of all the chat threads
+    """
+    def get(self, request):
+        # TODO : doing here-------------
+        # return render(request, 'scipris_index.html') 
+        return render(request, 'thread_list.html') 
+    

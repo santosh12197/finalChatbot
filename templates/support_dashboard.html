@@ -213,8 +213,10 @@
 
 {% block body %}
 
+    {% include 'sidebar.html' %} <!-- include sidebar on left side-->
+
     <!-- left most part of screen -->
-    <div id="thread-list">
+    <div id="thread-list" class="main-content" style="margin-left: 60px; padding: 20px;">
         {% if threads %}
             {% for thread in threads %}
                 <div class="user-thread" 

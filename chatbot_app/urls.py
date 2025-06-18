@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAndThreadIdView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SciPrisIndexView, StartChatView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, UserDetailsView, UserLocationView
+from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAndThreadIdView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SciPrisIndexView, StartChatView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, ThreadListView, UserDetailsView, UserLocationView
 
 urlpatterns = [
 
@@ -28,6 +28,7 @@ urlpatterns = [
     path("has_welcome_messages/", CheckWelcomeMessagesView.as_view(), name="has_welcome_messages"),
     path('check_or_assign_support/', CheckOrAssignSupportAgentView.as_view(), name='check_or_assign_support'),
     path('assigned_support_and_thread_id/', GetAssignedSupportAndThreadIdView.as_view(), name='assigned_support_and_thread_id'),
+    path('chat_history/', ThreadListView.as_view(), name='chat_history'),
 
     # SciPR index page to integrate ChatBot
     path('index/', SciPrisIndexView.as_view(), name='index'),

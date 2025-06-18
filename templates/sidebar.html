@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 60px;
+            background-color: #2C2C3A; /* lighter Gemini-style dark */
+            overflow-x: hidden;
+            transition: width 0.3s ease;
+            padding-top: 60px;
+            z-index: 1000;
+        }
+
+        .sidebar:hover {
+            width: 200px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .sidebar-item:hover {
+            background-color: #3A3A4D;
+        }
+
+        .icon {
+            font-size: 20px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .label {
+            opacity: 0;
+            white-space: nowrap;
+            margin-left: 10px;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar:hover .label {
+            opacity: 1;
+        }
+    </style>
+
+
+{% endblock %}
+
+{% block body %} 
+
+    <div class="sidebar">
+        <a href="{% url 'support_dashboard' %}" class="sidebar-item">
+            <span class="icon">🟢</span>
+            <span class="label">Active Chats</span>
+        </a>
+        <a href="{% url 'chat_history' %}" class="sidebar-item">
+            <span class="icon">📜</span>
+            <span class="label">Chat History</span>
+        </a>
+    </div>
+
+{% endblock %}
