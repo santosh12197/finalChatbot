@@ -1,460 +1,464 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SciPris - Sign In</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-<!-- Google Material Icons -->
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-<style>
-  /* Reset + Base */
-  * {
-    box-sizing: border-box;
-  }
-  .logo {
-      font-size: 40px;
-      font-weight: bold;
-      font-family: Arial, sans-serif;
+
+{% block title %} SciPris - Sign In {% endblock %}
+{% block link %} 
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+{% endblock %}
+
+{% block css %} 
+
+  <style>
+    /* Reset + Base */
+    * {
+      box-sizing: border-box;
+    }
+    .logo {
+        font-size: 40px;
+        font-weight: bold;
+        font-family: Arial, sans-serif;
+      }
+
+      .logo .sci {
+        color: #005377; /* Dark Blue */
+      }
+
+      .logo .pris {
+        color: #3CB3D8; /* Light Blue */
+      }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #222;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a {
+      color: #0a78cc;
+      text-decoration: none;
+    }
+    a:hover,
+    a:focus {
+      text-decoration: underline;
+    }
+    /* Utility */
+    .container {
+      max-width: 1140px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 16px;
+      padding-right: 16px;
     }
 
-    .logo .sci {
-      color: #005377; /* Dark Blue */
-    }
-
-    .logo .pris {
-      color: #3CB3D8; /* Light Blue */
-    }
-
-  body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background: #fff;
-    color: #222;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  a {
-    color: #0a78cc;
-    text-decoration: none;
-  }
-  a:hover,
-  a:focus {
-    text-decoration: underline;
-  }
-  /* Utility */
-  .container {
-    max-width: 1140px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  /* Header */
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #ddd;
-    background-color: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .brand {
-    font-weight: 700;
-    font-size: 1.5rem;
-    color: #0c4a6e; /* blue-green from logo color */
-  }
-  .chat-live {
-    display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-    color: #0a78cc;
-    cursor: pointer;
-    user-select: none;
-  }
-  .chat-live .status-dot {
-    width: 10px;
-    height: 10px;
-    background: #24b24b;
-    border-radius: 50%;
-    margin-right: 8px;
-    flex-shrink: 0;
-  }
-
-  /* Navbar beneath header */
-  nav.navbar {
-    background-color: #002855; /* navy blue */
-    padding: 8px 0;
-    display: flex;
-    align-items: center;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  nav.navbar img.logo-publisher {
-    height: 48px;
-    width: auto;
-    object-fit: contain;
-  }
-
-  /* Step progress */
-  .steps-container {
-    max-width: 800px;
-    margin: 32px auto 48px;
-    padding: 0 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    user-select: none;
-    gap: 0 12px;
-  }
-  .step {
-    flex: 1 1 0;
-    text-align: center;
-    color: #666;
-    font-weight: 600;
-    font-size: 0.9rem;
-    position: relative;
-    padding-top: 32px;
-  }
-  .step-circle {
-    width: 32px;
-    height: 32px;
-    line-height: 32px;
-    margin: 0 auto;
-    border-radius: 50%;
-    background: #e6ebf2;
-    color: #444;
-    font-weight: 600;
-    font-size: 1rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-    cursor: default;
-    user-select: none;
-  }
-  .step.active .step-circle,
-  .step.completed .step-circle {
-    background: #222222;
-    color: #fff;
-  }
-  .step.completed .step-circle {
-    background: #0a78cc;
-  }
-  /* Step labels */
-  .step-label {
-    margin-top: 8px;
-    display: block;
-    font-weight: 500;
-    color: #444;
-  }
-  .step.active .step-label {
-    font-weight: 700;
-    color: #222222;
-  }
-  /* Connecting lines between step circles */
-  .step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    top: 16px;
-    left: calc(50% + 16px);
-    right: -50%;
-    height: 2px;
-    background: #ddd;
-    z-index: 1;
-  }
-  .step.completed:not(:last-child)::after {
-    background: #0a78cc;
-  }
-
-  /* Sign In form */
-  .signin-form-container {
-    max-width: 420px;
-    margin: 0 auto 80px;
-    padding: 24px 32px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-  .signin-form-container h2 {
-    font-weight: 700;
-    margin-bottom: 8px;
-    font-size: 1.25rem;
-    color: #222;
-  }
-  .signin-form-container p {
-    margin-top: 0;
-    font-size: 0.95rem;
-    color: #444;
-    margin-bottom: 22px;
-  }
-  form label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #222;
-  }
-  form label.required::after {
-    content: ' *';
-    color: #d43f3a;
-  }
-  select,
-  input[type="email"],
-  input[type="password"] {
-    width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    padding: 10px 12px;
-    color: #444;
-    outline-offset: 2px;
-    outline-color: transparent;
-    transition: outline-color 0.25s ease;
-  }
-  select:focus,
-  input[type="email"]:focus,
-  input[type="password"]:focus {
-    outline-color: #0a78cc;
-    border-color: #0a78cc;
-  }
-  input[readonly] {
-    background-color: #f2f6fb;
-    color: #555;
-    cursor: default;
-  }
-
-  /* Password input wrapper for eye icon button */
-  .password-wrapper {
-    position: relative;
-  }
-  .password-wrapper input[type="password"],
-  .password-wrapper input[type="text"] {
-    padding-right: 40px;
-  }
-  .password-wrapper .toggle-password {
-    position: absolute;
-    right: 5px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #d1d9e6;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #555;
-    transition: background 0.3s ease;
-  }
-  .password-wrapper .toggle-password:hover,
-  .password-wrapper .toggle-password:focus {
-    background: #0a78cc;
-    color: white;
-    outline-offset: 2px;
-    outline-color: #0a78cc;
-  }
-
-  /* Forgotten password link */
-  .forgot-password {
-    font-size: 0.9rem;
-    margin-top: 8px;
-    display: inline-block;
-    color: #0a78cc;
-    cursor: pointer;
-  }
-  .forgot-password:hover,
-  .forgot-password:focus {
-    text-decoration: underline;
-  }
-
-  /* Sign in button */
-  .btn-signin {
-    margin-top: 20px;
-    background-color: #0a78cc;
-    color: white;
-    font-weight: 600;
-    border: none;
-    padding: 12px 16px;
-    font-size: 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    width: 100%;
-    transition: background-color 0.3s ease;
-  }
-  .btn-signin:hover,
-  .btn-signin:focus {
-    background-color: #075a9a;
-    outline-offset: 2px;
-    outline-color: #075a9a;
-  }
-
-  /* Footer */
-  footer {
-    background: #f9fafb;
-    padding: 24px 0;
-    font-size: 0.9rem;
-    color: #555;
-    border-top: 1px solid #ddd;
-  }
-  footer .container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-  }
-  footer-links {
-    display: flex;
-    gap: 16px;
-  }
-  footer a {
-    color: #0a78cc;
-  }
-  footer a:hover,
-  footer a:focus {
-    text-decoration: underline;
-  }
-
-  /* Responsive */
-  @media (max-width: 767px) {
     /* Header */
     header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 12px 16px;
+      border-bottom: 1px solid #ddd;
+      background-color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
+    .brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #0c4a6e; /* blue-green from logo color */
+    }
+    .chat-live {
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #0a78cc;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chat-live .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #24b24b;
+      border-radius: 50%;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Navbar beneath header */
     nav.navbar {
-      justify-content: center;
+      background-color: #002855; /* navy blue */
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      padding-left: 16px;
+      padding-right: 16px;
     }
+    nav.navbar img.logo-publisher {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    /* Step progress */
     .steps-container {
-      max-width: 100%;
-      overflow-x: auto;
-      padding: 0 8px;
-      margin: 24px 0 32px;
-      gap: 32px;
+      max-width: 800px;
+      margin: 32px auto 48px;
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      gap: 0 12px;
     }
     .step {
-      min-width: 100px;
-      flex: none;
-      padding-top: 30px;
+      flex: 1 1 0;
+      text-align: center;
+      color: #666;
+      font-weight: 600;
+      font-size: 0.9rem;
+      position: relative;
+      padding-top: 32px;
     }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: #e6ebf2;
+      color: #444;
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      cursor: default;
+      user-select: none;
+    }
+    .step.active .step-circle,
+    .step.completed .step-circle {
+      background: #222222;
+      color: #fff;
+    }
+    .step.completed .step-circle {
+      background: #0a78cc;
+    }
+    /* Step labels */
+    .step-label {
+      margin-top: 8px;
+      display: block;
+      font-weight: 500;
+      color: #444;
+    }
+    .step.active .step-label {
+      font-weight: 700;
+      color: #222222;
+    }
+    /* Connecting lines between step circles */
     .step:not(:last-child)::after {
-      display: none;
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: calc(50% + 16px);
+      right: -50%;
+      height: 2px;
+      background: #ddd;
+      z-index: 1;
+    }
+    .step.completed:not(:last-child)::after {
+      background: #0a78cc;
     }
 
+    /* Sign In form */
     .signin-form-container {
-      margin: 0 16px 64px;
-      padding: 24px 20px;
-      max-width: none;
+      max-width: 420px;
+      margin: 0 auto 80px;
+      padding: 24px 32px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .signin-form-container h2 {
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 1.25rem;
+      color: #222;
+    }
+    .signin-form-container p {
+      margin-top: 0;
+      font-size: 0.95rem;
+      color: #444;
+      margin-bottom: 22px;
+    }
+    form label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #222;
+    }
+    form label.required::after {
+      content: ' *';
+      color: #d43f3a;
+    }
+    select,
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      padding: 10px 12px;
+      color: #444;
+      outline-offset: 2px;
+      outline-color: transparent;
+      transition: outline-color 0.25s ease;
+    }
+    select:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      outline-color: #0a78cc;
+      border-color: #0a78cc;
+    }
+    input[readonly] {
+      background-color: #f2f6fb;
+      color: #555;
+      cursor: default;
+    }
+
+    /* Password input wrapper for eye icon button */
+    .password-wrapper {
+      position: relative;
+    }
+    .password-wrapper input[type="password"],
+    .password-wrapper input[type="text"] {
+      padding-right: 40px;
+    }
+    .password-wrapper .toggle-password {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #d1d9e6;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      transition: background 0.3s ease;
+    }
+    .password-wrapper .toggle-password:hover,
+    .password-wrapper .toggle-password:focus {
+      background: #0a78cc;
+      color: white;
+      outline-offset: 2px;
+      outline-color: #0a78cc;
+    }
+
+    /* Forgotten password link */
+    .forgot-password {
+      font-size: 0.9rem;
+      margin-top: 8px;
+      display: inline-block;
+      color: #0a78cc;
+      cursor: pointer;
+    }
+    .forgot-password:hover,
+    .forgot-password:focus {
+      text-decoration: underline;
+    }
+
+    /* Sign in button */
+    .btn-signin {
+      margin-top: 20px;
+      background-color: #0a78cc;
+      color: white;
+      font-weight: 600;
+      border: none;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+    .btn-signin:hover,
+    .btn-signin:focus {
+      background-color: #075a9a;
+      outline-offset: 2px;
+      outline-color: #075a9a;
+    }
+
+    /* Footer */
+    footer {
+      background: #f9fafb;
+      padding: 24px 0;
+      font-size: 0.9rem;
+      color: #555;
+      border-top: 1px solid #ddd;
     }
     footer .container {
-      flex-direction: column;
-      gap: 8px;
-      font-size: 0.85rem;
-      text-align: center;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
     }
-  }
-
-  
-    #chatbot-icon {
-        position: fixed;
-        bottom: 120px;
-        right: 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        font-size: 30px;
-        cursor: pointer;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
+    footer-links {
+      display: flex;
+      gap: 16px;
+    }
+    footer a {
+      color: #0a78cc;
+    }
+    footer a:hover,
+    footer a:focus {
+      text-decoration: underline;
     }
 
-    #chatbot-popup {
-        position: fixed;
-        bottom: 10px;
-        right: 20px;
-        width: 450px;
-        height: 600px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
-        background-color: white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    /* Responsive */
+    @media (max-width: 767px) {
+      /* Header */
+      header {
+        padding: 12px 16px;
+      }
+      nav.navbar {
+        justify-content: center;
+      }
+      .steps-container {
+        max-width: 100%;
+        overflow-x: auto;
+        padding: 0 8px;
+        margin: 24px 0 32px;
+        gap: 32px;
+      }
+      .step {
+        min-width: 100px;
+        flex: none;
+        padding-top: 30px;
+      }
+      .step:not(:last-child)::after {
         display: none;
+      }
+
+      .signin-form-container {
+        margin: 0 16px 64px;
+        padding: 24px 20px;
+        max-width: none;
+      }
+      footer .container {
         flex-direction: column;
-        overflow: hidden;
-        animation: fadeIn 0.3s ease-in-out;
-        z-index: 999;
+        gap: 8px;
+        font-size: 0.85rem;
+        text-align: center;
+      }
     }
 
-    #chatbot-header {
-        height: 50px;
-        background-color: #4786c9c2;
-        color: white;
-        padding: 5px 10px;
-        font-size: 14px;
-        font-weight: bold;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+    
+      #chatbot-icon {
+          position: fixed;
+          bottom: 120px;
+          right: 20px;
+          background-color: #007bff;
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          font-size: 30px;
+          cursor: pointer;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+          z-index: 1000;
+      }
 
-    #chatbot-close {
-        background: transparent;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-    }   
+      #chatbot-popup {
+          position: fixed;
+          bottom: 10px;
+          right: 20px;
+          width: 450px;
+          height: 600px;
+          border: 1px solid #ccc;
+          border-radius: 10px;
+          background-color: white;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          display: none;
+          flex-direction: column;
+          overflow: hidden;
+          animation: fadeIn 0.3s ease-in-out;
+          z-index: 999;
+      }
 
-    #chatbot-popup iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
+      #chatbot-header {
+          height: 50px;
+          background-color: #4786c9c2;
+          color: white;
+          padding: 5px 10px;
+          font-size: 14px;
+          font-weight: bold;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
 
-    .fade-in {
-        animation: fadeInIcon 0.5s ease-in-out;
-    }
+      #chatbot-close {
+          background: transparent;
+          border: none;
+          color: white;
+          font-size: 18px;
+          cursor: pointer;
+      }   
 
-    @keyframes fadeIn {
-        from {
-            transform: scale(0.95);
-            opacity: 0;
-        }
-        to {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
+      #chatbot-popup iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+      }
 
-    @keyframes fadeInIcon {
-        from {
-            opacity: 1;
-            transform: scale(0.8);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
+      .fade-in {
+          animation: fadeInIcon 0.5s ease-in-out;
+      }
 
-    .chatbot-container {
-    position: relative;
-    /* z-index: 1000; */
-}
-</style>
-</head>
-<body>
+      @keyframes fadeIn {
+          from {
+              transform: scale(0.95);
+              opacity: 0;
+          }
+          to {
+              transform: scale(1);
+              opacity: 1;
+          }
+      }
+
+      @keyframes fadeInIcon {
+          from {
+              opacity: 1;
+              transform: scale(0.8);
+          }
+          to {
+              opacity: 1;
+              transform: scale(1);
+          }
+      }
+
+      .chatbot-container {
+      position: relative;
+      /* z-index: 1000; */
+  }
+  </style>
+
+{% endblock %}
+
+{% block header %} 
     <header>
     <!-- <div class="brand" aria-label="SciPris brand logo text">SciPris</div> -->
     <div class="logo">
@@ -477,7 +481,10 @@
     />
     </nav>
 
-    <main>
+{% endblock %}
+
+{% block body %}
+  <main>
     <section class="steps-container" aria-label="Checkout steps progress">
         <div class="step" aria-current="false" tabindex="-1">
         <div class="step-circle">1</div>
@@ -527,139 +534,139 @@
         <button type="submit" class="btn-signin">Sign in</button>
         </form>
     </section>
-    
-    <section>
-        <div class="chatbot-container">
-            <!-- Floating chat icon -->
-            <button id="chatbot-icon">💬</button>
+  
+  <section>
+    <div class="chatbot-container">
+        <!-- Floating chat icon -->
+        <button id="chatbot-icon">💬</button>
 
-            <!-- Chat popup with header and close button -->
-            <div id="chatbot-popup">
-                <div id="chatbot-header">
-                    <span>Ask EVA</span>
-                    <button id="chatbot-close" title="Close">✖</button>
-                </div>
-                <iframe id="chatbot-iframe" src="/user_details/" title="ChatBot"></iframe>
+        <!-- Chat popup with header and close button -->
+        <div id="chatbot-popup">
+            <div id="chatbot-header">
+                <span>Ask EVA</span>
+                <button id="chatbot-close" title="Close">✖</button>
             </div>
+            <iframe id="chatbot-iframe" src="/user_details/" title="ChatBot"></iframe>
         </div>
-    </section>
-    </main>
-    
-    <footer>
-    <div class="container" role="contentinfo">
-        <nav aria-label="Footer navigation" class="footer-links" style="display:flex; gap:16px; flex-wrap:wrap;">
-        <a href="#" tabindex="0">Contact</a>
-        <a href="#" tabindex="0">Help</a>
-        <a href="#" tabindex="0">Terms &amp; Conditions</a>
-        <a href="#" tabindex="0">Privacy Policy</a>
-        </nav>
-        <div style="margin-left:auto; color:#555; flex-shrink:0;" aria-label="Copyright information">&copy; 2025 <a href="#" style="color:#0a78cc;" tabindex="0">Publisher</a></div>
     </div>
-    </footer>
+  </section>
+  </main>
+  
+  <footer>
+  <div class="container" role="contentinfo">
+      <nav aria-label="Footer navigation" class="footer-links" style="display:flex; gap:16px; flex-wrap:wrap;">
+      <a href="#" tabindex="0">Contact</a>
+      <a href="#" tabindex="0">Help</a>
+      <a href="#" tabindex="0">Terms &amp; Conditions</a>
+      <a href="#" tabindex="0">Privacy Policy</a>
+      </nav>
+      <div style="margin-left:auto; color:#555; flex-shrink:0;" aria-label="Copyright information">&copy; 2025 <a href="#" style="color:#0a78cc;" tabindex="0">Publisher</a></div>
+  </div>
+  </footer>
 
-    <script>
-        const chatbotIcon = document.getElementById('chatbot-icon');
-        const chatbotPopup = document.getElementById('chatbot-popup');
-        const chatbotHeader = document.getElementById('chatbot-header');
-        const chatbotClose = document.getElementById('chatbot-close');
-        const chatbotIframe = document.getElementById('chatbot-iframe');
+  <script>
+      const chatbotIcon = document.getElementById('chatbot-icon');
+      const chatbotPopup = document.getElementById('chatbot-popup');
+      const chatbotHeader = document.getElementById('chatbot-header');
+      const chatbotClose = document.getElementById('chatbot-close');
+      const chatbotIframe = document.getElementById('chatbot-iframe');
 
-        let chatThreadId = null;
+      let chatThreadId = null;
 
-        // Listen to messages from iframe
-        window.addEventListener("message", (event) => {
-            if (event.data.type === "THREAD_ID_FROM_IFRAME") {
-            chatThreadId = event.data.thread_id;
-            }
-        });
+      // Listen to messages from iframe
+      window.addEventListener("message", (event) => {
+          if (event.data.type === "THREAD_ID_FROM_IFRAME") {
+          chatThreadId = event.data.thread_id;
+          }
+      });
 
-        chatbotIcon.addEventListener('click', () => {
-            chatbotPopup.style.display = 'flex';     // Show the popup
-            chatbotIcon.style.display = 'none';      // Hide the icon
+      chatbotIcon.addEventListener('click', () => {
+          chatbotPopup.style.display = 'flex';     // Show the popup
+          chatbotIcon.style.display = 'none';      // Hide the icon
 
-            // Reset iframe to login page every time it's opened
-            chatbotIframe.src = '/user_details/';
-        });
+          // Reset iframe to login page every time it's opened
+          chatbotIframe.src = '/user_details/';
+      });
 
-        chatbotClose.addEventListener('click', () => {
-            chatbotPopup.style.display = 'none';    // Hide the popup
-            chatbotIframe.src = '';
+      chatbotClose.addEventListener('click', () => {
+          chatbotPopup.style.display = 'none';    // Hide the popup
+          chatbotIframe.src = '';
 
-            if (chatThreadId) {
+          if (chatThreadId) {
 
-                fetch(`/close_chat_thread/${chatThreadId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken(),
-                    },
-                    body: JSON.stringify({
-                        support_agent_id: null  // Since this is user closing the thread
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log("Chat closed from user side.");
-                    } else {
-                        console.warn("Chat close failed:", data.error);
-                    }
-                })
-                .catch(err => {
-                    console.error("Error closing chat:", err);
-                });
-            }
+              fetch(`/close_chat_thread/${chatThreadId}/`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': getCSRFToken(),
+                  },
+                  body: JSON.stringify({
+                      support_agent_id: null  // Since this is user closing the thread
+                  })
+              })
+              .then(res => res.json())
+              .then(data => {
+                  if (data.success) {
+                      console.log("Chat closed from user side.");
+                  } else {
+                      console.warn("Chat close failed:", data.error);
+                  }
+              })
+              .catch(err => {
+                  console.error("Error closing chat:", err);
+              });
+          }
 
-            // Delay the reappearance of the icon
-            setTimeout(() => {
-                chatbotIcon.style.display = 'block';
-                chatbotIcon.classList.add('fade-in');
+          // Delay the reappearance of the icon
+          setTimeout(() => {
+              chatbotIcon.style.display = 'block';
+              chatbotIcon.classList.add('fade-in');
 
-            // Remove animation class after it runs once to allow repeat
-            setTimeout(() => {
-                chatbotIcon.classList.remove('fade-in');
-                }, 500); // Duration of fade-in animation
-            }); // Delay before icon shows again
-        });
-        
-        // Util: CSRF Token helper
-        function getCSRFToken() {
-            const name = 'csrftoken';
-            const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-            const [k, v] = cookie.trim().split('=');
-            if (k === name) return v;
-            }
-            return '';
-        }
-        
-    </script>
+          // Remove animation class after it runs once to allow repeat
+          setTimeout(() => {
+              chatbotIcon.classList.remove('fade-in');
+              }, 500); // Duration of fade-in animation
+          }); // Delay before icon shows again
+      });
+      
+      // Util: CSRF Token helper
+      function getCSRFToken() {
+          const name = 'csrftoken';
+          const cookies = document.cookie.split(';');
+          for (let cookie of cookies) {
+          const [k, v] = cookie.trim().split('=');
+          if (k === name) return v;
+          }
+          return '';
+      }
+      
+  </script>
 
-    <script>
-    // Toggle password visibility
-    const passwordInput = document.getElementById('password');
-    const toggleButton = document.querySelector('.toggle-password');
-    const icon = toggleButton.querySelector('.material-icons');
+  <script>
+  // Toggle password visibility
+  const passwordInput = document.getElementById('password');
+  const toggleButton = document.querySelector('.toggle-password');
+  const icon = toggleButton.querySelector('.material-icons');
 
-    toggleButton.addEventListener('click', () => {
-        if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.textContent = 'visibility_off';
-        } else {
-        passwordInput.type = 'password';
-        icon.textContent = 'visibility';
-        }
-        passwordInput.focus();
-    });
+  toggleButton.addEventListener('click', () => {
+      if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      icon.textContent = 'visibility_off';
+      } else {
+      passwordInput.type = 'password';
+      icon.textContent = 'visibility';
+      }
+      passwordInput.focus();
+  });
 
-    // Accessibility: Enable toggle with keyboard (Enter/Space)
-    toggleButton.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        toggleButton.click();
-        }
-    });
-    </script>
-</body>
-</html>
+  // Accessibility: Enable toggle with keyboard (Enter/Space)
+  toggleButton.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleButton.click();
+      }
+  });
+  </script>
+
+{% endblock %}
 

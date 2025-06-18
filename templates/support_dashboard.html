@@ -1,9 +1,12 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Support Dashboard</title>
+
+{% block title %}Support Dashboard{% endblock %}
+{% block link %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block css %}
     <style>
         body { 
             font-family: sans-serif; 
@@ -200,11 +203,15 @@
         }
         
     </style>
+{% endblock %}
+
+{% block extra_scripts %}
     <!-- first load common utils -->
     <script src="{% static 'js/common_utils.js' %}"></script>
     <!-- To add script for google map having key-->
-</head>
-<body>
+{% endblock %}
+
+{% block body %}
 
     <!-- left most part of screen -->
     <div id="thread-list">
@@ -394,7 +401,7 @@
                     closeBtn.textContent = "Close Chat";
                     closeBtn.title = "";
 
-                     // Prevent duplicate event listeners
+                    // Prevent duplicate event listeners
                     const newCloseBtn = closeBtn.cloneNode(true);
                     closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
 
@@ -1203,7 +1210,4 @@
 
     </script>
 
-
-    
-</body>
-</html>
+{% endblock %}
