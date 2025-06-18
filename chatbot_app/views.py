@@ -43,6 +43,11 @@ SUB_OPTIONS = {
 
 
 class StartChatView(View):
+    """ 
+        - Each time, user clicks on start chat after entering name, email, doi, then first register then login that user:
+            - each time, first close all the other active chat threads of that user, and then create a new chat thread with user and doi.
+            - each thread is chat session wise.
+    """
     def post(self, request):
         name = request.POST.get("name")
         email = request.POST.get("email")
@@ -73,18 +78,19 @@ class StartChatView(View):
         user.backend = "django.contrib.auth.backends.ModelBackend"
         login(request, user)
 
-        # Check for existing open thread
-        thread = ChatThread.objects.filter(
+        # TODO: May think later to re-use the active chat threads of the user
+        
+        # For now, close all the active threads of the user, and
+        # create a new thread for user with the doi
+        ChatThread.objects.filter(
             user=user, 
-            doi_or_article_number=doi, 
             is_closed=False
-        ).first()
+        ).update(is_closed=True)
 
-        if not thread:
-            thread = ChatThread.objects.create(
-                user=user, 
-                doi_or_article_number=doi
-            )
+        thread = ChatThread.objects.create(
+            user=user, 
+            doi_or_article_number=doi
+        )
 
         # Redirect to chat interface
         # return redirect("chat")  # This resolves to `path("", ChatView.as_view(), name="chat")`
