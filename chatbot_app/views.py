@@ -16,30 +16,12 @@ from django.utils.decorators import method_decorator
 import json
 from zoneinfo import ZoneInfo
 from django.contrib.auth.hashers import make_password
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from .utils import notify_support_of_unread, get_client_ip, get_location_from_ip, save_user_location, iframe_exempt
-
-INITIAL_OPTIONS = [
-    "Payment Failure",
-    "Refund Issues",
-    "Invoice Requests",
-    "Other Payment Queries"
-]
-
-SUB_OPTIONS = {
-    "Payment Failure": ["Card Payment Failure", "Bank Transfer Failure"],
-    "Refund Issues": ["Refund Status", "Refund Delay", "Refund Request"],
-    "Invoice Requests": ["Invoice Not Received", "Incorrect Invoice"],
-    "Other Payment Queries": [
-        "General Payment Inquiry", "Payer Change/Modification", "Payment Method Inquiry",
-        "Membership/Account Inquiry", "Hold Payment Request", "License / Billing Info",
-        "Installments/Discount", "Waiver/Other Issues", "Signed Document Request",
-        "Payment Receipt Request"
-    ]
-}
 
 
 class StartChatView(View):
@@ -947,10 +929,28 @@ class SciPrisIndexView(View):
 
 class ThreadListView(View):
     """
-        List of all the chat threads
+        List of all the chat threads who have been requested to chat with support
     """
     def get(self, request):
-        # TODO : doing here-------------
+        all_threads = ChatThread.objects.filter(
+            chat_messages__requested_for_support=True,
+        ).distinct().order_by("-created_at")
+
+         # Paginate with 30 threads per page
+        paginator = Paginator(all_threads, 30)
+        page_number = request.GET.get('page')
+
+        try:
+            page_obj = paginator.get_page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.get_page(1)
+        except EmptyPage:
+            page_obj = paginator.get_page(paginator.num_pages)
+        
+        context = {
+            "page_obj": page_obj
+        }
+        
         # return render(request, 'scipris_index.html') 
-        return render(request, 'thread_list.html') 
+        return render(request, 'thread_list.html', context) 
     

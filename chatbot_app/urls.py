@@ -30,7 +30,7 @@ urlpatterns = [
     path('assigned_support_and_thread_id/', GetAssignedSupportAndThreadIdView.as_view(), name='assigned_support_and_thread_id'),
     path('chat_history/', ThreadListView.as_view(), name='chat_history'),
 
-    # SciPR index page to integrate ChatBot
+    # SciPris index page to integrate ChatBot
     path('index/', SciPrisIndexView.as_view(), name='index'),
 
 ]
