@@ -84,15 +84,37 @@
     .text-danger{
       color: rgba(139, 0, 0, 0.966)
     }
+    .chat-bubble {
+      background-color: #e4f9ff;
+      color: #333;
+      padding: 12px 16px;
+      border-radius: 16px 16px 16px 0;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      display: inline-block;
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 60px;
+      max-height: 60px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: clip;
+    }
+
+    .typewriter.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 {% endblock %}
 
 {% block body %}
 
-  <div class="form-container">
-    <div>
-      <p>Hi, I'm EVA. Welcome to Aptara.</p>
-      <P>Please provide your details in order to start chat.</P>
+  <div class="">
+    <div class="chat-bubble" id="chatBubble">
+      <span class="typewriter show" >Hi, I'm EVA. Welcome to Aptara.</span><br>
+      <span class="typewriter show" >Please provide your details in order to start chat.</span>
     </div>
 
     <div id="signup-form" class="form-section active">
