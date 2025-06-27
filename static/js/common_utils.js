@@ -1,7 +1,7 @@
 
 
 // botTree for SciPris
-const botTree = {
+const botTree1 = {
     "Payment Failure": {
         "Card Payment Failure": {
             "Master Card": "Thank you for connecting. You can try again with Master Card.",
@@ -32,6 +32,133 @@ const botTree = {
         "Payment Receipt Request": "We will resend your receipt shortly."
     }
 };
+
+const visa_or_master_card_used_scenario = {
+    "OTP not Received": "Try again.",
+    "Card Expired": "Try using different Visa card / Master card.",
+    "Incorrect Card Detail Entered": "Please enter correct card details."
+}
+
+const bank_transfer_failure_flow = {
+    "Card used: Visa card / Master card": {
+        "Bank Declined the Transfer": "Contact your bank or support team.",
+        "Amount deducted, but not confirmed": "Wait till 30-60 min., check with bank, or connect with the support team."
+    },
+    "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only."
+}
+
+// final SciPris botTree
+const botTree = {
+
+    "Payment Failure": {
+        "Card Payment Failure": {
+            "Card Declined / Blocked":{
+                "Card used: Visa card / Master card": visa_or_master_card_used_scenario,
+                "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only.",
+                "Authentication Error (e.g., OTP failed etc.)": "Try different Visa / Master card or retry again." 
+            },
+            "Payment timed out / frozen": {
+                "Card used: Visa card / Master card": visa_or_master_card_used_scenario,
+                "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only."
+            }
+
+        },
+        "Bank Transfer Failure": {
+            bank_transfer_failure_flow
+        }
+    },
+
+    "Refund Issues": {
+        "Refund Delay": {
+            "Mode of Refund": {
+                "Card": {
+                    "Card used: Visa card / Master card": {
+                        "OTP Not Received": "Try Again.",
+                        "Card Expired": "Try different Visa / Master Card."
+                    },
+                    "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only."
+                },
+                "Bank Transfer": {
+                    bank_transfer_failure_flow
+                }
+            }
+        },
+        "Refund Status":{
+            "Status in portal / email": {
+                "Pending": "If you have any doubt, then please connect with our support team.",
+                "Processed": "If you have any doubt, then please connect with our support team.",
+                "Failed": "If you have any doubt, then please connect with our support team."
+            },
+            "Want refund status update from support?": "Please connect with our support team."
+        }
+    },
+
+    "Invoice Requests": {
+        "Invoice Not Received": {
+            "Payer has not generated invoice": {
+                "Payer unaware of request": {
+                    "Support shares payment link": {
+                        "Payer accepts request": "Please connect with support team for more clarification.",
+                        "Payer declines request": "Please connect with support team for more clarification."
+                    },
+                    "Support assigns new payer": "Please connect with support team."
+                },
+                "Payer login/reset issue": {
+                    "Reset link sent but failed": "Please connect with support team for more clarification.",
+                    "Payer stuck in reset process": "Please connect with support team for more clarification."
+                }
+            },
+            "Payer has not received email": {
+                "Support verifies payer email": {
+                    "Email correct": "Please check in spam folder.",
+                    "Email incorrect": "Please update correct email."
+                },
+                "Support resends payment link": {
+                    "Payer receives link and invoice": "Proceed further with the provided link.",
+                    "Payer still does not receive email": "Ask support to provide payment link."
+                }
+            }
+        },
+
+        "Incorrect Invoice": {
+            "Invoice shows wrong amount": {
+                "Extra color figure charges": {
+                    "Support queries figure count": "Connect with the support.",
+                    "Support clarifies figures": "Connect with the support for more clarification."
+                },
+                "Unexpected page charges": {
+                    "Support questions page charge": "Connect with the support.",
+                    "Support explains charge": "Connect with support to discuss further."
+                }
+            },
+            "Incorrect billing details": {
+                "Wrong name or institution": {
+                    "Author requests correction": "Connect with the support.",
+                    "Support issues updated invoice": "Connect with the support.",
+                },
+                "Wrong address or tax details": {
+                    "Author requests correction": "Connect with the support.",
+                    "Support updates and sends invoice": "Connect with the support."
+                }
+            },
+            "Wrong payer email": {
+                "Author requests reassignment": {
+                    "Payer receives new link": "Proceed with the provided link.",
+                    "Payer declines new payment request": "connect with the support team."
+                },
+                "Support forwards reassignment request": "connect with the support team."
+            }
+        }
+    },
+
+    "Other Payment Queries": {
+        
+    }
+
+
+}
+
+
 
 
 // botTree for SciPR
