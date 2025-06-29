@@ -383,18 +383,19 @@
 
       #chatbot-popup {
           position: fixed;
-          bottom: 10px;
-          right: 20px;
-          width: 450px;
+          bottom: 25px;
+          right: 25px;
+          width: 380px;
           height: 600px;
           border: 1px solid #ccc;
-          border-radius: 10px;
+          border-radius: 20px;
           background-color: white;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
           display: none;
           flex-direction: column;
           overflow: hidden;
-          animation: fadeIn 0.3s ease-in-out;
+          transition: all 0.4s ease;
+          /* animation: fadeIn 0.3s ease-in-out; */
           z-index: 999;
       }
 
@@ -534,22 +535,19 @@
         <button type="submit" class="btn-signin">Sign in</button>
         </form>
     </section>
-  
-  <section>
-    <div class="chatbot-container">
-        <!-- Floating chat icon -->
-        <button id="chatbot-icon">💬</button>
+    
+    <!-- ChatBot section -->
+    <section>
+      <div class="chatbot-container">
+          <!-- Floating chat icon -->
+          <button id="chatbot-icon">💬</button>
 
-        <!-- Chat popup with header and close button -->
-        <div id="chatbot-popup">
-            <div id="chatbot-header">
-                <span>Ask EVA</span>
-                <button id="chatbot-close" title="Close Chat">✖</button>
-            </div>
-            <iframe id="chatbot-iframe" src="/user_details/" title="ChatBot"></iframe>
-        </div>
-    </div>
-  </section>
+          <!-- Chat popup with header and close button -->
+          <div id="chatbot-popup">
+              <iframe id="chatbot-iframe" src="/user_details/" title="ChatBot"></iframe>
+          </div>
+      </div>
+    </section>
   </main>
   
   <footer>
