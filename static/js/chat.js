@@ -253,8 +253,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (inputField) inputField.disabled = true;
                 if (sendButton) sendButton.disabled = true;
 
-                // Optional: add visual cue
-                inputField.placeholder = "This chat has been closed by support.";
+                // add visual
+                inputField.placeholder = "This chat has been closed";
             }
 
             if (data.message && data.timestamp) {

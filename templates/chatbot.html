@@ -300,7 +300,7 @@
         <img src="https://cdn-icons-png.flaticon.com/512/219/219969.png" alt="" />
         Ask EVA
       </div>
-      <span class="eva-close" onclick="toggleChat()">×</span>
+      <span class="eva-close" id="chatbot-close">×</span>
     </div>
     <div class="eva-body">
       <div class="chat-bubble">
@@ -326,32 +326,82 @@
   <script>
     const chatBox = document.getElementById("chatBox");
     const toggleBtn = document.getElementById("chatToggle");
-    const l1 = document.getElementById("line1");
-    const l2 = document.getElementById("line2");
+    let chatThreadId = null;
 
-    const line1Text = `Hi<span class="wave-emoji">👋</span>, I'm EVA. Welcome to Aptara.`;
-    const line2Text = "Please provide your details in order to start chat.";
+    // CSRF Helper
+    function getCSRFToken() {
+      const name = 'csrftoken';
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [k, v] = cookie.trim().split('=');
+        if (k === name) return v;
+      }
+      return '';
+    }
 
-    function toggleChat(){
+    function resetChatBox() {
+      // Get CSRF token input if present in original HTML
+      const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+      chatBox.innerHTML = `
+        <div class="eva-header">
+          <div class="icon-label">
+            <img src="https://cdn-icons-png.flaticon.com/512/219/219969.png" alt="" />
+            Ask EVA
+          </div>
+          <span class="eva-close" id="chatbot-close">×</span>
+        </div>
+        <div class="eva-body">
+          <div class="chat-bubble">
+            <span id="line1" class="typewriter"></span>
+            <span id="line2" class="typewriter"></span>
+          </div>
+          <form method="POST" action="/start_chat/" id="start-chat-form">
+            ${csrfInput ? csrfInput.outerHTML : ''}
+            <label for="fullname">Full Name <span class="required">*</span></label>
+            <input type="text" name="name" id="fullname" placeholder="Enter your full name" required>
+
+            <label for="email">Email <span class="required">*</span></label>
+            <input type="email" name="email" id="email" placeholder="Enter your email" required>
+
+            <label for="doi">DOI / Article Number <span class="required">*</span></label>
+            <input type="text" name="doi" id="doi" placeholder="Enter DOI / Article No." required>
+
+            <button class="start-chat-btn" type="submit">🚀 Start Chat</button>
+          </form>
+        </div>`;
+
+      // Run typewriter
+      const l1 = document.getElementById("line1");
+      const l2 = document.getElementById("line2");
+      runTypewriter(l1, l2);
+
+      // Reattach events
+      attachStartChatEvent();
+      attachCloseEvent();
+    }
+
+    function toggleChat() {
+      const isOpening = !chatBox.classList.contains("open");
       chatBox.classList.toggle("open");
 
-      if(chatBox.classList.contains("open")){
+      if (chatBox.classList.contains("open")) {
         document.querySelector('.chat-toggle-icon').style.display = "none";
-        l1.innerHTML = ""; l2.innerHTML = "";
-        l1.classList.remove("show"); l2.classList.remove("show");
-        runTypewriter();
+        if (isOpening) resetChatBox(); // Always start fresh on open
       } else {
         document.querySelector('.chat-toggle-icon').style.display = "block";
       }
     }
-    
-    function runTypewriter(){
+
+    function runTypewriter(l1, l2) {
+      const line1Text = `Hi<span class="wave-emoji">👋</span>, I'm EVA. Welcome to Aptara.`;
+      const line2Text = "Please provide your details in order to start chat.";
+
       l1.innerHTML = line1Text;
       l1.classList.add("show");
       typeText(line2Text, l2, 300);
     }
 
-    function typeText(text, el, delay=0){
+    function typeText(text, el, delay=0) {
       return new Promise(resolve => {
         el.textContent = "";
         el.classList.remove("show");
@@ -369,64 +419,73 @@
       });
     }
 
-    // Register the form listener ONCE outside toggleChat:
-    document.getElementById('start-chat-form').addEventListener('submit', function(e) {
-      e.preventDefault();
+    function attachStartChatEvent() {
+      const form = document.getElementById('start-chat-form');
+      if (!form) return;
 
-      const form = e.target;
-      const formData = new FormData(form);
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
 
-      fetch(form.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          // Embed / page inside the chatbot window
-          const evaBody = document.querySelector(".eva-body");
-          chatBox.innerHTML = `
-            <div class="eva-header">
-            <div class="icon-label">
-              <img src="https://cdn-icons-png.flaticon.com/512/219/219969.png" alt="">
-              Ask EVA
-            </div>
-            <span class="eva-close" onclick="toggleChat()">×</span>
-          </div>
-            <iframe src="/" style="
-              width: 100%;
-              height: 100%;
-              border: none;
-              display: block
-            "></iframe>
-          `;
-        } else {
-          console.log("error:", data.error);
-        }
-      })
-      .catch(err => {
-        console.error("Failed to start chat:", err);
+        const formData = new FormData(form);
+        fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': (form.querySelector('[name=csrfmiddlewaretoken]')?.value || getCSRFToken())
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            chatThreadId = data.thread_id;
+            chatBox.innerHTML = `
+              <div class="eva-header">
+                <div class="icon-label">
+                  <img src="https://cdn-icons-png.flaticon.com/512/219/219969.png" alt="">
+                  Ask EVA
+                </div>
+                <span class="eva-close" id="chatbot-close">×</span>
+              </div>
+              <iframe src="/" style="width:100%; height:100%; border:none; display:block" id="chatbot-iframe"></iframe>`;
+            
+            attachCloseEvent();
+          } else {
+            console.log("error:", data.error);
+          }
+        })
+        .catch(err => console.error("Failed to start chat:", err));
       });
-    });
-
-    
-    toggleBtn.addEventListener("click", toggleChat);
-
-    // Util: CSRF Token helper
-    function getCSRFToken() {
-      const name = 'csrftoken';
-      const cookies = document.cookie.split(';');
-      for (let cookie of cookies) {
-      const [k, v] = cookie.trim().split('=');
-      if (k === name) return v;
-      }
-      return '';
     }
 
+    function attachCloseEvent() {
+      const closeBtn = document.getElementById('chatbot-close');
+      if (!closeBtn) return;
 
+      closeBtn.addEventListener('click', () => {
+        toggleChat();
+        if (chatThreadId) {
+          fetch(`/close_chat_thread/${chatThreadId}/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify({ support_agent_id: null })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              console.log("Chat closed from user side.");
+            } else {
+              console.warn("Chat close failed:", data.error);
+            }
+          })
+          .catch(err => console.error("Error closing chat:", err));
+        }
+      });
+    }
+
+    toggleBtn.addEventListener('click', toggleChat);
   </script>
 </body>
 </html>
