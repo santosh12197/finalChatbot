@@ -40,11 +40,11 @@ const visa_or_master_card_used_scenario = {
 }
 
 const bank_transfer_failure_flow = {
-    "Card used: Visa card / Master card": {
+    "Visa / Master Card Used": {
         "Bank Declined the Transfer": "Contact your bank or support team.",
         "Amount deducted, but not confirmed": "Wait till 30-60 min., check with bank, or connect with the support team."
     },
-    "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only."
+    "Other Than Visa / Master Card Used": "Please try with Visa / Master card only."
 }
 
 // final SciPris botTree
@@ -53,18 +53,30 @@ const botTree = {
     "Payment Failure": {
         "Card Payment Failure": {
             "Card Declined / Blocked":{
-                "Card used: Visa card / Master card": visa_or_master_card_used_scenario,
-                "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only.",
+                "Visa / Master Card Used": {
+                    "OTP not Received": "Try again.",
+                    "Card Expired": "Try using different Visa card / Master card.",
+                    "Incorrect Card Detail Entered": "Please enter correct card details."
+                },
+                "Other Than Visa / Master Card Used": "Please try with Visa / Master card only.",
                 "Authentication Error (e.g., OTP failed etc.)": "Try different Visa / Master card or retry again." 
             },
             "Payment timed out / frozen": {
-                "Card used: Visa card / Master card": visa_or_master_card_used_scenario,
-                "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only."
+                "Visa / Master Card Used": {
+                    "OTP not Received": "Try again.",
+                    "Card Expired": "Try using different Visa card / Master card.",
+                    "Incorrect Card Detail Entered": "Please enter correct card details."
+                },
+                "Other Than Visa / Master Card Used": "Please try with Visa / Master card only."
             }
 
         },
         "Bank Transfer Failure": {
-            bank_transfer_failure_flow
+            "Visa / Master Card Used": {
+                "Bank Declined the Transfer": "Contact your bank or support team.",
+                "Amount deducted, but not confirmed": "Wait till 30-60 min., check with bank, or connect with the support team."
+            },
+            "Other Than Visa / Master Card Used": "Please try with Visa / Master card only."
         }
     },
 
@@ -72,14 +84,18 @@ const botTree = {
         "Refund Delay": {
             "Mode of Refund": {
                 "Card": {
-                    "Card used: Visa card / Master card": {
+                    "Visa / Master Card Used": {
                         "OTP Not Received": "Try Again.",
                         "Card Expired": "Try different Visa / Master Card."
                     },
-                    "Card used: Other than Visa Card / Master Card": "Please try with Visa / Master card only."
+                    "Other Than Visa / Master Card Used": "Please try with Visa / Master card only."
                 },
                 "Bank Transfer": {
-                    bank_transfer_failure_flow
+                    "Visa / Master Card Used": {
+                        "Bank Declined the Transfer": "Contact your bank or support team.",
+                        "Amount deducted, but not confirmed": "Wait till 30-60 min., check with bank, or connect with the support team."
+                    },
+                    "Other Than Visa / Master Card Used": "Please try with Visa / Master card only."
                 }
             }
         },
@@ -153,8 +169,74 @@ const botTree = {
 
     "Other Payment Queries": {
         
-    }
+        "Payment Process Modification": {
+            "Change Payer Request": {
+                "Support Asks Which Payer To Change": {
+                    "User Provides Accurate Details": {
+                        "Support Verifies New Payer": {
+                            "Support Updates System": "Support updates payment system with new payer.",
+                            "Support Sends Confirmation": "Support sends confirmation of the change."
+                        }
+                    },
+                    "User Provides Incorrect Details": {
+                        "Support Requests Resubmission": "Support asks user to resend correct details.",
+                        "Support Offers Assistance": "Support offers help filling out information."
+                    }
+                }
+            },
+            "Payment Method Change": {
+                "User Wants To Switch To Bank Transfer": {
+                    "Support Sends Bank Details": "Support sends bank account details for transfer.",
+                    "Support Explains Steps": "Support explains how to complete bank payment."
+                },
+                "User Wants To Switch To Card": {
+                    "Support Explains Card Payment Process": "Support describes how to pay by credit/debit card.",
+                    "Support Asks For Card Type": "Support asks for Visa, MasterCard, or other card type."
+                }
+            }
+        },
 
+        "Receipts and Invoices": {
+            "Receipt Request": {
+                "User Requests Copy": {
+                    "Support Asks For Transaction ID": {
+                        "User Provides ID": {
+                            "Support Verifies And Sends PDF": "Support verifies ID and sends receipt as PDF.",
+                            "Support Asks If Further Help Needed": "Support checks if the user needs anything else."
+                        },
+                        "User Provides Wrong ID": {
+                            "Support Asks To Resend": "Support asks the user to resend correct ID.",
+                            "Support Offers Contact Option": "Support offers alternative ways to get help."
+                        }
+                    }
+                },
+                "User Requests Alternative Format": {
+                    "Support Provides Format Options": "Support lists available formats (PDF, Excel, etc.).",
+                    "Support Sends Requested Format": "Support sends receipt in requested format."
+                }
+            },
+            "Invoice Correction": {
+                "User Reports Wrong Info": {
+                    "Support Asks What Is Incorrect": {
+                        "User Reports Name Error": {
+                            "Support Updates Invoice": "Support updates invoice with correct name.",
+                            "Support Sends Updated Copy": "Support sends the corrected invoice."
+                        },
+                        "User Reports Amount Error": {
+                            "Support Investigates": "Support checks records to verify amount.",
+                            "Support Provides Clarification": "Support explains amount discrepancy."
+                        }
+                    }
+                },
+                "User Asks For New Invoice": {
+                    "Support Asks Reason For Request": "Support asks why a new invoice is needed.",
+                    "Support Confirms New Details": "Support confirms details for generating new invoice."
+                }
+            }
+        },
+
+        "Other Queries?": "Connect With the Support Team"
+    }
 
 }
 
