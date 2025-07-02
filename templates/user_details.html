@@ -105,8 +105,8 @@
       margin-top: 24px;
       width: 100%;
       padding: 12px;
-      background-color: #93DFFC;
-      color: black;
+      background: linear-gradient(135deg, #003a6f, #0059b3);
+      color: white;
       border: none;
       border-radius: 50px;
       font-weight: 600;
@@ -114,25 +114,6 @@
       cursor: pointer;
       box-shadow: 0 8px 24px rgba(147, 223, 252, 0.3);
       transition: all 0.3s ease;
-    }
-    .chat-bubble {
-      background-color: #e4f9ff;
-      color: #333;
-      padding: 12px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      line-height: 1.5;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-      display: inline-block;
-      width: 100%;
-      box-sizing: border-box;
-      min-height: 60px;
-      max-height: 60px;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: clip;
-      margin-bottom: 20px;
-      margin-top: 20px;
     }
 
     .typewriter.show {
@@ -154,21 +135,39 @@
           width: 100%;          /* Make header fill the entire iframe width */
           box-sizing: border-box;
       }
+    
+    input[type="text"], input[type="email"] {
+      width: 100%;
+      padding: 12px 12px 12px 36px;       /* left padding for icons */
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background-color: #f9f9fb;
+      background-repeat: no-repeat;
+      background-position: 10px center;   /* icon at left with some space */
+      background-size: 16px;              /* uniform icon size */
+      box-sizing: border-box;
+    }
+
+    /* User icon for Full Name input */
+    #name {
+      background-image: url("/static/images/EmployeeIcon.png");
+    }
+
+    /* Email icon for Email input */
+    #email {
+      background-image: url("/static/images/EmailIcon.png");
+    }
+
+    /* Article icon for DOI input */
+    #doi {
+      background-image: url("/static/images/ArticleIcon.png");
+    }
   </style>
 {% endblock %}
 
 {% block body %}
 
   <div class="form-container">
-    <div id="chatbot-header">
-      <span>Ask EVA</span>
-      <button id="chatbot-close" title="Close Chat">✖</button>
-    </div>
-    <div class="chat-bubble" id="chatBubble">
-      <span class="typewriter show" >Hi, I'm EVA. Welcome to Aptara.</span><br>
-      <span class="typewriter show" >Please provide your details in order to start chat.</span>
-    </div>
-
     <div id="signup-form" class="form-section active">
       <form method="POST" action="/start_chat/" id="start-chat-form">
         {% csrf_token %}
@@ -189,7 +188,7 @@
           <input type="text" id="msg" name="query" required>
         </div> -->
         
-        <button type="submit" class="submit">Start Chat</button>
+        <button type="submit" class="submit">🚀 Start Chat</button>
       </form>
     </div>
   </div>
