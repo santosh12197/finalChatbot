@@ -46,7 +46,7 @@ A modern chatbot system built with **Django 5.0**, **PostgreSQL**, and **WebSock
 - PostgreSQL
 - WebSockets
 - HTML/CSS + JavaScript for frontend
-- TailwindCSS or Bootstrap for styling (optional)
+- Bootstrap for styling
 
 ---
 
