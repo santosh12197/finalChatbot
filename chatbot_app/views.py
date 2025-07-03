@@ -112,7 +112,7 @@ class RegisterView(View):
         )
         user.save()
 
-        messages.success(request, "Registration successful! Please login.")
+        messages.success(request, "Sign Up successful! Please Sign In.")
         return redirect('login')  
     
 @iframe_exempt
@@ -206,7 +206,7 @@ class SupportRegisterView(View):
         )
         user.save()
 
-        messages.success(request, "Registration successful! Please login.")
+        messages.success(request, "Sign Up successful! Please Sign In.")
         return redirect('support_login')  
     
 
