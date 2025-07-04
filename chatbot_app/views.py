@@ -1,11 +1,17 @@
 from django.db.models import Count, Q, OuterRef, Subquery
 from django.shortcuts import render, redirect
 from django.views import View
+from .models import PasswordResetOTP
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 import requests
+import random
+from django.core.mail import send_mail
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.urls import reverse
 
 from .models import ChatMessage, ChatThread, UserLocation, UserProfile
 from django.utils import timezone
@@ -22,6 +28,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from .utils import notify_support_of_unread, get_client_ip, get_location_from_ip, save_user_location, iframe_exempt
+
 
 
 class StartChatView(View):
@@ -953,4 +960,110 @@ class ThreadListView(View):
         
         # return render(request, 'scipris_index.html') 
         return render(request, 'thread_list.html', context) 
-    
+
+
+class PasswordResetRequestView(View):
+    def get(self, request):
+        return render(request, 'password_reset.html')
+
+    def post(self, request):
+        email = request.POST.get('email', '').strip()
+        if not email:
+            messages.error(request, "Please enter your email.")
+            return redirect('password_reset')
+
+        try:
+            user = UserProfile.objects.get(email=email)
+            
+        except UserProfile.DoesNotExist:
+            messages.error(request, "User does not exist!") 
+            
+            return redirect('password_reset')
+
+        otp_code = f"{random.randint(100000, 999999)}"
+        PasswordResetOTP.objects.create(user=user, otp_code=otp_code)
+
+        subject = "SciPris-Aptara | Password Reset OTP"
+        from_email = settings.DEFAULT_FROM_EMAIL
+        to = [user.email]
+
+        text_content = f"""Hi {user.first_name} {user.last_name},
+
+            Your OTP to reset your password is: {otp_code}
+
+            This OTP is valid for 10 minutes.
+
+            If you didn't request a password reset, please ignore this email.
+
+            Thanks,
+            SciPris Support Team
+        """
+        html_content = f"""
+            <p>Hi {user.first_name} {user.last_name},</p>
+            <p>Your <strong>OTP</strong> to reset your password is: <strong>{otp_code}</strong></p>
+            <p>This OTP is valid for 10 minutes.</p>
+            <p>If you didn't request a password reset, please ignore this email.</p>
+            <p>Thanks,<br>SciPris Support Team</p>
+        """
+
+        try:
+            msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+            
+        except Exception as e:
+            messages.error(request, "Failed to send OTP email. Please try again later.")
+            return redirect('password_reset')
+
+        messages.success(request, "An OTP has been sent to your email.")
+        return redirect(f"{reverse('password_reset_confirm')}?email={email}")
+
+
+class PasswordResetConfirmOTPView(View):
+    def get(self, request):
+        email = request.GET.get('email', '')
+        return render(request, 'password_reset_confirm.html', {"email": email})
+
+    def post(self, request):
+        email = request.POST.get('email')
+        otp = request.POST.get('otp')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+
+        if not (email and otp and password1 and password2):
+            messages.error(request, "All fields are required.")
+            return redirect('password_reset_confirm')
+
+        if password1 != password2:
+            messages.error(request, "Passwords do not match.")
+            return redirect('password_reset_confirm')
+
+        try:
+            user = UserProfile.objects.get(email=email)
+        except UserProfile.DoesNotExist:
+            messages.error(request, "User not found!")
+            return redirect('password_reset_confirm')
+
+        try:
+            otp_obj = PasswordResetOTP.objects.filter(user=user, otp_code=otp, is_used=False).latest('created_at')
+        except PasswordResetOTP.DoesNotExist:
+            messages.error(request, "Invalid OTP or expired OTP.")
+            return redirect('password_reset_confirm')
+
+        if otp_obj.is_expired():
+            otp_obj.is_used = True
+            otp_obj.save()
+            messages.error(request, "OTP has expired.")
+            return redirect('password_reset_confirm')
+
+        # Reset password
+        user.set_password(password1)
+        user.save()
+
+        # Mark OTP as used
+        otp_obj.is_used = True
+        otp_obj.save()
+
+        messages.success(request, "Password has been reset successfully. You can now sign in below.")
+        return redirect('support_login')
+

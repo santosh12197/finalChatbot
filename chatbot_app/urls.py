@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAndThreadIdView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SciPrisIndexView, StartChatView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, ThreadListView, UserDetailsView, UserLocationView
+from .views import AssignSupportAgentView, CheckOrAssignSupportAgentView, CheckSupportChatView, CheckWelcomeMessagesView, CloseChatThreadView, GetAssignedSupportAndThreadIdView, GetChatHistoryView, MarkAsRead, MarkSupportRequestView, PasswordResetConfirmOTPView, PasswordResetRequestView, RegisterView, LoginView, LogoutView, ChatView, SaveChatMessageView, SciPrisIndexView, StartChatView, SupportDashboardView, SupportLoginView, SupportMembersListView, SupportRegisterView, ThreadListView, UserDetailsView, UserLocationView
 
 urlpatterns = [
 
@@ -32,5 +32,9 @@ urlpatterns = [
 
     # SciPris index page to integrate ChatBot
     path('index/', SciPrisIndexView.as_view(), name='index'),
+
+    # forget password
+    path('password_reset/', PasswordResetRequestView.as_view(), name='password_reset'),
+    path('password_reset_confirm/', PasswordResetConfirmOTPView.as_view(), name='password_reset_confirm'),
 
 ]
