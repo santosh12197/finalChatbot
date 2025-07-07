@@ -6,10 +6,19 @@ A modern chatbot system built with **Django 5.0**, **PostgreSQL**, and **WebSock
 
 ## 🚀 Features
 
-### 🔐 User Authentication
-- User Registration
-- Login / Logout
-- Session management with secure auth
+### 🔐 User Side Chat
+- Each time user clicks on chat bot icon, then it will ask for details like name, email, DOI / Article No, and start a new chat thread and closing the previous chat thread, if any.
+- After above form submission, user is directed to chat bot tree (where user can interact with the bot)
+- At the end of each branch in bot tree, user will be asked to connect with the support member for live chatting.
+- once connected with support agent, thay can interact and chat in real time.
+- User can also "Close" the chat.
+  
+### 🔐 Support Side Chat
+- Support agent first needs to login for real time chat with the user. 
+- At a time only one support member can chat. Here, support agent must "Connect" with the user in order to start the chat.
+- Chat history of a user will be available when any support member clicks any user to chat. 
+- One support member can assign other support member for chat.
+- After issue is resolved, support agent can "Close" the chat.
 
 ### 🤖 Chatbot Interface
 - Button-based, hierarchical query handling (focused on payment-related queries)
@@ -26,18 +35,8 @@ A modern chatbot system built with **Django 5.0**, **PostgreSQL**, and **WebSock
 - Stored user-wise
 - Includes both bot responses and human support replies
 
-### 💬 WhatsApp-style UI
-- Modern chat interface styled to resemble WhatsApp
-- Distinct views for users and support agents
-- Responsive and user-friendly layout
-
-### 🛠️ Admin/Support Dashboard
-- Support team panel to monitor & respond to user chats
-- Real-time updates of new incoming requests
-- Search/sort/filter conversations
-
 ### 🌐 WebSocket Integration
-- Real-time bidirectional communication using Django Channels or similar
+- Real-time bidirectional communication using Django Channels
 - Instant message delivery between user and support team
 
 ### 🧱 Tech Stack
@@ -75,23 +74,3 @@ python manage.py createsuperuser
 # Run development server
 python manage.py runserver
 
-## Project structure
-chatbot_project/
-├── chatbot_app/
-│   ├── migrations/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── consumers.py
-│   ├── models.py
-│   ├── urls.py
-│   ├── views.py
-├── chatbot_project/
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── templates/
-│   ├── chatbot.html
-│   └── support_team.html
-└── manage.py
