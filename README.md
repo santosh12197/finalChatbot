@@ -72,5 +72,6 @@ python manage.py migrate
 python manage.py createsuperuser
 
 # Run development server
-python manage.py runserver
+# python manage.py runserver
+uvicorn chatbot_project.asgi:application --reload
 
