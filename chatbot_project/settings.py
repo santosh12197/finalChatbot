@@ -24,7 +24,7 @@ TEMPLATE_DIR = BASE_DIR / 'templates'
 SECRET_KEY = 'django-insecure-5^c_71&_h*ah%!=8g!@kaa6j!xykdez3msvu!%@+r%%j*d(xot'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True # TODO: DEBUG = False on production
 
 ALLOWED_HOSTS = []
 
@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
+    # 'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'channels',
-    'rest_framework',
+    # 'rest_framework',
     'chatbot_app',
 ]
 

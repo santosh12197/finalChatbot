@@ -1,1 +1,5 @@
 migrations/
+*.pyc
+__pycache__/
+
+chat_env/
