@@ -53,6 +53,10 @@ A modern chatbot system built with **Django 5.0**, **PostgreSQL**, and **WebSock
  - Make "DEBUG = False" 
  - ALLOWED_HOSTS = [] (add hosts here)
 
+### urls
+ - /index: chatbot embedded on SciPris login page (user side)
+ - /support_dashboard: support page (support side)
+
 ---
 
 ## 🛠️ Installation
