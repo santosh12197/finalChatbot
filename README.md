@@ -60,6 +60,9 @@ cd django-chatbot-support
 python3.11 -m venv ienv
 source ienv/bin/activate  # On Windows: venv\Scripts\activate
 
+# Activate env
+ienv\scripts\activate
+
 # Install dependencies
 pip install -r final_requirements.txt
 
