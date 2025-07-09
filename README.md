@@ -47,6 +47,12 @@ A modern chatbot system built with **Django 5.0**, **PostgreSQL**, and **WebSock
 - HTML/CSS + JavaScript for frontend
 - Bootstrap for styling
 
+
+### Most Important
+ inside settings.py file, do the following before production deployment:
+ - Make "DEBUG = False" 
+ - ALLOWED_HOSTS = [] (add hosts here)
+
 ---
 
 ## 🛠️ Installation
