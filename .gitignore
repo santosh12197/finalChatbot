@@ -2,4 +2,4 @@ migrations/
 *.pyc
 __pycache__/
 
-chat_env/
+daphne_chatbot_env/

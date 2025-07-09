@@ -74,7 +74,9 @@ source ienv/bin/activate  # On Windows: venv\Scripts\activate
 ienv\scripts\activate
 
 # Install dependencies
-pip install -r final_requirements.txt
+# pip install -r final_requirements.txt
+pip install -r requirements.txt
+
 
 # Create PostgreSQL DB & configure settings.py
 # Run migrations
@@ -85,6 +87,6 @@ python manage.py migrate
 python manage.py createsuperuser
 
 # Run development server
-# python manage.py runserver
-uvicorn chatbot_project.asgi:application --reload
+python manage.py runserver
+# uvicorn chatbot_project.asgi:application --reload
 

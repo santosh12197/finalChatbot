@@ -52,9 +52,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         chat = await self.save_message(thread, user, message, sender, support_agent)
         
         # support agent name
-        support_full_name = ""
-        if sender == "support":
-            support_full_name = await self.get_support_full_name(chat)
+        support_full_name = await self.get_support_full_name(chat)
 
         # Convert from utc to IST, since timestamp is stored in utc format in db
         chat_time_ist = chat.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))
@@ -100,7 +98,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                         "unread_count": unread_count,
                         "timestamp": timestamp,
                         "message": message,
-                        "is_closed": thread.is_closed
+                        "is_closed": thread.is_closed,
+                        "active_support_agent": support_full_name
                     }
                 }
             )
@@ -203,7 +202,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             sender=sender,
             has_read=False,
             requested_for_support=True,  
-            support_agent=support_agent,
+            support_agent=thread.active_support_agent,
         )
         return chat
 

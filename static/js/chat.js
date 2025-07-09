@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         chatSocket.onclose = function(e) {
             console.error('Chat socket closed unexpectedly');
         };
-
+        
         // user sends msg
         sendButton.onclick = async () => {
 
@@ -353,6 +353,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // Support name and msg are in seperate lines
                 const supportName = document.createElement("div");
                 supportName.style.fontWeight = "bold";
+
+                if (supportFullName.length > 20) {
+                    supportFullName = supportFullName.slice(0, 20) + '...';
+                }
                 supportName.textContent = supportFullName;
 
                 const messageLine = document.createElement("div");

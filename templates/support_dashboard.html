@@ -245,10 +245,16 @@
                             {% endif %}
                         </span>
                     </div>
-                    {% if thread.is_closed %}
-                        <div class="badge bg-secondary">Closed</div>
+                    {% if not thread.active_support_agent %}
+                        <div class="badge bg-secondary">Unassigned</div>
                     {% else %}
-                        <div class="badge bg-success">Active</div>
+                        {% with full_name=thread.active_support_agent.first_name|add:" "|add:thread.active_support_agent.last_name %}
+                            {% if full_name|length > 20 %}
+                                <div class="badge bg-success">{{ full_name|slice:":20" }}...</div>
+                            {% else %}
+                                <div class="badge bg-success">{{ full_name }}</div>
+                            {% endif %}
+                        {% endwith %}
                     {% endif %}
                 </div>
             {% endfor %}
@@ -279,7 +285,15 @@
         <div class="support-detail" style="display: flex; justify-content: flex-end; align-items: center; background-color: #f5f5f5; padding: 10px;">
             <div class="dropdown">
                 <button class="btn btn-light dropdown-toggle btn-sm" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
+                    <strong>
+                        {% with full_name=request.user.first_name|add:" "|add:request.user.last_name %}
+                            {% if full_name|length > 40 %}
+                                {{ full_name|slice:":40" }}...
+                            {% else %}
+                                {{ full_name }}
+                            {% endif %}
+                        {% endwith %}
+                    </strong>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li>
@@ -365,7 +379,12 @@
                 // Update the selected user's name in the top div
                 const selectedUserName = document.getElementById("selected-user-name");
                 selectedUserName.textContent = "";
-                selectedUserName.textContent = `${fname} ${lname}`;
+                let fullName = `${fname} ${lname}`;
+
+                if (fullName.length > 25) {
+                    fullName = fullName.slice(0, 25) + '...';
+                }
+                selectedUserName.textContent = fullName;
                 selectedUserName.setAttribute("data-user-id", selectedUserId);
                 // selectedUserName.style.backgroundColor = 'green';
                 // Show the div with 10% height
@@ -647,7 +666,13 @@
                             const memberDiv = document.createElement("div");
                             memberDiv.classList.add("dropdown-item");
                             memberDiv.setAttribute("data-member-id", member.id);
-                            memberDiv.textContent = `${member.first_name} ${member.last_name} (${member.username})`;
+                            // Todo
+                            let fullName = `${member.first_name} ${member.last_name} (${member.username})`;
+                            if (fullName.length > 70) {
+                                fullName = fullName.slice(0, 70) + '...';
+                            }
+
+                            memberDiv.textContent = fullName;
                             memberDiv.style.cursor = "pointer";
                             memberDiv.style.padding = "5px";
 
@@ -752,7 +777,14 @@
                         if (msg.sender === 'bot') {
                             senderLabel.textContent = "Eva";
                         } else if (msg.sender === 'support') {
-                            senderLabel.textContent = (msg.support_agent_id === support_agent_id) ? "You" : msg.support_full_name;
+                            if (msg.support_agent_id === support_agent_id) {
+                                senderLabel.textContent = "You";
+                            } else {
+                                const fullName = msg.support_full_name || '';
+                                senderLabel.textContent = fullName.length > 25 
+                                    ? fullName.slice(0, 25) + "..." 
+                                    : fullName;
+                            }
                         }
 
                         textSpan.appendChild(senderLabel);
@@ -961,6 +993,38 @@
                     // Update latest message and timestamp
                     updateLastMessageAndTimestamp(data.user);
 
+                    // show unassigned / assigned support name
+                    const threadElement = document.getElementById(`thread-${data.user.chat_thread_id}`);
+                    
+                    if (threadElement) {
+                        // Try to find existing badge or create a new one
+                        let badgeContainer = threadElement.querySelector('.badge');
+
+                        if (!badgeContainer) {
+                            // Create and append badge if it doesn't exist yet
+                            badgeContainer = document.createElement('div');
+                            badgeContainer.classList.add('badge');
+                            threadElement.appendChild(badgeContainer);
+                        }
+
+                        // Reset badge styling
+                        badgeContainer.classList.remove('bg-secondary', 'bg-success');
+                        // Add appropriate style and text
+                        if (!data.user.active_support_agent) {
+                            badgeContainer.classList.add('bg-secondary');
+                            badgeContainer.textContent = 'Unassigned';
+                        } else {
+                            badgeContainer.classList.add('bg-success');
+
+                            let fullName = `${data.user.active_support_agent}`;
+                            if (fullName.length > 20) {
+                                fullName = fullName.slice(0, 20) + '...';
+                            }
+
+                            badgeContainer.textContent = fullName;
+                        }
+                    }
+
                     if (!isCurrentThreadOpen) {
                         // Only update unread count if this user is NOT currently being viewed
                         addOrUpdateUser(data.user);
@@ -1106,7 +1170,11 @@
                     const selectedUserName = document.getElementById("selected-user-name");
                     selectedUserName.textContent = "";
 
-                    selectedUserName.textContent = `${fname} ${lname}`;
+                    let fullName = `${fname} ${lname}`;
+                    if (fullName.length > 25) {
+                        fullName = fullName.slice(0, 25) + '...';
+                    }
+                    selectedUserName.textContent = fullName;
                     selectedUserName.setAttribute("data-user-id", selectedUserId);
                     // selectedUserName.style.backgroundColor = 'green';
                     // Show the div with 10% height

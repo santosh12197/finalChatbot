@@ -572,6 +572,7 @@ class SupportDashboardView(LoginRequiredMixin, View):
                 'latest_timestamp': formatted_timestamp,
                 'unread_count': thread.unread_count,
                 'is_closed': thread.is_closed,
+                "active_support_agent": thread.active_support_agent
             })
 
         context = {
