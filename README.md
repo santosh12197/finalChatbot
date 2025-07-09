@@ -61,7 +61,7 @@ python3.11 -m venv ienv
 source ienv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r final_requirements.txt
 
 # Create PostgreSQL DB & configure settings.py
 # Run migrations
