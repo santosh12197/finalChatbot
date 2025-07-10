@@ -68,10 +68,9 @@ cd django-chatbot-support
 
 # Create virtual environment
 python3.11 -m venv ienv
-source ienv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Activate env
-ienv\scripts\activate
+source ienv/bin/activate  # On Windows: ienv\Scripts\activate
 
 # Install dependencies
 # pip install -r final_requirements.txt
