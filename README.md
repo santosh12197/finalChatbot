@@ -64,7 +64,9 @@ A modern chatbot system built with **Django 5.0**, **PostgreSQL**, and **WebSock
 ```bash
 # Clone the repo
 git clone https://github.com/santosh12197/finalChatbot.git
-cd django-chatbot-support
+
+# Open chatbot project
+open project folder in editor like VS Code
 
 # Create virtual environment
 python3.11 -m venv ienv
@@ -73,7 +75,7 @@ python3.11 -m venv ienv
 source ienv/bin/activate  # On Windows: ienv\Scripts\activate
 
 # Install dependencies
-# pip install -r final_requirements.txt
+# pip install -r uvicorn_requirements.txt
 pip install -r requirements.txt
 
 
