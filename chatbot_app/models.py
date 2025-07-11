@@ -7,7 +7,8 @@ from django.utils import timezone
 
 class UserProfile(AbstractUser):
     is_support_agent = models.BooleanField(default=False)
-
+    # one doi (or article number)(for a particular user)
+    # doi_or_article_number = models.CharField(max_length=255, null=True, blank=True) 
     def __str__(self):
         return self.username
     
